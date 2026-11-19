@@ -1,0 +1,23 @@
+# Env (rahasia lokal)
+.env
+.env.*
+!.env.example
+
+# Go
+be/bin/
+*.exe
+*.test
+*.out
+coverage.out
+
+# Node / Bun
+node_modules/
+dist/
+build/
+.bun/
+*.log
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/

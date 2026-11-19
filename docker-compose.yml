@@ -1,0 +1,43 @@
+name: lsp
+
+services:
+  postgres:
+    build:
+      context: .
+      dockerfile: docker/postgres.Dockerfile
+    image: lsp-postgres:local
+    container_name: lsp-postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: lsp
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      # Gunakan TCP (bukan Unix socket) agar healthcheck tidak lolos saat server
+      # sementara milik initdb masih berjalan dan TCP 5432 belum terbuka.
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 -U postgres -d lsp"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  dragonfly:
+    build:
+      context: .
+      dockerfile: docker/dragonfly.Dockerfile
+    image: lsp-dragonfly:local
+    container_name: lsp-dragonfly
+    command: ["dragonfly", "--logtostderr", "--dir=/data"]
+    ulimits:
+      memlock: -1
+    ports:
+      - "6379:6379"
+    volumes:
+      - dragonflydata:/data
+
+volumes:
+  pgdata:
+  dragonflydata:
