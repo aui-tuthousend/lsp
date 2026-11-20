@@ -10,15 +10,16 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	asesorhttp "lsp/internal/asesor/adapters/http"
+	asesorpg "lsp/internal/asesor/adapters/postgres"
 	notificationshttp "lsp/internal/notifications/adapters/http"
 	"lsp/internal/platform/auth"
 	"lsp/internal/platform/config"
 	"lsp/internal/platform/events"
 	httpplatform "lsp/internal/platform/http"
 	"lsp/internal/platform/storage"
+	tukhttp "lsp/internal/tuk/adapters/http"
 	usershttp "lsp/internal/users/adapters/http"
-	userspg "lsp/internal/users/adapters/postgres"
-	"lsp/internal/users/app"
 )
 
 type App struct {
@@ -28,18 +29,13 @@ type App struct {
 	API           huma.API
 	Users         *UsersModule
 	Notifications *NotificationsModule
+	Asesor        *AsesorModule
+	TUK           *TUKModule
 	Schema        *SchemaModule
 	APL01         *APL01Module
 	APL02         *APL02Module
 	Portfolio     *PortfolioModule
 	ObjectStorage storage.ObjectStorage
-}
-
-type UsersModule struct {
-	Repository *userspg.Repository
-	Roles      *userspg.RolesRepository
-	Service    *app.Service
-	Handler    *usershttp.Handler
 }
 
 func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage storage.ObjectStorage) (*App, error) {
@@ -59,8 +55,13 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 
 	bus := events.NewRedisBus(rdb)
 
-	usersModule := newUsersModule(pool, jwtProvider)
+	asesorRepo := asesorpg.NewRepository(pool)
+	usersModule := newUsersModule(pool, asesorRepo, jwtProvider)
 	usershttp.RegisterRoutes(api, usersModule.Handler)
+	asesorModule := newAsesorModule(asesorRepo, usersModule.Repository)
+	asesorhttp.RegisterRoutes(api, asesorModule.Handler)
+	tukModule := newTUKModule(pool)
+	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
 	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
@@ -71,6 +72,8 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		API:           api,
 		Users:         usersModule,
 		Notifications: notificationsModule,
+		Asesor:        asesorModule,
+		TUK:           tukModule,
 		Schema:        newSchemaModule(),
 		APL01:         newAPL01Module(),
 		APL02:         newAPL02Module(),
@@ -86,14 +89,6 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		httpplatform.Timeout(30*time.Second, "/events"),
 	)
 	return app, nil
-}
-
-func newUsersModule(pool *pgxpool.Pool, jwtProvider *auth.JWTProvider) *UsersModule {
-	repo := userspg.NewRepository(pool)
-	roles := userspg.NewRolesRepository(pool)
-	service := app.NewService(repo, roles, jwtProvider)
-	handler := usershttp.NewHandler(service)
-	return &UsersModule{Repository: repo, Roles: roles, Service: service, Handler: handler}
 }
 
 type HealthInput struct{}

@@ -88,6 +88,24 @@ func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain
 	return domain.ListResult{Users: users, Total: total}, nil
 }
 
+// IsAsesor mengembalikan true bila user dengan id tersebut ber-role asesor.
+// Dipakai modul asesor sebagai implementasi port AsesorChecker.
+func (r *Repository) IsAsesor(ctx context.Context, userID string) (bool, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var exists bool
+	if err := db.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1
+			FROM users u
+			JOIN roles r ON r.id = u.role_id
+			WHERE u.id = $1 AND r.code = 'asesor' AND u.deleted_at IS NULL
+		)
+	`, userID).Scan(&exists); err != nil {
+		return false, err
+	}
+	return exists, nil
+}
+
 func scanUser(row pgx.Row) (domain.User, error) {
 	var user domain.User
 	var roleCode string

@@ -83,3 +83,33 @@ func writeUnauthorized(ctx huma.Context, message string) {
 	ctx.SetHeader("Content-Type", "application/json")
 	_ = json.NewEncoder(ctx.BodyWriter()).Encode(map[string]string{"error": message})
 }
+
+func writeForbidden(ctx huma.Context, message string) {
+	ctx.SetStatus(403)
+	ctx.SetHeader("Content-Type", "application/json")
+	_ = json.NewEncoder(ctx.BodyWriter()).Encode(map[string]string{"error": message})
+}
+
+// RequireRoles membatasi sebuah operasi Huma hanya untuk role tertentu.
+// Dipakai bersama middleware autentikasi global yang sudah menaruh claims di
+// context (lihat NewJWTAuthMiddleware / NewDevAuthMiddleware).
+func RequireRoles(roles ...string) func(*huma.Operation) {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[role] = struct{}{}
+	}
+	return func(o *huma.Operation) {
+		o.Middlewares = append(o.Middlewares, func(ctx huma.Context, next func(huma.Context)) {
+			claims, ok := ClaimsFromContext(ctx.Context())
+			if !ok {
+				writeUnauthorized(ctx, "unauthenticated")
+				return
+			}
+			if _, ok := allowed[claims.Role]; !ok {
+				writeForbidden(ctx, "forbidden")
+				return
+			}
+			next(ctx)
+		})
+	}
+}

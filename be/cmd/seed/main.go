@@ -61,7 +61,7 @@ func main() {
 		slog.Error("connect postgres", "error", err)
 		os.Exit(1)
 	}
-	
+
 	defer pool.Close()
 
 	roles := postgres.NewRolesRepository(pool)

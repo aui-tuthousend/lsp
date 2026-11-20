@@ -7,6 +7,7 @@ services:
       dockerfile: docker/postgres.Dockerfile
     image: lsp-postgres:local
     container_name: lsp-postgres
+    restart: unless-stopped
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
@@ -30,6 +31,7 @@ services:
       dockerfile: docker/dragonfly.Dockerfile
     image: lsp-dragonfly:local
     container_name: lsp-dragonfly
+    restart: unless-stopped
     command: ["dragonfly", "--logtostderr", "--dir=/data"]
     ulimits:
       memlock: -1

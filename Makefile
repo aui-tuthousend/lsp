@@ -32,12 +32,8 @@ logs: ## Ikuti log container
 ps: ## Tampilkan status container
 	$(COMPOSE) ps
 
-dev: ## Nyalakan Postgres + Dragonfly (temporary) lalu jalankan API lokal; container dihentikan saat API keluar
-	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; \
-		trap 'echo "==> Menghentikan container Postgres + Dragonfly"; $(COMPOSE) stop' EXIT INT TERM; \
-		$(COMPOSE) up -d; \
-		echo "==> Menjalankan API lokal: go -C be run $(API_MAIN)"; \
-		go -C be run $(API_MAIN)
+dev: ## Jalankan API lokal (Postgres + Dragonfly diasumsikan sudah hidup)
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; go -C be run $(API_MAIN)
 
 run: ## Jalankan API lokal saja (tanpa menyentuh Docker)
 	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; go -C be run $(API_MAIN)

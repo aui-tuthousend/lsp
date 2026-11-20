@@ -25,3 +25,10 @@ type RolesRepository interface {
 	FindByCode(ctx context.Context, code Role) (RoleRecord, error)
 	List(ctx context.Context) ([]RoleRecord, error)
 }
+
+// AsesorProfileInitializer membuat profil asesor default saat user ber-role
+// asesor dibuat. Port didefinisikan di sini dan diimplementasikan modul asesor
+// (internal/asesor/adapters/postgres), lalu disambungkan di bootstrap.
+type AsesorProfileInitializer interface {
+	EnsureProfile(ctx context.Context, userID string) error
+}

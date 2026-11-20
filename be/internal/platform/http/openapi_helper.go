@@ -10,3 +10,11 @@ func WithDoc(operationID, summary, description string, tags ...string) func(*hum
 		o.Tags = tags
 	}
 }
+
+// WithStatus menetapkan default HTTP status code untuk sebuah operasi
+// (mis. 201 Created).
+func WithStatus(code int) func(*huma.Operation) {
+	return func(o *huma.Operation) {
+		o.DefaultStatus = code
+	}
+}

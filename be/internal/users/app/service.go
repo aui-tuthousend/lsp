@@ -10,12 +10,21 @@ import (
 )
 
 type Service struct {
-	repo  domain.Repository
-	roles domain.RolesRepository
-	jwt   *auth.JWTProvider
+	repo       domain.Repository
+	roles      domain.RolesRepository
+	asesorInit domain.AsesorProfileInitializer
+	jwt        *auth.JWTProvider
 }
 
 type RegisterCommand struct {
+	Email           string
+	Password        string
+	Name            string
+	Phone           *string
+	NomorRegistrasi *string
+}
+
+type CreateUserCommand struct {
 	Email           string
 	Password        string
 	Name            string
@@ -34,34 +43,31 @@ type AuthResult struct {
 	Token string
 }
 
-func NewService(repo domain.Repository, roles domain.RolesRepository, jwt *auth.JWTProvider) *Service {
-	return &Service{repo: repo, roles: roles, jwt: jwt}
+func NewService(repo domain.Repository, roles domain.RolesRepository, asesorInit domain.AsesorProfileInitializer, jwt *auth.JWTProvider) *Service {
+	return &Service{repo: repo, roles: roles, asesorInit: asesorInit, jwt: jwt}
 }
 
+// Register adalah pendaftaran mandiri (endpoint publik) dan hanya membuat asesi.
 func (s *Service) Register(ctx context.Context, cmd RegisterCommand) (AuthResult, error) {
-	roleCode := cmd.Role
-	if roleCode == "" {
-		roleCode = domain.RoleAsesi
-	}
-	if !domain.IsValidRole(roleCode) {
-		return AuthResult{}, domain.ErrInvalidRole
-	}
-	role, err := s.roles.FindByCode(ctx, roleCode)
+	user, err := s.newUser(ctx, cmd.Email, cmd.Password, cmd.Name, domain.RoleAsesi, cmd.Phone, cmd.NomorRegistrasi)
 	if err != nil {
-		if err == domain.ErrNotFound {
-			return AuthResult{}, domain.ErrInvalidRole
-		}
-		return AuthResult{}, err
-	}
-	hash, err := bcrypt.GenerateFromPassword([]byte(cmd.Password), bcrypt.DefaultCost)
-	if err != nil {
-		return AuthResult{}, err
-	}
-	user := domain.User{ID: id.New(), RoleID: role.ID, Role: role.Code, Email: cmd.Email, PasswordHash: string(hash), Name: cmd.Name, IsValid: true, Phone: cmd.Phone, NomorRegistrasi: cmd.NomorRegistrasi}
-	if err := s.repo.Create(ctx, user); err != nil {
 		return AuthResult{}, err
 	}
 	return s.authResult(user)
+}
+
+// CreateUser dipakai admin untuk membuat user dengan role apa pun.
+func (s *Service) CreateUser(ctx context.Context, cmd CreateUserCommand) (domain.User, error) {
+	user, err := s.newUser(ctx, cmd.Email, cmd.Password, cmd.Name, cmd.Role, cmd.Phone, cmd.NomorRegistrasi)
+	if err != nil {
+		return domain.User{}, err
+	}
+	if user.Role == domain.RoleAsesor && s.asesorInit != nil {
+		if err := s.asesorInit.EnsureProfile(ctx, user.ID); err != nil {
+			return domain.User{}, err
+		}
+	}
+	return user, nil
 }
 
 func (s *Service) Login(ctx context.Context, cmd LoginCommand) (AuthResult, error) {
@@ -87,6 +93,40 @@ func (s *Service) GetMe(ctx context.Context, claims auth.UserClaims) (domain.Use
 
 func (s *Service) List(ctx context.Context, limit, offset int) (domain.ListResult, error) {
 	return s.repo.List(ctx, domain.ListParams{Limit: limit, Offset: offset})
+}
+
+// newUser memvalidasi role, me-resolve role_id dari master data, meng-hash
+// password, lalu menyimpan user.
+func (s *Service) newUser(ctx context.Context, email, password, name string, roleCode domain.Role, phone, nomorRegistrasi *string) (domain.User, error) {
+	if !domain.IsValidRole(roleCode) {
+		return domain.User{}, domain.ErrInvalidRole
+	}
+	role, err := s.roles.FindByCode(ctx, roleCode)
+	if err != nil {
+		if err == domain.ErrNotFound {
+			return domain.User{}, domain.ErrInvalidRole
+		}
+		return domain.User{}, err
+	}
+	hash, err := bcrypt.GenerateFromPassword([]byte(password), bcrypt.DefaultCost)
+	if err != nil {
+		return domain.User{}, err
+	}
+	user := domain.User{
+		ID:              id.New(),
+		RoleID:          role.ID,
+		Role:            role.Code,
+		Email:           email,
+		PasswordHash:    string(hash),
+		Name:            name,
+		IsValid:         true,
+		Phone:           phone,
+		NomorRegistrasi: nomorRegistrasi,
+	}
+	if err := s.repo.Create(ctx, user); err != nil {
+		return domain.User{}, err
+	}
+	return user, nil
 }
 
 func (s *Service) authResult(user domain.User) (AuthResult, error) {

@@ -33,6 +33,7 @@ Repositori berbentuk **monorepo**: backend Go di `be/`, frontend di `fe/` (bun w
 │   │   │   ├── module_apl02.go         # Wiring khusus bounded context apl02
 │   │   │   ├── module_portfolio.go     # Wiring khusus bounded context portfolio & presigned storage
 │   │   │   └── module_notifications.go # Wiring khusus bounded context notifikasi realtime (SSE)
+│   │   │   └── module_asesor.go        # Wiring khusus bounded context profil asesor
 │   │   │
 │   │   ├── platform/                   # Shared Infrastructure & Cross-Cutting Concerns
 │   │   │   ├── config/
@@ -61,7 +62,7 @@ Repositori berbentuk **monorepo**: backend Go di `be/`, frontend di `fe/` (bun w
 │   │   │   ├── auth/
 │   │   │   │   ├── claims.go           # UserClaims struct & context injector
 │   │   │   │   ├── jwt.go              # golang-jwt/v5 sign & verify
-│   │   │   │   └── huma_middleware.go  # Switchable JWTAuthMiddleware (Prod) vs DevAuthMiddleware (Dev)
+│   │   │   │   └── huma_middleware.go  # JWTAuthMiddleware (Prod) / DevAuthMiddleware (Dev) + RequireRoles (RBAC)
 │   │   │   ├── http/
 │   │   │   │   ├── middleware.go       # Chain(), RequestID, Structured Logger, Panic Recoverer, Timeout, MaxBodySize
 │   │   │   │   ├── pagination.go       # Generic PaginationQuery, PaginationMeta, PagedResponse[T]
@@ -77,6 +78,23 @@ Repositori berbentuk **monorepo**: backend Go di `be/`, frontend di `fe/` (bun w
 │   │   │           ├── dto.go          # EventsInput
 │   │   │           ├── routes.go       # GET /events (Huma sse.Register)
 │   │   │           └── handler.go      # Subscribe bus + heartbeat + graceful shutdown
+│   │   │
+│   │   ├── asesor/                     # Bounded Context: Profil asesor (afiliasi TUK, domisili, batas penugasan harian)
+│   │   │   ├── domain/
+│   │   │   │   ├── profile.go          # Profile & ListItem + sentinel errors
+│   │   │   │   └── repository.go       # Port Repository & AsesorChecker
+│   │   │   ├── app/
+│   │   │   │   └── service.go          # Upsert / Get / List
+│   │   │   └── adapters/
+│   │   │       ├── postgres/           # Tabel asesor_profiles (FK ke users & tuks)
+│   │   │       └── http/               # GET/PUT /asesor-profiles
+│   │   │
+│   │   ├── tuk/                        # Bounded Context: Master data Tempat Uji Kompetensi
+│   │   │   ├── domain/                 # TUK model, repository port, sentinel errors
+│   │   │   ├── app/                    # CRUD service
+│   │   │   └── adapters/
+│   │   │       ├── postgres/           # Tabel tuks
+│   │   │       └── http/               # CRUD /tuks (admin-only)
 │   │   │
 │   │   ├── schema/                     # Bounded Context 1: Master Skema, Unit, Elemen, KUK
 │   │   │   ├── domain/
