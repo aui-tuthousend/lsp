@@ -37,6 +37,7 @@ type App struct {
 
 type UsersModule struct {
 	Repository *userspg.Repository
+	Roles      *userspg.RolesRepository
 	Service    *app.Service
 	Handler    *usershttp.Handler
 }
@@ -89,9 +90,10 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 
 func newUsersModule(pool *pgxpool.Pool, jwtProvider *auth.JWTProvider) *UsersModule {
 	repo := userspg.NewRepository(pool)
-	service := app.NewService(repo, jwtProvider)
+	roles := userspg.NewRolesRepository(pool)
+	service := app.NewService(repo, roles, jwtProvider)
 	handler := usershttp.NewHandler(service)
-	return &UsersModule{Repository: repo, Service: service, Handler: handler}
+	return &UsersModule{Repository: repo, Roles: roles, Service: service, Handler: handler}
 }
 
 type HealthInput struct{}

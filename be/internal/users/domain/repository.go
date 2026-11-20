@@ -12,6 +12,7 @@ type ListResult struct {
 	Total int
 }
 
+// Repository adalah port penyimpanan user.
 type Repository interface {
 	Create(ctx context.Context, user User) error
 	FindByEmail(ctx context.Context, email string) (User, error)
@@ -19,11 +20,8 @@ type Repository interface {
 	List(ctx context.Context, params ListParams) (ListResult, error)
 }
 
-func IsValidRole(role Role) bool {
-	switch role {
-	case RoleAdmin, RoleAsesi, RoleAsesor, RoleValidator:
-		return true
-	default:
-		return false
-	}
+// RolesRepository adalah port untuk master data roles.
+type RolesRepository interface {
+	FindByCode(ctx context.Context, code Role) (RoleRecord, error)
+	List(ctx context.Context) ([]RoleRecord, error)
 }

@@ -10,8 +10,9 @@ import (
 )
 
 type Service struct {
-	repo domain.Repository
-	jwt  *auth.JWTProvider
+	repo  domain.Repository
+	roles domain.RolesRepository
+	jwt   *auth.JWTProvider
 }
 
 type RegisterCommand struct {
@@ -33,23 +34,30 @@ type AuthResult struct {
 	Token string
 }
 
-func NewService(repo domain.Repository, jwt *auth.JWTProvider) *Service {
-	return &Service{repo: repo, jwt: jwt}
+func NewService(repo domain.Repository, roles domain.RolesRepository, jwt *auth.JWTProvider) *Service {
+	return &Service{repo: repo, roles: roles, jwt: jwt}
 }
 
 func (s *Service) Register(ctx context.Context, cmd RegisterCommand) (AuthResult, error) {
-	role := cmd.Role
-	if role == "" {
-		role = domain.RoleAsesi
+	roleCode := cmd.Role
+	if roleCode == "" {
+		roleCode = domain.RoleAsesi
 	}
-	if !domain.IsValidRole(role) {
+	if !domain.IsValidRole(roleCode) {
 		return AuthResult{}, domain.ErrInvalidRole
+	}
+	role, err := s.roles.FindByCode(ctx, roleCode)
+	if err != nil {
+		if err == domain.ErrNotFound {
+			return AuthResult{}, domain.ErrInvalidRole
+		}
+		return AuthResult{}, err
 	}
 	hash, err := bcrypt.GenerateFromPassword([]byte(cmd.Password), bcrypt.DefaultCost)
 	if err != nil {
 		return AuthResult{}, err
 	}
-	user := domain.User{ID: id.New(), Email: cmd.Email, PasswordHash: string(hash), Name: cmd.Name, Role: role, IsValid: true, Phone: cmd.Phone, NomorRegistrasi: cmd.NomorRegistrasi}
+	user := domain.User{ID: id.New(), RoleID: role.ID, Role: role.Code, Email: cmd.Email, PasswordHash: string(hash), Name: cmd.Name, IsValid: true, Phone: cmd.Phone, NomorRegistrasi: cmd.NomorRegistrasi}
 	if err := s.repo.Create(ctx, user); err != nil {
 		return AuthResult{}, err
 	}

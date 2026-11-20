@@ -15,7 +15,7 @@ type RegisterBody struct {
 	Email           string  `json:"email" format:"email" maxLength:"255"`
 	Password        string  `json:"password" minLength:"8" maxLength:"72"`
 	Name            string  `json:"name" minLength:"2" maxLength:"255"`
-	Role            string  `json:"role,omitempty" enum:"admin,asesi,asesor,validator"`
+	Role            string  `json:"role,omitempty" enum:"admin,asesi,asesor,validator,manager_sertifikasi"`
 	Phone           *string `json:"phone,omitempty" maxLength:"20"`
 	NomorRegistrasi *string `json:"nomor_registrasi,omitempty" maxLength:"50"`
 }

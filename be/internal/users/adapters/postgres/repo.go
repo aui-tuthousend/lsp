@@ -22,41 +22,44 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 func (r *Repository) Create(ctx context.Context, user domain.User) error {
 	db := database.GetExecutor(ctx, r.pool)
 	_, err := db.Exec(ctx, `
-		INSERT INTO users (id, role, isvalid, name, email, phone, nomor_registrasi, password_hash)
+		INSERT INTO users (id, role_id, isvalid, name, email, phone, nomor_registrasi, password_hash)
 		VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-	`, user.ID, string(user.Role), user.IsValid, user.Name, user.Email, user.Phone, user.NomorRegistrasi, user.PasswordHash)
+	`, user.ID, user.RoleID, user.IsValid, user.Name, user.Email, user.Phone, user.NomorRegistrasi, user.PasswordHash)
 	return mapError(err)
 }
 
 func (r *Repository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanUser(db.QueryRow(ctx, `
-		SELECT id, role::text, isvalid, name, email::text, phone, nomor_registrasi, password_hash,
-		       email_verified_at, remember_token, created_at, updated_at, deleted_at
-		FROM users
-		WHERE email = $1 AND deleted_at IS NULL
+		SELECT u.id, u.role_id, r.code::text, u.isvalid, u.name, u.email::text, u.phone, u.nomor_registrasi, u.password_hash,
+		       u.email_verified_at, u.remember_token, u.created_at, u.updated_at, u.deleted_at
+		FROM users u
+		JOIN roles r ON r.id = u.role_id
+		WHERE u.email = $1 AND u.deleted_at IS NULL
 	`, email))
 }
 
 func (r *Repository) FindByID(ctx context.Context, id string) (domain.User, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanUser(db.QueryRow(ctx, `
-		SELECT id, role::text, isvalid, name, email::text, phone, nomor_registrasi, password_hash,
-		       email_verified_at, remember_token, created_at, updated_at, deleted_at
-		FROM users
-		WHERE id = $1 AND deleted_at IS NULL
+		SELECT u.id, u.role_id, r.code::text, u.isvalid, u.name, u.email::text, u.phone, u.nomor_registrasi, u.password_hash,
+		       u.email_verified_at, u.remember_token, u.created_at, u.updated_at, u.deleted_at
+		FROM users u
+		JOIN roles r ON r.id = u.role_id
+		WHERE u.id = $1 AND u.deleted_at IS NULL
 	`, id))
 }
 
 func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain.ListResult, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	rows, err := db.Query(ctx, `
-		SELECT id, role::text, isvalid, name, email::text, phone, nomor_registrasi, password_hash,
-		       email_verified_at, remember_token, created_at, updated_at, deleted_at,
+		SELECT u.id, u.role_id, r.name::text, u.isvalid, u.name, u.email::text, u.phone, u.nomor_registrasi, u.password_hash,
+		       u.email_verified_at, u.remember_token, u.created_at, u.updated_at, u.deleted_at,
 		       COUNT(*) OVER() AS total_count
-		FROM users
-		WHERE deleted_at IS NULL
-		ORDER BY created_at DESC
+		FROM users u
+		JOIN roles r ON r.id = u.role_id
+		WHERE u.deleted_at IS NULL
+		ORDER BY u.created_at DESC
 		LIMIT $1 OFFSET $2
 	`, params.Limit, params.Offset)
 	if err != nil {
@@ -87,22 +90,22 @@ func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain
 
 func scanUser(row pgx.Row) (domain.User, error) {
 	var user domain.User
-	var role string
-	if err := row.Scan(&user.ID, &role, &user.IsValid, &user.Name, &user.Email, &user.Phone, &user.NomorRegistrasi, &user.PasswordHash, &user.EmailVerifiedAt, &user.RememberToken, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
+	var roleCode string
+	if err := row.Scan(&user.ID, &user.RoleID, &roleCode, &user.IsValid, &user.Name, &user.Email, &user.Phone, &user.NomorRegistrasi, &user.PasswordHash, &user.EmailVerifiedAt, &user.RememberToken, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt); err != nil {
 		return domain.User{}, mapError(err)
 	}
-	user.Role = domain.Role(role)
+	user.Role = domain.Role(roleCode)
 	return user, nil
 }
 
 func scanUserWithTotal(rows pgx.Rows) (domain.User, int, error) {
 	var user domain.User
-	var role string
+	var roleCode string
 	var total int
-	if err := rows.Scan(&user.ID, &role, &user.IsValid, &user.Name, &user.Email, &user.Phone, &user.NomorRegistrasi, &user.PasswordHash, &user.EmailVerifiedAt, &user.RememberToken, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt, &total); err != nil {
+	if err := rows.Scan(&user.ID, &user.RoleID, &roleCode, &user.IsValid, &user.Name, &user.Email, &user.Phone, &user.NomorRegistrasi, &user.PasswordHash, &user.EmailVerifiedAt, &user.RememberToken, &user.CreatedAt, &user.UpdatedAt, &user.DeletedAt, &total); err != nil {
 		return domain.User{}, 0, mapError(err)
 	}
-	user.Role = domain.Role(role)
+	user.Role = domain.Role(roleCode)
 	return user, total, nil
 }
 
