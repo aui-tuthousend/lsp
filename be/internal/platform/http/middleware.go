@@ -77,8 +77,22 @@ func MaxBodySize(bytes int64) Middleware {
 	}
 }
 
-func Timeout(timeout time.Duration) Middleware {
+// Timeout membatasi durasi request. Path pada skipPaths dilewatkan tanpa
+// timeout karena responsnya bersifat streaming (mis. SSE) dan tidak boleh
+// dibuffer/dipotong oleh http.TimeoutHandler.
+func Timeout(timeout time.Duration, skipPaths ...string) Middleware {
+	skip := make(map[string]struct{}, len(skipPaths))
+	for _, path := range skipPaths {
+		skip[path] = struct{}{}
+	}
 	return func(next stdhttp.Handler) stdhttp.Handler {
-		return stdhttp.TimeoutHandler(next, timeout, "request timeout")
+		limited := stdhttp.TimeoutHandler(next, timeout, "request timeout")
+		return stdhttp.HandlerFunc(func(w stdhttp.ResponseWriter, r *stdhttp.Request) {
+			if _, ok := skip[r.URL.Path]; ok {
+				next.ServeHTTP(w, r)
+				return
+			}
+			limited.ServeHTTP(w, r)
+		})
 	}
 }

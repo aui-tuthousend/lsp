@@ -10,8 +10,10 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	notificationshttp "lsp/internal/notifications/adapters/http"
 	"lsp/internal/platform/auth"
 	"lsp/internal/platform/config"
+	"lsp/internal/platform/events"
 	httpplatform "lsp/internal/platform/http"
 	"lsp/internal/platform/storage"
 	usershttp "lsp/internal/users/adapters/http"
@@ -25,6 +27,7 @@ type App struct {
 	Handler       stdhttp.Handler
 	API           huma.API
 	Users         *UsersModule
+	Notifications *NotificationsModule
 	Schema        *SchemaModule
 	APL01         *APL01Module
 	APL02         *APL02Module
@@ -38,7 +41,7 @@ type UsersModule struct {
 	Handler    *usershttp.Handler
 }
 
-func NewApp(cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage storage.ObjectStorage) (*App, error) {
+func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage storage.ObjectStorage) (*App, error) {
 	mux := stdhttp.NewServeMux()
 	humaConfig := huma.DefaultConfig("LSP API", "0.1.0")
 	humaConfig.OpenAPIPath = "/openapi"
@@ -53,8 +56,12 @@ func NewApp(cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage
 		api.UseMiddleware(auth.NewJWTAuthMiddleware(jwtProvider))
 	}
 
+	bus := events.NewRedisBus(rdb)
+
 	usersModule := newUsersModule(pool, jwtProvider)
 	usershttp.RegisterRoutes(api, usersModule.Handler)
+	notificationsModule := newNotificationsModule(ctx, bus)
+	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
 
 	app := &App{
@@ -62,6 +69,7 @@ func NewApp(cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage
 		Router:        mux,
 		API:           api,
 		Users:         usersModule,
+		Notifications: notificationsModule,
 		Schema:        newSchemaModule(),
 		APL01:         newAPL01Module(),
 		APL02:         newAPL02Module(),
@@ -74,7 +82,7 @@ func NewApp(cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage
 		httpplatform.Recover(slog.Default()),
 		httpplatform.CORS(),
 		httpplatform.MaxBodySize(1<<20),
-		httpplatform.Timeout(30*time.Second),
+		httpplatform.Timeout(30*time.Second, "/events"),
 	)
 	return app, nil
 }

@@ -49,7 +49,7 @@ func main() {
 		}
 	}
 
-	app, err := bootstrap.NewApp(cfg, pool, rds.Client, objStorage)
+	app, err := bootstrap.NewApp(ctx, cfg, pool, rds.Client, objStorage)
 	if err != nil {
 		slog.Error("bootstrap app", "error", err)
 		os.Exit(1)

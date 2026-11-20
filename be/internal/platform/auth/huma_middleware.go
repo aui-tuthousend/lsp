@@ -13,18 +13,28 @@ func NewJWTAuthMiddleware(provider *JWTProvider) func(huma.Context, func(huma.Co
 			next(ctx)
 			return
 		}
-		header := ctx.Header("Authorization")
-		if !strings.HasPrefix(header, "Bearer ") {
+		token := bearerToken(ctx)
+		if token == "" {
 			writeUnauthorized(ctx, "missing bearer token")
 			return
 		}
-		claims, err := provider.VerifyToken(strings.TrimPrefix(header, "Bearer "))
+		claims, err := provider.VerifyToken(token)
 		if err != nil {
 			writeUnauthorized(ctx, "invalid bearer token")
 			return
 		}
 		next(huma.WithContext(ctx, ContextWithClaims(ctx.Context(), claims)))
 	}
+}
+
+// bearerToken mengambil token dari header Authorization, atau dari query
+// `?token=` sebagai fallback untuk koneksi streaming (SSE) yang tidak bisa
+// mengirim header custom dari EventSource browser.
+func bearerToken(ctx huma.Context) string {
+	if header := ctx.Header("Authorization"); strings.HasPrefix(header, "Bearer ") {
+		return strings.TrimPrefix(header, "Bearer ")
+	}
+	return ctx.Query("token")
 }
 
 func NewDevAuthMiddleware() func(huma.Context, func(huma.Context)) {
