@@ -23,9 +23,9 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		adminOnly,
 		httpplatform.WithDoc("tuks-get", "Get TUK", "Ambil detail Tempat Uji Kompetensi.", "TUK"),
 	)
-	huma.Put(api, "/tuks/{id}", handler.Update,
+	huma.Patch(api, "/tuks/{id}", handler.Update,
 		adminOnly,
-		httpplatform.WithDoc("tuks-update", "Update TUK", "Ubah master data Tempat Uji Kompetensi.", "TUK"),
+		httpplatform.WithDoc("tuks-update", "Update TUK", "Ubah sebagian master data Tempat Uji Kompetensi.", "TUK"),
 	)
 	huma.Delete(api, "/tuks/{id}", handler.Delete,
 		adminOnly,

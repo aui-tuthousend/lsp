@@ -28,17 +28,17 @@ type CreateCommand struct {
 	Letterhead *string
 }
 
-type UpdateCommand struct {
+type PatchCommand struct {
 	ID         string
-	Name       string
+	Name       *string
 	Logo       *string
-	PostalCode string
-	Phone      string
-	Email      string
-	Province   string
-	City       string
-	Address    string
-	MapsURL    string
+	PostalCode *string
+	Phone      *string
+	Email      *string
+	Province   *string
+	City       *string
+	Address    *string
+	MapsURL    *string
 	Letterhead *string
 }
 
@@ -62,8 +62,8 @@ func (s *Service) Create(ctx context.Context, cmd CreateCommand) (domain.TUK, er
 	return s.repo.FindByID(ctx, tuk.ID)
 }
 
-func (s *Service) Update(ctx context.Context, cmd UpdateCommand) (domain.TUK, error) {
-	return s.repo.Update(ctx, domain.TUK{
+func (s *Service) Patch(ctx context.Context, cmd PatchCommand) (domain.TUK, error) {
+	return s.repo.Patch(ctx, domain.Patch{
 		ID:         cmd.ID,
 		Name:       cmd.Name,
 		Logo:       cmd.Logo,

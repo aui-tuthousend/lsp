@@ -36,7 +36,7 @@ func (h *Handler) Create(ctx context.Context, input *CreateInput) (*TUKOutput, e
 }
 
 func (h *Handler) Update(ctx context.Context, input *UpdateInput) (*TUKOutput, error) {
-	tuk, err := h.service.Update(ctx, app.UpdateCommand{
+	tuk, err := h.service.Patch(ctx, app.PatchCommand{
 		ID:         input.ID,
 		Name:       input.Body.Name,
 		Logo:       input.Body.Logo,

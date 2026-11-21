@@ -12,11 +12,18 @@ type ListResult struct {
 	Total int
 }
 
-// Repository adalah port penyimpanan profil asesor.
+// Repository adalah port penyimpanan profil asesor beserta sertifikasinya.
 type Repository interface {
 	Upsert(ctx context.Context, profile Profile) (Profile, error)
+	PatchProfile(ctx context.Context, patch ProfilePatch) (Profile, error)
 	FindByUserID(ctx context.Context, userID string) (Profile, error)
 	List(ctx context.Context, params ListParams) (ListResult, error)
+
+	ListCertifications(ctx context.Context, userID string) ([]Certification, error)
+	FindCertificationByID(ctx context.Context, userID, certID string) (Certification, error)
+	CreateCertification(ctx context.Context, cert Certification) error
+	PatchCertification(ctx context.Context, patch CertificationPatch) (Certification, error)
+	DeleteCertification(ctx context.Context, userID, certID string) error
 }
 
 // AsesorChecker memastikan sebuah user benar-benar ber-role asesor.

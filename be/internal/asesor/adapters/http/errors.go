@@ -20,6 +20,10 @@ func mapError(err error) error {
 		return huma.Error422UnprocessableEntity("tuk not found")
 	case errors.Is(err, domain.ErrInvalidLimit):
 		return huma.Error400BadRequest("daily assignment limit must be >= 0")
+	case errors.Is(err, domain.ErrCertificationNotFound):
+		return huma.Error404NotFound("asesor certification not found")
+	case errors.Is(err, domain.ErrInvalidCertificationPeriod):
+		return huma.Error400BadRequest("certification expired_at must be after issued_at")
 	default:
 		return err
 	}

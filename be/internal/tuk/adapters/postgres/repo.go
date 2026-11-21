@@ -28,23 +28,23 @@ func (r *Repository) Create(ctx context.Context, tuk domain.TUK) error {
 	return mapError(err)
 }
 
-func (r *Repository) Update(ctx context.Context, tuk domain.TUK) (domain.TUK, error) {
+func (r *Repository) Patch(ctx context.Context, patch domain.Patch) (domain.TUK, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanTUK(db.QueryRow(ctx, `
 		UPDATE tuks
-		SET name = $2,
-		    logo = $3,
-		    postal_code = $4,
-		    phone = $5,
-		    email = $6,
-		    province = $7,
-		    city = $8,
-		    address = $9,
-		    maps_url = $10,
-		    letterhead = $11
+		SET name = COALESCE($2::varchar, name),
+		    logo = COALESCE($3::text, logo),
+		    postal_code = COALESCE($4::varchar, postal_code),
+		    phone = COALESCE($5::varchar, phone),
+		    email = COALESCE($6::citext, email),
+		    province = COALESCE($7::varchar, province),
+		    city = COALESCE($8::varchar, city),
+		    address = COALESCE($9::text, address),
+		    maps_url = COALESCE($10::text, maps_url),
+		    letterhead = COALESCE($11::text, letterhead)
 		WHERE id = $1 AND deleted_at IS NULL
 		RETURNING id, name, logo, postal_code, phone, email::text, province, city, address, maps_url, letterhead, created_at, updated_at, deleted_at
-	`, tuk.ID, tuk.Name, tuk.Logo, tuk.PostalCode, tuk.Phone, tuk.Email, tuk.Province, tuk.City, tuk.Address, tuk.MapsURL, tuk.Letterhead))
+	`, patch.ID, patch.Name, patch.Logo, patch.PostalCode, patch.Phone, patch.Email, patch.Province, patch.City, patch.Address, patch.MapsURL, patch.Letterhead))
 }
 
 func (r *Repository) FindByID(ctx context.Context, id string) (domain.TUK, error) {

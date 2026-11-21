@@ -15,6 +15,14 @@ type Profile struct {
 	UpdatedAt            time.Time
 }
 
+type ProfilePatch struct {
+	UserID               string
+	TUKID                *string
+	Province             *string
+	City                 *string
+	DailyAssignmentLimit *int
+}
+
 // ListItem adalah profil asesor yang dilengkapi data user & TUK untuk tampilan admin.
 type ListItem struct {
 	UserID               string

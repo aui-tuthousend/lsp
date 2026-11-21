@@ -12,8 +12,8 @@ type CreateInput struct {
 }
 
 type UpdateInput struct {
-	ID   string  `path:"id"`
-	Body TUKBody `json:"body"`
+	ID   string       `path:"id"`
+	Body TUKPatchBody `json:"body"`
 }
 
 type GetInput struct {
@@ -38,6 +38,19 @@ type TUKBody struct {
 	City       string  `json:"city" minLength:"2" maxLength:"120"`
 	Address    string  `json:"address" minLength:"5"`
 	MapsURL    string  `json:"maps_url" minLength:"5" doc:"Link Google Maps atau provider maps lain"`
+	Letterhead *string `json:"letterhead,omitempty" doc:"URL/path kop surat TUK"`
+}
+
+type TUKPatchBody struct {
+	Name       *string `json:"name,omitempty" minLength:"2" maxLength:"255"`
+	Logo       *string `json:"logo,omitempty" doc:"URL/path logo TUK"`
+	PostalCode *string `json:"postal_code,omitempty" minLength:"3" maxLength:"10"`
+	Phone      *string `json:"phone,omitempty" minLength:"5" maxLength:"20"`
+	Email      *string `json:"email,omitempty" format:"email" maxLength:"255"`
+	Province   *string `json:"province,omitempty" minLength:"2" maxLength:"120"`
+	City       *string `json:"city,omitempty" minLength:"2" maxLength:"120"`
+	Address    *string `json:"address,omitempty" minLength:"5"`
+	MapsURL    *string `json:"maps_url,omitempty" minLength:"5" doc:"Link Google Maps atau provider maps lain"`
 	Letterhead *string `json:"letterhead,omitempty" doc:"URL/path kop surat TUK"`
 }
 

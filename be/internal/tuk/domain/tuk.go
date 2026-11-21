@@ -19,3 +19,17 @@ type TUK struct {
 	UpdatedAt  time.Time
 	DeletedAt  *time.Time
 }
+
+type Patch struct {
+	ID         string
+	Name       *string
+	Logo       *string
+	PostalCode *string
+	Phone      *string
+	Email      *string
+	Province   *string
+	City       *string
+	Address    *string
+	MapsURL    *string
+	Letterhead *string
+}
