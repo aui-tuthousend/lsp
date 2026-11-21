@@ -24,7 +24,7 @@ function LoginPage() {
     try {
       const session = await loginFn({ data: { email, password } })
       await router.invalidate()
-      await router.navigate({ to: homeForRole(session.role) })
+      await router.navigate({ to: homeForRole(session.role), replace: true })
     } catch {
       setError('Email atau password tidak valid')
     }
