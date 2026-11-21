@@ -8,7 +8,7 @@ SEED_MAIN := ./cmd/seed/main.go
 
 .DEFAULT_GOAL := help
 
-.PHONY: help dev up down stop restart logs ps run worker seed migrate psql redis-cli build test fmt vet tidy fe-install clean
+.PHONY: help dev up down stop restart logs ps run worker seed migrate psql redis-cli build test fmt vet tidy fe-install fe-dev fe-build fe-typecheck clean
 
 help: ## Tampilkan daftar target
 	@echo "Target yang tersedia:"
@@ -72,7 +72,16 @@ tidy: ## Rapikan dependency backend
 	go -C be tidy
 
 fe-install: ## Install dependency frontend (bun)
-	bun install
+	bun install --cwd fe
+
+fe-dev: ## Jalankan dev server frontend
+	bun run --cwd fe dev
+
+fe-build: ## Build frontend
+	bun run --cwd fe build
+
+fe-typecheck: ## Typecheck frontend
+	bun run --cwd fe typecheck
 
 clean: ## Hentikan container dan hapus volume data
 	$(COMPOSE) down -v
