@@ -32,8 +32,12 @@ logs: ## Ikuti log container
 ps: ## Tampilkan status container
 	$(COMPOSE) ps
 
-dev: ## Jalankan API lokal (Postgres + Dragonfly diasumsikan sudah hidup)
-	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; go -C be run $(API_MAIN)
+dev: ## Jalankan API (Go) + dev server FE sekaligus (infra diasumsikan hidup)
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; \
+	trap 'kill 0' INT TERM; \
+	( go -C be run $(API_MAIN) ) & \
+	( cd fe && ./node_modules/.bin/vite dev ) & \
+	wait
 
 run: ## Jalankan API lokal saja (tanpa menyentuh Docker)
 	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; go -C be run $(API_MAIN)
@@ -72,16 +76,16 @@ tidy: ## Rapikan dependency backend
 	go -C be tidy
 
 fe-install: ## Install dependency frontend (bun)
-	bun install --cwd fe
+	cd fe && bun install
 
 fe-dev: ## Jalankan dev server frontend
-	bun run --cwd fe dev
+	cd fe && ./node_modules/.bin/vite dev
 
 fe-build: ## Build frontend
-	bun run --cwd fe build
+	cd fe && ./node_modules/.bin/vite build
 
 fe-typecheck: ## Typecheck frontend
-	bun run --cwd fe typecheck
+	cd fe && ./node_modules/.bin/tsc --noEmit
 
 clean: ## Hentikan container dan hapus volume data
 	$(COMPOSE) down -v
