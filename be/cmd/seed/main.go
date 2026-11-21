@@ -7,11 +7,11 @@ import (
 	"os"
 
 	"golang.org/x/crypto/bcrypt"
+	"lsp/internal/features/users/adapters/postgres"
+	"lsp/internal/features/users/domain"
 	"lsp/internal/platform/config"
 	"lsp/internal/platform/database"
 	"lsp/internal/platform/id"
-	"lsp/internal/users/adapters/postgres"
-	"lsp/internal/users/domain"
 )
 
 type roleSeed struct {

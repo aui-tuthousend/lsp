@@ -3,7 +3,7 @@ package bootstrap
 import (
 	"context"
 
-	notificationshttp "lsp/internal/notifications/adapters/http"
+	notificationshttp "lsp/internal/features/notifications/adapters/http"
 	"lsp/internal/platform/events"
 )
 

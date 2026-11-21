@@ -2,9 +2,9 @@ package bootstrap
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
-	tukhttp "lsp/internal/tuk/adapters/http"
-	tukpg "lsp/internal/tuk/adapters/postgres"
-	"lsp/internal/tuk/app"
+	tukhttp "lsp/internal/features/tuk/adapters/http"
+	tukpg "lsp/internal/features/tuk/adapters/postgres"
+	"lsp/internal/features/tuk/app"
 )
 
 type TUKModule struct {

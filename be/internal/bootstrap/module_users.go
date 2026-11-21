@@ -2,11 +2,11 @@ package bootstrap
 
 import (
 	"github.com/jackc/pgx/v5/pgxpool"
-	asesorpg "lsp/internal/asesor/adapters/postgres"
+	asesorpg "lsp/internal/features/asesor/adapters/postgres"
+	usershttp "lsp/internal/features/users/adapters/http"
+	userspg "lsp/internal/features/users/adapters/postgres"
+	"lsp/internal/features/users/app"
 	"lsp/internal/platform/auth"
-	usershttp "lsp/internal/users/adapters/http"
-	userspg "lsp/internal/users/adapters/postgres"
-	"lsp/internal/users/app"
 )
 
 type UsersModule struct {

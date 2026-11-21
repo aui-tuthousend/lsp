@@ -1,10 +1,10 @@
 package bootstrap
 
 import (
-	asesorhttp "lsp/internal/asesor/adapters/http"
-	asesorpg "lsp/internal/asesor/adapters/postgres"
-	asesorapp "lsp/internal/asesor/app"
-	userspg "lsp/internal/users/adapters/postgres"
+	asesorhttp "lsp/internal/features/asesor/adapters/http"
+	asesorpg "lsp/internal/features/asesor/adapters/postgres"
+	asesorapp "lsp/internal/features/asesor/app"
+	userspg "lsp/internal/features/users/adapters/postgres"
 )
 
 type AsesorModule struct {

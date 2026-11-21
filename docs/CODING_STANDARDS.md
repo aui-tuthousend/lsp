@@ -6,7 +6,7 @@ Ikuti aturan berikut secara ketat saat men-generate kode untuk proyek ini:
 ## 1. Aturan App Container & Cross-Module Isolation (`internal/bootstrap/`)
 * **Dilarang** membuat dynamic service locator berbasis `map[string]any`, `reflect`, atau `interface{}`. Seluruh dependency pada `bootstrap.App` dan sub-modulnya wajib bertipe eksplisit (*compile-time safe*).
 * **Dilarang** menaruh logika *wiring* repository/handler di dalam `cmd/api/main.go`. `main.go` hanya boleh memanggil `bootstrap.NewApp(cfg, pool, rdb, objStorage)`.
-* **Cross-Module Isolation:** Paket `internal/apl01` dilarang keras meng-import paket apa pun di bawah `internal/apl02` (dan sebaliknya). Jika `apl01` perlu memicu pembuatan form `apl02` saat approval, definisikan port interface (misal `APL02Initializer`) di `internal/apl01/domain/repository.go`, implementasikan di `internal/apl02/adapters/postgres/`, dan sambungkan keduanya hanya di `internal/bootstrap/app.go`.
+* **Cross-Module Isolation:** Paket `internal/features/apl01` dilarang keras meng-import paket apa pun di bawah `internal/features/apl02` (dan sebaliknya). Jika `apl01` perlu memicu pembuatan form `apl02` saat approval, definisikan port interface (misal `APL02Initializer`) di `internal/features/apl01/domain/repository.go`, implementasikan di `internal/features/apl02/adapters/postgres/`, dan sambungkan keduanya hanya di `internal/bootstrap/app.go`.
 * Pisahkan konstruktor modul per *bounded context* (`module_schema.go`, `module_apl01.go`, `module_apl02.go`, `module_portfolio.go`) di dalam paket `internal/bootstrap`.
 * `bootstrap.NewApp` tidak boleh memanggil `os.Exit` atau `log.Fatal`; biarkan `cmd/api/main.go` yang menangani lifecycle startup dan shutdown.
 

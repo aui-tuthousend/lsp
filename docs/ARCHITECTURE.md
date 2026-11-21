@@ -70,93 +70,109 @@ Repositori berbentuk **monorepo**: backend Go di `be/`, frontend di `fe/` (bun w
 │   │   │   └── worker/
 │   │   │       └── outbox_processor.go # Worker Pool + FOR UPDATE SKIP LOCKED, kirim email & publish event SSE
 │   │   │
-│   │   ├── notifications/              # Bounded Context: Notifikasi realtime (SSE)
-│   │   │   ├── domain/
-│   │   │   │   └── event.go            # NotificationEvent (payload SSE)
-│   │   │   └── adapters/
-│   │   │       └── http/
-│   │   │           ├── dto.go          # EventsInput
-│   │   │           ├── routes.go       # GET /events (Huma sse.Register)
-│   │   │           └── handler.go      # Subscribe bus + heartbeat + graceful shutdown
-│   │   │
-│   │   ├── asesor/                     # Bounded Context: Profil asesor (afiliasi TUK, domisili, batas penugasan harian)
-│   │   │   ├── domain/
-│   │   │   │   ├── profile.go          # Profile & ListItem + sentinel errors
-│   │   │   │   └── repository.go       # Port Repository & AsesorChecker
-│   │   │   ├── app/
-│   │   │   │   └── service.go          # Upsert / Get / List
-│   │   │   └── adapters/
-│   │   │       ├── postgres/           # Tabel asesor_profiles (FK ke users & tuks)
-│   │   │       └── http/               # GET/PUT /asesor-profiles
-│   │   │
-│   │   ├── tuk/                        # Bounded Context: Master data Tempat Uji Kompetensi
-│   │   │   ├── domain/                 # TUK model, repository port, sentinel errors
-│   │   │   ├── app/                    # CRUD service
-│   │   │   └── adapters/
-│   │   │       ├── postgres/           # Tabel tuks
-│   │   │       └── http/               # CRUD /tuks (admin-only)
-│   │   │
-│   │   ├── schema/                     # Bounded Context 1: Master Skema, Unit, Elemen, KUK
-│   │   │   ├── domain/
-│   │   │   ├── app/
-│   │   │   │   ├── command/
-│   │   │   │   └── query/
-│   │   │   └── adapters/
-│   │   │       ├── postgres/
-│   │   │       ├── redis/
-│   │   │       └── http/
-│   │   │
-│   │   ├── apl01/                      # Bounded Context 2: Pendaftaran & Verifikasi FR-APL-01
-│   │   │   ├── domain/
-│   │   │   │   ├── application.go      # Aggregate Root APL-01 & state machine rules
-│   │   │   │   ├── errors.go           # Domain sentinel errors
-│   │   │   │   └── repository.go       # Port interfaces (termasuk APL02Initializer & OutboxWriter)
-│   │   │   ├── app/
-│   │   │   │   ├── command/
-│   │   │   │   │   ├── create_apl01.go
-│   │   │   │   │   ├── submit_apl01.go
-│   │   │   │   │   └── verify_apl01.go # Approve APL-01 + generate draft APL-02 + outbox email Asesor dalam 1 Tx
-│   │   │   │   └── query/
-│   │   │   │       ├── get_apl01_detail.go
-│   │   │   │       └── list_apl01.go
-│   │   │   └── adapters/
-│   │   │       ├── postgres/
-│   │   │       │   ├── apl01_repo.go
-│   │   │       │   └── query_model.go
-│   │   │       └── http/
-│   │   │           ├── dto.go
-│   │   │           ├── routes.go
-│   │   │           ├── handler.go
-│   │   │           └── errors.go
-│   │   │
-│   │   ├── apl02/                      # Bounded Context 3: Asesmen Mandiri FR-APL-02
-│   │   │   ├── domain/
-│   │   │   │   ├── assessment.go       # Aggregate Root APL-02 & KUK answer validation
-│   │   │   │   ├── errors.go
-│   │   │   │   └── repository.go
-│   │   │   ├── app/
-│   │   │   │   ├── command/
-│   │   │   │   │   ├── bulk_save_kuk.go    # Simpan puluhan jawaban KUK sekaligus + anti-deadlock
-│   │   │   │   │   ├── submit_apl02.go     # Submit APL-02 + simpan event outbox email ke Asesor dalam 1 Tx
-│   │   │   │   │   └── recommend_apl02.go  # Rekomendasi Asesor
-│   │   │   │   └── query/
-│   │   │   │       └── get_apl02_form.go
-│   │   │   └── adapters/
-│   │   │       ├── postgres/
-│   │   │       ├── redis/
-│   │   │       └── http/
-│   │   │
-│   │   └── portfolio/                  # Bounded Context 4: Manajemen Dokumen & Bukti Portofolio
-│   │       ├── domain/
-│   │       ├── app/
-│   │       │   ├── command/
-│   │       │   │   ├── generate_upload_url.go # Generate Presigned PUT URL + object_key ke client
-│   │       │   │   ├── register_document.go   # Terima file_url/object_key setelah client upload & simpan DB
-│   │       │   │   └── delete_document.go
-│   │       │   └── query/
-│   │       └── adapters/
-│   │           ├── postgres/
-│   │           └── http/
+│   │   ├── features/                   # Bounded Contexts (fitur bisnis)
+│   │   │   ├── notifications/          # Notifikasi realtime (SSE)
+│   │   │   │   ├── domain/
+│   │   │   │   │   └── event.go            # NotificationEvent (payload SSE)
+│   │   │   │   └── adapters/
+│   │   │   │       └── http/
+│   │   │   │           ├── dto.go          # EventsInput
+│   │   │   │           ├── routes.go       # GET /events (Huma sse.Register)
+│   │   │   │           └── handler.go      # Subscribe bus + heartbeat + graceful shutdown
+│   │   │   │
+│   │   │   ├── users/                  # Akun & autentikasi (login, register, RBAC, master roles)
+│   │   │   │   ├── domain/                 # User, Role, repository port, sentinel errors
+│   │   │   │   ├── app/                    # Service login/register/user CRUD
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/           # Tabel users & roles (+ IsAsesor/IsAsesi checker)
+│   │   │   │       └── http/               # /auth/* & /users
+│   │   │   │
+│   │   │   ├── asesi/                  # Profil data diri asesi (relasi 1:1 ke users)
+│   │   │   │   ├── domain/                 # Profile, Patch, repository port, AsesiChecker
+│   │   │   │   ├── app/                    # CRUD service profil asesi
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/           # Tabel asesi_profiles
+│   │   │   │       └── http/               # CRUD /asesi-profiles (admin-only)
+│   │   │   │
+│   │   │   ├── asesor/                 # Profil asesor (afiliasi TUK, domisili, batas penugasan) + sertifikasi
+│   │   │   │   ├── domain/
+│   │   │   │   │   ├── profile.go          # Profile & ListItem + sentinel errors
+│   │   │   │   │   ├── certification.go    # Certification & Patch
+│   │   │   │   │   └── repository.go       # Port Repository & AsesorChecker
+│   │   │   │   ├── app/
+│   │   │   │   │   └── service.go          # Upsert/Patch/Get/List + CRUD sertifikasi
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/           # Tabel asesor_profiles & asesor_certifications
+│   │   │   │       └── http/               # /asesor-profiles & /asesor-certifications
+│   │   │   │
+│   │   │   ├── tuk/                    # Master data Tempat Uji Kompetensi
+│   │   │   │   ├── domain/                 # TUK model, repository port, sentinel errors
+│   │   │   │   ├── app/                    # CRUD service
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/           # Tabel tuks
+│   │   │   │       └── http/               # CRUD /tuks (admin-only)
+│   │   │   │
+│   │   │   ├── schema/                 # Master Skema, Unit, Elemen, KUK
+│   │   │   │   ├── domain/
+│   │   │   │   ├── app/
+│   │   │   │   │   ├── command/
+│   │   │   │   │   └── query/
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/
+│   │   │   │       ├── redis/
+│   │   │   │       └── http/
+│   │   │   │
+│   │   │   ├── apl01/                  # Pendaftaran & Verifikasi FR-APL-01
+│   │   │   │   ├── domain/
+│   │   │   │   │   ├── application.go      # Aggregate Root APL-01 & state machine rules
+│   │   │   │   │   ├── errors.go           # Domain sentinel errors
+│   │   │   │   │   └── repository.go       # Port interfaces (termasuk APL02Initializer & OutboxWriter)
+│   │   │   │   ├── app/
+│   │   │   │   │   ├── command/
+│   │   │   │   │   │   ├── create_apl01.go
+│   │   │   │   │   │   ├── submit_apl01.go
+│   │   │   │   │   │   └── verify_apl01.go # Approve APL-01 + generate draft APL-02 + outbox email Asesor dalam 1 Tx
+│   │   │   │   │   └── query/
+│   │   │   │   │       ├── get_apl01_detail.go
+│   │   │   │   │       └── list_apl01.go
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/
+│   │   │   │       │   ├── apl01_repo.go
+│   │   │   │       │   └── query_model.go
+│   │   │   │       └── http/
+│   │   │   │           ├── dto.go
+│   │   │   │           ├── routes.go
+│   │   │   │           ├── handler.go
+│   │   │   │           └── errors.go
+│   │   │   │
+│   │   │   ├── apl02/                  # Asesmen Mandiri FR-APL-02
+│   │   │   │   ├── domain/
+│   │   │   │   │   ├── assessment.go       # Aggregate Root APL-02 & KUK answer validation
+│   │   │   │   │   ├── errors.go
+│   │   │   │   │   └── repository.go
+│   │   │   │   ├── app/
+│   │   │   │   │   ├── command/
+│   │   │   │   │   │   ├── bulk_save_kuk.go    # Simpan puluhan jawaban KUK sekaligus + anti-deadlock
+│   │   │   │   │   │   ├── submit_apl02.go     # Submit APL-02 + simpan event outbox email ke Asesor dalam 1 Tx
+│   │   │   │   │   │   └── recommend_apl02.go  # Rekomendasi Asesor
+│   │   │   │   │   └── query/
+│   │   │   │   │       └── get_apl02_form.go
+│   │   │   │   └── adapters/
+│   │   │   │       ├── postgres/
+│   │   │   │       ├── redis/
+│   │   │   │       └── http/
+│   │   │   │
+│   │   │   └── portfolio/              # Manajemen Dokumen & Bukti Portofolio
+│   │   │       ├── domain/
+│   │   │       ├── app/
+│   │   │       │   ├── command/
+│   │   │       │   │   ├── generate_upload_url.go # Generate Presigned PUT URL + object_key ke client
+│   │   │       │   │   ├── register_document.go   # Terima file_url/object_key setelah client upload & simpan DB
+│   │   │       │   │   └── delete_document.go
+│   │   │       │   └── query/
+│   │   │       └── adapters/
+│   │   │           ├── postgres/
+│   │   │           └── http/
 │   ├── go.mod
 │   └── .env.example                    # Contoh konfigurasi environment
 ├── fe/                                 # Frontend (placeholder, bun workspace)
@@ -183,7 +199,7 @@ Selain notifikasi email asinkron, sistem menyediakan kanal **realtime satu arah*
   * Interface `Bus` dengan `Publish` dan `Subscribe(topics...)`, ditambah helper `UserTopic(id)` (`user:<id>`) dan `RoleTopic(role)` (`role:<role>`).
   * Adapter produksi `RedisBus` memakai Redis Pub/Sub, sehingga event bisa didistribusikan **lintas instance API** (bukan hanya in-process).
 * **Producer:** `internal/platform/worker/outbox_processor.go`. Setelah event outbox diproses dan transaksi **commit**, worker mem-publish payload ke bus berdasarkan metadata `user_id` dan/atau `role` di payload outbox. Publish bersifat *best-effort* (kegagalan hanya di-log), sementara pengiriman email tetap andal lewat outbox.
-* **Consumer:** `internal/notifications/adapters/http` mengekspos `GET /events` memakai `huma/v2/sse`. Handler berlangganan topic milik user yang login, mengirim event awal `connected`, lalu meneruskan setiap event sebagai nama event `notification` (jenis asli ada pada field `type`).
+* **Consumer:** `internal/features/notifications/adapters/http` mengekspos `GET /events` memakai `huma/v2/sse`. Handler berlangganan topic milik user yang login, mengirim event awal `connected`, lalu meneruskan setiap event sebagai nama event `notification` (jenis asli ada pada field `type`).
 * **Autentikasi:** middleware JWT menerima token dari header `Authorization: Bearer <token>` **atau** query `?token=<token>`, karena `EventSource` browser tidak bisa mengirim header custom.
 * **Keep-alive & Shutdown:**
   * Heartbeat berupa komentar SSE (`: ping`) setiap 20 detik agar koneksi tidak ditutup proxy/load balancer.

@@ -10,16 +10,17 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
-	asesorhttp "lsp/internal/asesor/adapters/http"
-	asesorpg "lsp/internal/asesor/adapters/postgres"
-	notificationshttp "lsp/internal/notifications/adapters/http"
+	asesihttp "lsp/internal/features/asesi/adapters/http"
+	asesorhttp "lsp/internal/features/asesor/adapters/http"
+	asesorpg "lsp/internal/features/asesor/adapters/postgres"
+	notificationshttp "lsp/internal/features/notifications/adapters/http"
+	tukhttp "lsp/internal/features/tuk/adapters/http"
+	usershttp "lsp/internal/features/users/adapters/http"
 	"lsp/internal/platform/auth"
 	"lsp/internal/platform/config"
 	"lsp/internal/platform/events"
 	httpplatform "lsp/internal/platform/http"
 	"lsp/internal/platform/storage"
-	tukhttp "lsp/internal/tuk/adapters/http"
-	usershttp "lsp/internal/users/adapters/http"
 )
 
 type App struct {
@@ -29,6 +30,7 @@ type App struct {
 	API           huma.API
 	Users         *UsersModule
 	Notifications *NotificationsModule
+	Asesi         *AsesiModule
 	Asesor        *AsesorModule
 	TUK           *TUKModule
 	Schema        *SchemaModule
@@ -60,6 +62,8 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	usershttp.RegisterRoutes(api, usersModule.Handler)
 	asesorModule := newAsesorModule(asesorRepo, usersModule.Repository)
 	asesorhttp.RegisterRoutes(api, asesorModule.Handler)
+	asesiModule := newAsesiModule(pool, usersModule.Repository)
+	asesihttp.RegisterRoutes(api, asesiModule.Handler)
 	tukModule := newTUKModule(pool)
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
@@ -72,6 +76,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		API:           api,
 		Users:         usersModule,
 		Notifications: notificationsModule,
+		Asesi:         asesiModule,
 		Asesor:        asesorModule,
 		TUK:           tukModule,
 		Schema:        newSchemaModule(),
