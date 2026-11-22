@@ -17,7 +17,6 @@ func NewHandler(service *app.Service) *Handler {
 func (h *Handler) Presign(ctx context.Context, input *PresignInput) (*PresignOutput, error) {
 	result, err := h.service.Presign(ctx, app.PresignCommand{
 		Purpose:     input.Body.Purpose,
-		NIK:         input.Body.NIK,
 		ContentType: input.Body.ContentType,
 	})
 	if err != nil {
