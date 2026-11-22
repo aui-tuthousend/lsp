@@ -8,10 +8,6 @@ import (
 )
 
 func RegisterRoutes(api huma.API, handler *Handler) {
-	huma.Post(api, "/auth/register", handler.Register,
-		auth.PublicOperation,
-		httpplatform.WithDoc("auth-register", "Register user", "Pendaftaran mandiri; selalu membuat akun dengan role asesi.", "Auth"),
-	)
 	huma.Post(api, "/auth/login", handler.Login,
 		auth.PublicOperation,
 		httpplatform.WithDoc("auth-login", "Login user", "Authenticate user and return JWT token.", "Auth"),

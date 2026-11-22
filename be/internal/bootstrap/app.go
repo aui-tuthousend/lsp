@@ -14,10 +14,12 @@ import (
 	asesorhttp "lsp/internal/features/asesor/adapters/http"
 	asesorpg "lsp/internal/features/asesor/adapters/postgres"
 	notificationshttp "lsp/internal/features/notifications/adapters/http"
+	registrationhttp "lsp/internal/features/registration/adapters/http"
 	tukhttp "lsp/internal/features/tuk/adapters/http"
 	usershttp "lsp/internal/features/users/adapters/http"
 	"lsp/internal/platform/auth"
 	"lsp/internal/platform/config"
+	"lsp/internal/platform/database"
 	"lsp/internal/platform/events"
 	httpplatform "lsp/internal/platform/http"
 	"lsp/internal/platform/storage"
@@ -30,6 +32,7 @@ type App struct {
 	API           huma.API
 	Users         *UsersModule
 	Notifications *NotificationsModule
+	Registration  *RegistrationModule
 	Asesi         *AsesiModule
 	Asesor        *AsesorModule
 	TUK           *TUKModule
@@ -56,6 +59,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	}
 
 	bus := events.NewRedisBus(rdb)
+	txManager := database.NewTxManager(pool)
 
 	asesorRepo := asesorpg.NewRepository(pool)
 	usersModule := newUsersModule(pool, asesorRepo, jwtProvider)
@@ -64,6 +68,8 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	asesorhttp.RegisterRoutes(api, asesorModule.Handler)
 	asesiModule := newAsesiModule(pool, usersModule.Repository)
 	asesihttp.RegisterRoutes(api, asesiModule.Handler)
+	registrationModule := newRegistrationModule(usersModule.Service, asesiModule.Service, txManager)
+	registrationhttp.RegisterRoutes(api, registrationModule.Handler)
 	tukModule := newTUKModule(pool)
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
@@ -76,6 +82,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		API:           api,
 		Users:         usersModule,
 		Notifications: notificationsModule,
+		Registration:  registrationModule,
 		Asesi:         asesiModule,
 		Asesor:        asesorModule,
 		TUK:           tukModule,

@@ -11,9 +11,41 @@ type BackendUser = {
   name: string
 }
 
-type LoginResponse = {
+type AuthResponse = {
   token: string
   user: BackendUser
+}
+
+/** Payload pendaftaran asesi (data akun + profil), sesuai body `POST /auth/register`. */
+export type RegisterPayload = {
+  email: string
+  password: string
+  full_name: string
+  phone: string
+  nik: string
+  gender: string
+  birth_place: string
+  birth_date: string
+  nationality: string
+  occupation: string
+  education_level: string
+  ktp_address: string
+  domicile_same_as_ktp: boolean
+  domicile_address?: string
+  province: string
+  city: string
+  district: string
+  village: string
+  postal_code?: string
+}
+
+function sessionCookieOptions() {
+  return {
+    httpOnly: true,
+    sameSite: 'lax' as const,
+    path: '/',
+    secure: process.env.NODE_ENV === 'production',
+  }
 }
 
 export const getSessionFn = createServerFn({ method: 'GET' }).handler(async (): Promise<Session | null> => {
@@ -35,14 +67,27 @@ export const loginFn = createServerFn({ method: 'POST' })
       body: JSON.stringify(data),
     })
     if (!res.ok) throw new Error('login failed')
-    const { token, user } = (await res.json()) as LoginResponse
+    const { token, user } = (await res.json()) as AuthResponse
     const session: Session = { id: user.id, role: user.role, name: user.name, token }
-    setCookie(COOKIE, JSON.stringify(session), {
-      httpOnly: true,
-      sameSite: 'lax',
-      path: '/',
-      secure: process.env.NODE_ENV === 'production',
+    setCookie(COOKIE, JSON.stringify(session), sessionCookieOptions())
+    return session
+  })
+
+export const registerFn = createServerFn({ method: 'POST' })
+  .validator((data: RegisterPayload) => data)
+  .handler(async ({ data }): Promise<Session> => {
+    const res = await fetch(`${API_BASE_URL}/auth/register`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
     })
+    if (!res.ok) {
+      const message = await res.text().catch(() => '')
+      throw new Error(message || 'registration failed')
+    }
+    const { token, user } = (await res.json()) as AuthResponse
+    const session: Session = { id: user.id, role: user.role, name: user.name, token }
+    setCookie(COOKIE, JSON.stringify(session), sessionCookieOptions())
     return session
   })
 

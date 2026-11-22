@@ -7,19 +7,6 @@ import (
 	httpplatform "lsp/internal/platform/http"
 )
 
-type RegisterInput struct {
-	Body RegisterBody `json:"body"`
-}
-
-// RegisterBody adalah pendaftaran mandiri; role selalu asesi (lihat service).
-type RegisterBody struct {
-	Email           string  `json:"email" format:"email" maxLength:"255"`
-	Password        string  `json:"password" minLength:"8" maxLength:"72"`
-	Name            string  `json:"name" minLength:"2" maxLength:"255"`
-	Phone           *string `json:"phone,omitempty" maxLength:"20"`
-	NomorRegistrasi *string `json:"nomor_registrasi,omitempty" maxLength:"50"`
-}
-
 type CreateUserInput struct {
 	Body CreateUserBody `json:"body"`
 }

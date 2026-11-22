@@ -17,14 +17,6 @@ func NewHandler(service *app.Service) *Handler {
 	return &Handler{service: service}
 }
 
-func (h *Handler) Register(ctx context.Context, input *RegisterInput) (*AuthOutput, error) {
-	result, err := h.service.Register(ctx, app.RegisterCommand{Email: input.Body.Email, Password: input.Body.Password, Name: input.Body.Name, Phone: input.Body.Phone, NomorRegistrasi: input.Body.NomorRegistrasi})
-	if err != nil {
-		return nil, mapError(err)
-	}
-	return &AuthOutput{Body: AuthResponse{Token: result.Token, User: toUserDTO(result.User)}}, nil
-}
-
 // Create dipakai admin untuk membuat user dengan role apa pun.
 func (h *Handler) Create(ctx context.Context, input *CreateUserInput) (*UserOutput, error) {
 	user, err := h.service.CreateUser(ctx, app.CreateUserCommand{Email: input.Body.Email, Password: input.Body.Password, Name: input.Body.Name, Role: domain.Role(input.Body.Role), Phone: input.Body.Phone, NomorRegistrasi: input.Body.NomorRegistrasi})

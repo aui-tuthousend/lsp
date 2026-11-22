@@ -30,7 +30,9 @@
     "tailwind-merge": "latest",
     "tailwindcss": "latest",
     "vite": "latest",
-    "vite-tsconfig-paths": "latest"
+    "vite-tsconfig-paths": "latest",
+    "zod": "^4.6.7",
+    "zustand": "^5.1.0"
   },
   "devDependencies": {
     "@types/node": "latest",
