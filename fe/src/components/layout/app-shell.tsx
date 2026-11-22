@@ -1,10 +1,19 @@
 import { Outlet, useRouter } from '@tanstack/react-router'
-import { Menu, PanelLeftClose, PanelLeftOpen, X } from 'lucide-react'
+import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, User, X } from 'lucide-react'
 import { useState } from 'react'
 import { toast } from 'sonner'
+import { Avatar } from '@/components/ui/avatar'
 import { Button } from '@/components/ui/button'
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu'
 import { logoutFn } from '@/lib/auth/session'
 import type { Session } from '@/lib/auth/types'
+import { profileForRole } from '@/lib/auth/types'
 import { useNotifications } from '@/lib/sse/use-notifications'
 import { cn } from '@/lib/utils'
 import { Sidebar } from './sidebar'
@@ -20,6 +29,15 @@ export function AppShell({ session }: { session: Session }) {
     await router.invalidate()
     toast.success('Berhasil logout')
     await router.navigate({ to: '/login', replace: true })
+  }
+
+  function openProfile() {
+    const path = profileForRole(session.role)
+    if (!path) {
+      toast.info('Halaman profil belum tersedia')
+      return
+    }
+    void router.navigate({ to: path })
   }
 
   return (
@@ -77,9 +95,32 @@ export function AppShell({ session }: { session: Session }) {
                 <div className="truncate text-xs text-slate-500">{session.role}</div>
               </div>
             </div>
-            <Button variant="outline" onClick={logout} className="shrink-0">
-              Logout
-            </Button>
+            <DropdownMenu className="shrink-0">
+              <DropdownMenuTrigger
+                aria-label="Menu akun"
+                className="rounded-full outline-none transition focus-visible:ring-2 focus-visible:ring-slate-300"
+              >
+                <Avatar name={session.name} />
+              </DropdownMenuTrigger>
+              <DropdownMenuContent className="w-56">
+                <div className="px-2.5 py-2">
+                  <div className="truncate text-sm font-medium text-slate-900">{session.name}</div>
+                  <div className="truncate text-xs text-slate-500">{session.role}</div>
+                </div>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem onSelect={openProfile}>
+                  <User className="h-4 w-4" />
+                  Profil
+                </DropdownMenuItem>
+                <DropdownMenuItem
+                  onSelect={() => void logout()}
+                  className="text-rose-600 hover:bg-rose-50"
+                >
+                  <LogOut className="h-4 w-4" />
+                  Logout
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </header>
           <main className={cn('min-w-0 flex-1 overflow-x-hidden p-3 sm:p-4 lg:p-6')}>
             <div className="mx-auto w-full max-w-7xl">

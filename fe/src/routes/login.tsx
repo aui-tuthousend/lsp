@@ -1,4 +1,4 @@
-import { createFileRoute, useRouter } from '@tanstack/react-router'
+import { createFileRoute, Link, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
@@ -48,6 +48,9 @@ function LoginPage() {
               {loading ? 'Memproses...' : 'Masuk'}
             </Button>
           </form>
+          <p className="text-center text-slate-500 mt-2">
+            Belum punya akun? <Link to="/register">Daftar disini</Link>
+          </p>
         </CardContent>
       </Card>
     </div>

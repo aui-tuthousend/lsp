@@ -1,6 +1,7 @@
 package auth
 
 import (
+	"context"
 	"encoding/json"
 	"strings"
 
@@ -112,4 +113,40 @@ func RequireRoles(roles ...string) func(*huma.Operation) {
 			next(ctx)
 		})
 	}
+}
+
+// RequireOwnerOrRoles mengizinkan operasi bila user memiliki salah satu role,
+// atau bila user adalah pemilik resource yang ditunjuk path param `param`.
+// `ownerOf` memetakan nilai path param tersebut menjadi id user pemilik.
+func RequireOwnerOrRoles(param string, ownerOf func(ctx context.Context, id string) (string, bool), roles ...string) func(*huma.Operation) {
+	allowed := make(map[string]struct{}, len(roles))
+	for _, role := range roles {
+		allowed[role] = struct{}{}
+	}
+	return func(o *huma.Operation) {
+		o.Middlewares = append(o.Middlewares, func(ctx huma.Context, next func(huma.Context)) {
+			claims, ok := ClaimsFromContext(ctx.Context())
+			if !ok {
+				writeUnauthorized(ctx, "unauthenticated")
+				return
+			}
+			if _, ok := allowed[claims.Role]; ok {
+				next(ctx)
+				return
+			}
+			if ownerID, found := ownerOf(ctx.Context(), ctx.Param(param)); found && ownerID == claims.UserID {
+				next(ctx)
+				return
+			}
+			writeForbidden(ctx, "forbidden")
+		})
+	}
+}
+
+// RequireSelfOrRoles mengizinkan operasi bila user memiliki salah satu role,
+// atau bila id pada path param `param` sama dengan id user yang terautentikasi.
+func RequireSelfOrRoles(param string, roles ...string) func(*huma.Operation) {
+	return RequireOwnerOrRoles(param, func(_ context.Context, id string) (string, bool) {
+		return id, true
+	}, roles...)
 }

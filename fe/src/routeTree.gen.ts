@@ -28,6 +28,7 @@ import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as ScanTokenRouteImport } from './routes/scan.$token'
 import { Route as ValidatorIndexRouteImport } from './routes/validator/index'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
+import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
 import { Route as AsesorAssignmentsAssignmentIdRouteImport } from './routes/asesor/assignments.$assignmentId'
 
 const IndexRoute = IndexRouteImport.update({
@@ -125,6 +126,11 @@ const VerifyTokenRoute = VerifyTokenRouteImport.update({
   path: '/verify/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AsesiProfilIndexRoute = AsesiProfilIndexRouteImport.update({
+  id: '/profil/',
+  path: '/profil/',
+  getParentRoute: () => AsesiRouteRoute,
+} as any)
 const AsesorAssignmentsAssignmentIdRoute =
   AsesorAssignmentsAssignmentIdRouteImport.update({
     id: '/$assignmentId',
@@ -153,6 +159,7 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -170,6 +177,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/validator': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/asesi/profil': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -193,6 +201,7 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -217,6 +226,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
+    | '/asesi/profil/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -234,6 +244,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/validator'
     | '/asesor/assignments/$assignmentId'
+    | '/asesi/profil'
   id:
     | '__root__'
     | '/'
@@ -256,6 +267,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
+    | '/asesi/profil/'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -406,6 +418,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/asesi/profil/': {
+      id: '/asesi/profil/'
+      path: '/profil'
+      fullPath: '/asesi/profil/'
+      preLoaderRoute: typeof AsesiProfilIndexRouteImport
+      parentRoute: typeof AsesiRouteRoute
+    }
     '/asesor/assignments/$assignmentId': {
       id: '/asesor/assignments/$assignmentId'
       path: '/$assignmentId'
@@ -436,10 +455,12 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface AsesiRouteRouteChildren {
   AsesiIndexRoute: typeof AsesiIndexRoute
+  AsesiProfilIndexRoute: typeof AsesiProfilIndexRoute
 }
 
 const AsesiRouteRouteChildren: AsesiRouteRouteChildren = {
   AsesiIndexRoute: AsesiIndexRoute,
+  AsesiProfilIndexRoute: AsesiProfilIndexRoute,
 }
 
 const AsesiRouteRouteWithChildren = AsesiRouteRoute._addFileChildren(

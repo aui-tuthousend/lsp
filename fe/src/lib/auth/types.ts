@@ -21,3 +21,13 @@ export function homeForRole(role: Role): string {
       return '/manager'
   }
 }
+
+/** Path halaman profil per role. `null` bila belum tersedia. */
+export function profileForRole(role: Role): string | null {
+  switch (role) {
+    case 'asesi':
+      return '/asesi/profil'
+    default:
+      return null
+  }
+}

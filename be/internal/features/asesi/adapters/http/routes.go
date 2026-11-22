@@ -9,6 +9,8 @@ import (
 
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
+	selfOrAdmin := auth.RequireSelfOrRoles("user_id", string(domain.RoleAdmin))
+	ownerOrAdmin := requireProfileOwnerOrRoles(handler, string(domain.RoleAdmin))
 
 	huma.Post(api, "/asesi-profiles", handler.Create,
 		adminOnly,
@@ -20,15 +22,15 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("asesi-profiles-list", "List asesi profiles", "Daftar profil data diri asesi.", "Asesi"),
 	)
 	huma.Get(api, "/asesi-profiles/{id}", handler.Get,
-		adminOnly,
+		ownerOrAdmin,
 		httpplatform.WithDoc("asesi-profiles-get", "Get asesi profile", "Ambil detail profil data diri asesi.", "Asesi"),
 	)
 	huma.Get(api, "/users/{user_id}/asesi-profile", handler.GetByUser,
-		adminOnly,
+		selfOrAdmin,
 		httpplatform.WithDoc("asesi-profiles-get-by-user", "Get asesi profile by user", "Ambil profil data diri asesi berdasarkan user ID.", "Asesi"),
 	)
 	huma.Patch(api, "/asesi-profiles/{id}", handler.Update,
-		adminOnly,
+		ownerOrAdmin,
 		httpplatform.WithDoc("asesi-profiles-update", "Update asesi profile", "Ubah sebagian profil data diri asesi.", "Asesi"),
 	)
 	huma.Delete(api, "/asesi-profiles/{id}", handler.Delete,
