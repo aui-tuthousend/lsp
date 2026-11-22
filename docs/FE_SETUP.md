@@ -65,7 +65,11 @@ bunx --bun shadcn@latest add sidebar button dropdown-menu avatar input form tabl
 ```
 
 - Komponen masuk ke `src/components/ui/`.
-- Blok `Sidebar` shadcn (`SidebarProvider`, `Sidebar`, `SidebarMenu`, `SidebarMenuButton`) dipakai **sekali** di `AppShell`.
+- `AppShell` wajib **mobile-first**: header sticky, konten `min-w-0`, padding responsif (`p-3 sm:p-4 lg:p-6`), dan layout tidak boleh bergantung pada viewport desktop.
+- Sidebar dipakai **sekali** di `AppShell`, dengan behavior:
+  - desktop (`lg+`): sidebar terlihat dan bisa collapse/expand;
+  - mobile (`<lg`): sidebar menjadi drawer overlay yang dibuka lewat tombol menu dan tertutup saat klik backdrop/link.
+- Setiap desain/halaman baru harus tetap nyaman di layar 320px: hindari fixed width, gunakan `w-full`, `max-w-*`, `overflow-x-auto` untuk tabel, dan `grid-cols-1 sm:/md:/lg:` untuk grid responsif.
 
 ---
 

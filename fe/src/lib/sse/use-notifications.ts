@@ -1,9 +1,8 @@
 import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@/lib/auth/types'
+import { API_BASE_URL } from '@/lib/api-base'
 import { eventInvalidation, type AppEvent } from './events'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
 
 export function useNotifications(session: Session | null) {
   const queryClient = useQueryClient()

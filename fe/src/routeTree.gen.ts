@@ -15,7 +15,6 @@ import { Route as AsesiRouteRouteImport } from './routes/asesi/route'
 import { Route as AsesorRouteRouteImport } from './routes/asesor/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManagerRouteRouteImport } from './routes/manager/route'
-import { Route as RegisterRouteImport } from './routes/register'
 import { Route as ValidatorRouteRouteImport } from './routes/validator/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAsesorProfilesRouteImport } from './routes/admin/asesor-profiles'
@@ -25,6 +24,7 @@ import { Route as AsesiIndexRouteImport } from './routes/asesi/index'
 import { Route as AsesorIndexRouteImport } from './routes/asesor/index'
 import { Route as AsesorAssignmentsRouteImport } from './routes/asesor/assignments'
 import { Route as ManagerIndexRouteImport } from './routes/manager/index'
+import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as ScanTokenRouteImport } from './routes/scan.$token'
 import { Route as ValidatorIndexRouteImport } from './routes/validator/index'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
@@ -58,11 +58,6 @@ const LoginRoute = LoginRouteImport.update({
 const ManagerRouteRoute = ManagerRouteRouteImport.update({
   id: '/manager',
   path: '/manager',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RegisterRoute = RegisterRouteImport.update({
-  id: '/register',
-  path: '/register',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ValidatorRouteRoute = ValidatorRouteRouteImport.update({
@@ -110,6 +105,11 @@ const ManagerIndexRoute = ManagerIndexRouteImport.update({
   path: '/',
   getParentRoute: () => ManagerRouteRoute,
 } as any)
+const RegisterIndexRoute = RegisterIndexRouteImport.update({
+  id: '/register/',
+  path: '/register/',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ScanTokenRoute = ScanTokenRouteImport.update({
   id: '/scan/$token',
   path: '/scan/$token',
@@ -140,7 +140,6 @@ export interface FileRoutesByFullPath {
   '/manager': typeof ManagerRouteRouteWithChildren
   '/validator': typeof ValidatorRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
   '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
@@ -151,13 +150,13 @@ export interface FileRoutesByFullPath {
   '/asesi/': typeof AsesiIndexRoute
   '/asesor/': typeof AsesorIndexRoute
   '/manager/': typeof ManagerIndexRoute
+  '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
   '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
@@ -168,6 +167,7 @@ export interface FileRoutesByTo {
   '/asesi': typeof AsesiIndexRoute
   '/asesor': typeof AsesorIndexRoute
   '/manager': typeof ManagerIndexRoute
+  '/register': typeof RegisterIndexRoute
   '/validator': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
 }
@@ -180,7 +180,6 @@ export interface FileRoutesById {
   '/manager': typeof ManagerRouteRouteWithChildren
   '/validator': typeof ValidatorRouteRouteWithChildren
   '/login': typeof LoginRoute
-  '/register': typeof RegisterRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
   '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
@@ -191,6 +190,7 @@ export interface FileRoutesById {
   '/asesi/': typeof AsesiIndexRoute
   '/asesor/': typeof AsesorIndexRoute
   '/manager/': typeof ManagerIndexRoute
+  '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
 }
@@ -204,7 +204,6 @@ export interface FileRouteTypes {
     | '/manager'
     | '/validator'
     | '/login'
-    | '/register'
     | '/admin/asesor-profiles'
     | '/admin/tuks'
     | '/admin/users'
@@ -215,13 +214,13 @@ export interface FileRouteTypes {
     | '/asesi/'
     | '/asesor/'
     | '/manager/'
+    | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
-    | '/register'
     | '/admin/asesor-profiles'
     | '/admin/tuks'
     | '/admin/users'
@@ -232,6 +231,7 @@ export interface FileRouteTypes {
     | '/asesi'
     | '/asesor'
     | '/manager'
+    | '/register'
     | '/validator'
     | '/asesor/assignments/$assignmentId'
   id:
@@ -243,7 +243,6 @@ export interface FileRouteTypes {
     | '/manager'
     | '/validator'
     | '/login'
-    | '/register'
     | '/admin/asesor-profiles'
     | '/admin/tuks'
     | '/admin/users'
@@ -254,6 +253,7 @@ export interface FileRouteTypes {
     | '/asesi/'
     | '/asesor/'
     | '/manager/'
+    | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
   fileRoutesById: FileRoutesById
@@ -266,9 +266,9 @@ export interface RootRouteChildren {
   ManagerRouteRoute: typeof ManagerRouteRouteWithChildren
   ValidatorRouteRoute: typeof ValidatorRouteRouteWithChildren
   LoginRoute: typeof LoginRoute
-  RegisterRoute: typeof RegisterRoute
   ScanTokenRoute: typeof ScanTokenRoute
   VerifyTokenRoute: typeof VerifyTokenRoute
+  RegisterIndexRoute: typeof RegisterIndexRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -313,13 +313,6 @@ declare module '@tanstack/react-router' {
       path: '/manager'
       fullPath: '/manager'
       preLoaderRoute: typeof ManagerRouteRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/register': {
-      id: '/register'
-      path: '/register'
-      fullPath: '/register'
-      preLoaderRoute: typeof RegisterRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/validator': {
@@ -384,6 +377,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/manager/'
       preLoaderRoute: typeof ManagerIndexRouteImport
       parentRoute: typeof ManagerRouteRoute
+    }
+    '/register/': {
+      id: '/register/'
+      path: '/register'
+      fullPath: '/register/'
+      preLoaderRoute: typeof RegisterIndexRouteImport
+      parentRoute: typeof rootRouteImport
     }
     '/scan/$token': {
       id: '/scan/$token'
@@ -503,9 +503,9 @@ const rootRouteChildren: RootRouteChildren = {
   ManagerRouteRoute: ManagerRouteRouteWithChildren,
   ValidatorRouteRoute: ValidatorRouteRouteWithChildren,
   LoginRoute: LoginRoute,
-  RegisterRoute: RegisterRoute,
   ScanTokenRoute: ScanTokenRoute,
   VerifyTokenRoute: VerifyTokenRoute,
+  RegisterIndexRoute: RegisterIndexRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

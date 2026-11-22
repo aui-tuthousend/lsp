@@ -36,7 +36,7 @@ dev: ## Jalankan API (Go) + dev server FE sekaligus (infra diasumsikan hidup)
 	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; \
 	trap 'kill 0' INT TERM; \
 	( go -C be run $(API_MAIN) ) & \
-	( cd fe && ./node_modules/.bin/vite dev ) & \
+	( cd fe && ./node_modules/.bin/vite dev --host ) & \
 	wait
 
 run: ## Jalankan API lokal saja (tanpa menyentuh Docker)
@@ -78,8 +78,8 @@ tidy: ## Rapikan dependency backend
 fe-install: ## Install dependency frontend (bun)
 	cd fe && bun install
 
-fe-dev: ## Jalankan dev server frontend
-	cd fe && ./node_modules/.bin/vite dev
+fe-dev: ## Jalankan dev server frontend (bisa diakses dari device lain di jaringan)
+	cd fe && ./node_modules/.bin/vite dev --host
 
 fe-build: ## Build frontend
 	cd fe && ./node_modules/.bin/vite build

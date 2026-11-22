@@ -1,5 +1,6 @@
 import { createFileRoute, useRouter } from '@tanstack/react-router'
 import { useState } from 'react'
+import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -16,17 +17,20 @@ function LoginPage() {
   const router = useRouter()
   const [email, setEmail] = useState('admin@lsp.local')
   const [password, setPassword] = useState('password')
-  const [error, setError] = useState<string | null>(null)
+  const [loading, setLoading] = useState(false)
 
   async function submit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault()
-    setError(null)
+    setLoading(true)
     try {
       const session = await loginFn({ data: { email, password } })
       await router.invalidate()
-      await router.navigate({ to: homeForRole(session.role) })
+      toast.success('Login berhasil', { description: `Selamat datang, ${session.name}` })
+      await router.navigate({ to: homeForRole(session.role), replace: true })
     } catch {
-      setError('Email atau password tidak valid')
+      toast.error('Login gagal', { description: 'Email atau password tidak valid' })
+    } finally {
+      setLoading(false)
     }
   }
 
@@ -40,8 +44,9 @@ function LoginPage() {
           <form className="space-y-4" onSubmit={submit}>
             <Input value={email} onChange={(event) => setEmail(event.target.value)} placeholder="Email" type="email" />
             <Input value={password} onChange={(event) => setPassword(event.target.value)} placeholder="Password" type="password" />
-            {error ? <p className="text-sm text-red-600">{error}</p> : null}
-            <Button className="w-full" type="submit">Masuk</Button>
+            <Button className="w-full" type="submit" disabled={loading}>
+              {loading ? 'Memproses...' : 'Masuk'}
+            </Button>
           </form>
         </CardContent>
       </Card>

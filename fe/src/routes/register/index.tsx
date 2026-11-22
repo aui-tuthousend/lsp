@@ -2,7 +2,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { requireGuest } from '@/lib/auth/guards'
 
-export const Route = createFileRoute('/register')({
+export const Route = createFileRoute('/register/')({
   beforeLoad: ({ context }) => requireGuest(context),
   component: RegisterPage,
 })
