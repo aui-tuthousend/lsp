@@ -8,11 +8,11 @@ SEED_MAIN := ./cmd/seed/main.go
 
 .DEFAULT_GOAL := help
 
-.PHONY: help dev up down stop restart logs ps run worker seed migrate psql redis-cli build test fmt vet tidy fe-install fe-dev fe-build fe-typecheck clean
+.PHONY: help dev up down stop restart logs ps run worker seed migrate psql redis-cli build test fmt vet tidy fe-install fe-dev fe-build fe-typecheck r2-cors clean
 
 help: ## Tampilkan daftar target
 	@echo "Target yang tersedia:"
-	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
+	@grep -E '^[a-zA-Z0-9_-]+:.*?## .*$$' $(MAKEFILE_LIST) | \
 		awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-12s\033[0m %s\n", $$1, $$2}'
 
 up: ## Jalankan Postgres + Dragonfly di Docker dan tunggu siap
@@ -86,6 +86,11 @@ fe-build: ## Build frontend
 
 fe-typecheck: ## Typecheck frontend
 	cd fe && ./node_modules/.bin/tsc --noEmit
+
+r2-cors: ## Terapkan CORS policy bucket R2 dari be/cors.json (via bunx wrangler)
+	@set -a; [ -f $(ENV_FILE) ] && . ./$(ENV_FILE); set +a; \
+	test -n "$$R2_BUCKET" || { echo "R2_BUCKET belum diisi di $(ENV_FILE)"; exit 1; }; \
+	bunx wrangler r2 bucket cors set "$$R2_BUCKET" --file be/cors.json --force
 
 clean: ## Hentikan container dan hapus volume data
 	$(COMPOSE) down -v

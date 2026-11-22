@@ -37,6 +37,10 @@ export type RegisterPayload = {
   district: string
   village: string
   postal_code?: string
+  photo?: string
+  ktp_file?: string
+  cv_file?: string
+  npwp_file?: string
 }
 
 function sessionCookieOptions() {

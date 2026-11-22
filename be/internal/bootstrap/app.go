@@ -16,6 +16,7 @@ import (
 	notificationshttp "lsp/internal/features/notifications/adapters/http"
 	registrationhttp "lsp/internal/features/registration/adapters/http"
 	tukhttp "lsp/internal/features/tuk/adapters/http"
+	uploadshttp "lsp/internal/features/uploads/adapters/http"
 	usershttp "lsp/internal/features/users/adapters/http"
 	"lsp/internal/platform/auth"
 	"lsp/internal/platform/config"
@@ -34,6 +35,7 @@ type App struct {
 	Notifications *NotificationsModule
 	Registration  *RegistrationModule
 	Asesi         *AsesiModule
+	Uploads       *UploadsModule
 	Asesor        *AsesorModule
 	TUK           *TUKModule
 	Schema        *SchemaModule
@@ -66,10 +68,12 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	usershttp.RegisterRoutes(api, usersModule.Handler)
 	asesorModule := newAsesorModule(asesorRepo, usersModule.Repository)
 	asesorhttp.RegisterRoutes(api, asesorModule.Handler)
-	asesiModule := newAsesiModule(pool, usersModule.Repository)
+	asesiModule := newAsesiModule(pool, usersModule.Repository, objStorage)
 	asesihttp.RegisterRoutes(api, asesiModule.Handler)
 	registrationModule := newRegistrationModule(usersModule.Service, asesiModule.Service, txManager)
 	registrationhttp.RegisterRoutes(api, registrationModule.Handler)
+	uploadsModule := newUploadsModule(objStorage)
+	uploadshttp.RegisterRoutes(api, uploadsModule.Handler)
 	tukModule := newTUKModule(pool)
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
@@ -84,6 +88,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		Notifications: notificationsModule,
 		Registration:  registrationModule,
 		Asesi:         asesiModule,
+		Uploads:       uploadsModule,
 		Asesor:        asesorModule,
 		TUK:           tukModule,
 		Schema:        newSchemaModule(),

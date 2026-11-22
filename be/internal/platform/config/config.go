@@ -123,8 +123,8 @@ func (c Config) HasR2Config() bool {
 }
 
 func (c Config) ValidateR2() error {
-	if c.R2AccountID == "" || c.R2AccessKeyID == "" || c.R2SecretAccessKey == "" || c.R2Bucket == "" || c.R2PublicBaseURL == "" {
-		return errors.New("R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET, and R2_PUBLIC_BASE_URL are required")
+	if c.R2AccountID == "" || c.R2AccessKeyID == "" || c.R2SecretAccessKey == "" || c.R2Bucket == "" {
+		return errors.New("R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, and R2_BUCKET are required")
 	}
 	if c.R2Region == "" {
 		return errors.New("R2_REGION is required")

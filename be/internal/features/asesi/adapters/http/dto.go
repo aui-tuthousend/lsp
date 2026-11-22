@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+	"strings"
 	"time"
 
 	"lsp/internal/features/asesi/domain"
@@ -115,7 +117,12 @@ type AsesiProfileDTO struct {
 
 type DeleteOutput struct{}
 
-func toDTO(profile domain.Profile) AsesiProfileDTO {
+// fileURLExpiry adalah masa berlaku presigned GET URL untuk file privat.
+const fileURLExpiry = 15 * time.Minute
+
+// toDTO mengubah profil menjadi DTO. Object key dokumen ditandatangani menjadi
+// presigned GET URL agar bisa diakses langsung (bucket privat).
+func (h *Handler) toDTO(ctx context.Context, profile domain.Profile) AsesiProfileDTO {
 	return AsesiProfileDTO{
 		ID:                profile.ID,
 		UserID:            profile.UserID,
@@ -136,13 +143,30 @@ func toDTO(profile domain.Profile) AsesiProfileDTO {
 		District:          profile.District,
 		Village:           profile.Village,
 		PostalCode:        profile.PostalCode,
-		Photo:             profile.Photo,
-		KTPFile:           profile.KTPFile,
-		CVFile:            profile.CVFile,
-		NPWPFile:          profile.NPWPFile,
+		Photo:             h.fileURL(ctx, profile.Photo),
+		KTPFile:           h.fileURL(ctx, profile.KTPFile),
+		CVFile:            h.fileURL(ctx, profile.CVFile),
+		NPWPFile:          h.fileURL(ctx, profile.NPWPFile),
 		CreatedAt:         profile.CreatedAt,
 		UpdatedAt:         profile.UpdatedAt,
 	}
+}
+
+// fileURL menandatangani object key menjadi presigned GET URL. Bila storage
+// tidak dikonfigurasi, nilai sudah berupa URL penuh, atau penandatanganan
+// gagal, nilai asli dikembalikan apa adanya.
+func (h *Handler) fileURL(ctx context.Context, key *string) *string {
+	if key == nil || *key == "" {
+		return key
+	}
+	if h.files == nil || strings.HasPrefix(*key, "http://") || strings.HasPrefix(*key, "https://") {
+		return key
+	}
+	url, err := h.files.PresignedGetURL(ctx, *key, fileURLExpiry)
+	if err != nil {
+		return key
+	}
+	return &url
 }
 
 func parseDate(value string) (time.Time, error) {

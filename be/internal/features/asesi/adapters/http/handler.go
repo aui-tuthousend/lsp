@@ -6,14 +6,16 @@ import (
 	"github.com/danielgtaylor/huma/v2"
 	"lsp/internal/features/asesi/app"
 	httpplatform "lsp/internal/platform/http"
+	"lsp/internal/platform/storage"
 )
 
 type Handler struct {
 	service *app.Service
+	files   storage.ObjectStorage
 }
 
-func NewHandler(service *app.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *app.Service, files storage.ObjectStorage) *Handler {
+	return &Handler{service: service, files: files}
 }
 
 func (h *Handler) Create(ctx context.Context, input *CreateInput) (*AsesiProfileOutput, error) {
@@ -48,7 +50,7 @@ func (h *Handler) Create(ctx context.Context, input *CreateInput) (*AsesiProfile
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &AsesiProfileOutput{Body: toDTO(profile)}, nil
+	return &AsesiProfileOutput{Body: h.toDTO(ctx, profile)}, nil
 }
 
 func (h *Handler) Update(ctx context.Context, input *UpdateInput) (*AsesiProfileOutput, error) {
@@ -83,7 +85,7 @@ func (h *Handler) Update(ctx context.Context, input *UpdateInput) (*AsesiProfile
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &AsesiProfileOutput{Body: toDTO(profile)}, nil
+	return &AsesiProfileOutput{Body: h.toDTO(ctx, profile)}, nil
 }
 
 func (h *Handler) Get(ctx context.Context, input *GetInput) (*AsesiProfileOutput, error) {
@@ -91,7 +93,7 @@ func (h *Handler) Get(ctx context.Context, input *GetInput) (*AsesiProfileOutput
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &AsesiProfileOutput{Body: toDTO(profile)}, nil
+	return &AsesiProfileOutput{Body: h.toDTO(ctx, profile)}, nil
 }
 
 func (h *Handler) GetByUser(ctx context.Context, input *GetByUserInput) (*AsesiProfileOutput, error) {
@@ -99,7 +101,7 @@ func (h *Handler) GetByUser(ctx context.Context, input *GetByUserInput) (*AsesiP
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &AsesiProfileOutput{Body: toDTO(profile)}, nil
+	return &AsesiProfileOutput{Body: h.toDTO(ctx, profile)}, nil
 }
 
 func (h *Handler) List(ctx context.Context, input *ListInput) (*httpplatform.PagedResponse[AsesiProfileDTO], error) {
@@ -110,7 +112,7 @@ func (h *Handler) List(ctx context.Context, input *ListInput) (*httpplatform.Pag
 	}
 	items := make([]AsesiProfileDTO, 0, len(result.Items))
 	for _, item := range result.Items {
-		items = append(items, toDTO(item))
+		items = append(items, h.toDTO(ctx, item))
 	}
 	return httpplatform.NewPagedResponse(items, input.Page, limit, result.Total), nil
 }

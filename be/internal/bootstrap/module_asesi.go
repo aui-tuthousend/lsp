@@ -6,6 +6,7 @@ import (
 	asesipg "lsp/internal/features/asesi/adapters/postgres"
 	asesiapp "lsp/internal/features/asesi/app"
 	userspg "lsp/internal/features/users/adapters/postgres"
+	"lsp/internal/platform/storage"
 )
 
 type AsesiModule struct {
@@ -14,9 +15,9 @@ type AsesiModule struct {
 	Handler    *asesihttp.Handler
 }
 
-func newAsesiModule(pool *pgxpool.Pool, usersRepo *userspg.Repository) *AsesiModule {
+func newAsesiModule(pool *pgxpool.Pool, usersRepo *userspg.Repository, objStorage storage.ObjectStorage) *AsesiModule {
 	repo := asesipg.NewRepository(pool)
 	service := asesiapp.NewService(repo, usersRepo)
-	handler := asesihttp.NewHandler(service)
+	handler := asesihttp.NewHandler(service, objStorage)
 	return &AsesiModule{Repository: repo, Service: service, Handler: handler}
 }

@@ -1,11 +1,25 @@
 import { registerFn } from '@/lib/auth/session'
+import { uploadFile, type UploadPurpose } from '@/lib/upload'
 import type { CreateAsesiProfiles } from './-types'
 
+async function uploadIfPresent(file: File | null, purpose: UploadPurpose) {
+  if (!file) return undefined
+  return uploadFile(file, purpose)
+}
+
 /**
- * Kirim pendaftaran asesi (akun + profil) ke backend.
- * Memakai server function agar cookie sesi ikut di-set, konsisten dengan login.
+ * Unggah dokumen (bila ada) lalu kirim pendaftaran asesi (akun + profil) ke
+ * backend. Memakai server function agar cookie sesi ikut di-set, konsisten
+ * dengan login. Dokumen dikirim sebagai object key hasil unggah.
  */
-export function registerAsesi(values: CreateAsesiProfiles) {
+export async function registerAsesi(values: CreateAsesiProfiles) {
+  const [photo, ktpFile, cvFile, npwpFile] = await Promise.all([
+    uploadIfPresent(values.photo, 'photo'),
+    uploadIfPresent(values.ktp_file, 'ktp_file'),
+    uploadIfPresent(values.cv_file, 'cv_file'),
+    uploadIfPresent(values.npwp_file, 'npwp_file'),
+  ])
+
   return registerFn({
     data: {
       email: values.email.trim(),
@@ -27,6 +41,10 @@ export function registerAsesi(values: CreateAsesiProfiles) {
       district: values.district.trim(),
       village: values.village.trim(),
       postal_code: values.postal_code.trim() || undefined,
+      photo,
+      ktp_file: ktpFile,
+      cv_file: cvFile,
+      npwp_file: npwpFile,
     },
   })
 }
