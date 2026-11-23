@@ -28,7 +28,7 @@ export const navSections: NavSection[] = [
     title: 'Master Data',
     items: [
       { label: 'TUK', to: '/admin/tuks', icon: Building2, roles: ['admin'] },
-      { label: 'Profil Asesor', to: '/admin/asesor-profiles', icon: Users, roles: ['admin'] },
+      { label: 'Asesor', to: '/admin/asesor', icon: Users, roles: ['admin'] },
       { label: 'Users', to: '/admin/users', icon: UserCog, roles: ['admin'] },
     ],
   },

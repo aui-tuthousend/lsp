@@ -24,4 +24,17 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		auth.RequireRoles(string(domain.RoleAdmin)),
 		httpplatform.WithDoc("users-list", "List users", "Return paginated users list.", "Users"),
 	)
+	huma.Get(api, "/users/{id}", handler.Get,
+		auth.RequireRoles(string(domain.RoleAdmin)),
+		httpplatform.WithDoc("users-get", "Get user", "Ambil satu user berdasarkan id (khusus admin).", "Users"),
+	)
+	huma.Patch(api, "/users/{id}", handler.Update,
+		auth.RequireRoles(string(domain.RoleAdmin)),
+		httpplatform.WithDoc("users-update", "Update user", "Ubah sebagian data user (khusus admin).", "Users"),
+	)
+	huma.Delete(api, "/users/{id}", handler.Delete,
+		auth.RequireRoles(string(domain.RoleAdmin)),
+		httpplatform.WithStatus(204),
+		httpplatform.WithDoc("users-delete", "Delete user", "Hapus (soft delete) user (khusus admin).", "Users"),
+	)
 }

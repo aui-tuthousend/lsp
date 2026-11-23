@@ -29,6 +29,29 @@ type LoginBody struct {
 	Password string `json:"password" minLength:"8" maxLength:"72"`
 }
 
+type GetUserInput struct {
+	ID string `path:"id"`
+}
+
+type UpdateUserInput struct {
+	ID   string         `path:"id"`
+	Body UpdateUserBody `json:"body"`
+}
+
+type UpdateUserBody struct {
+	Name            *string `json:"name,omitempty" minLength:"2" maxLength:"255"`
+	Phone           *string `json:"phone,omitempty" maxLength:"20"`
+	NomorRegistrasi *string `json:"nomor_registrasi,omitempty" maxLength:"50"`
+	Password        *string `json:"password,omitempty" minLength:"8" maxLength:"72"`
+	IsValid         *bool   `json:"isvalid,omitempty"`
+}
+
+type DeleteUserInput struct {
+	ID string `path:"id"`
+}
+
+type DeleteUserOutput struct{}
+
 type EmptyInput struct{}
 
 type ListUsersInput struct {

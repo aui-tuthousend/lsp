@@ -28,6 +28,40 @@ func (r *Repository) Create(ctx context.Context, user domain.User) error {
 	return mapError(err)
 }
 
+// Patch mengubah sebagian data user; kolom yang tidak dikirim tetap.
+func (r *Repository) Patch(ctx context.Context, patch domain.UserPatch) (domain.User, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	return scanUser(db.QueryRow(ctx, `
+		UPDATE users AS u
+		SET name = COALESCE($2::varchar, u.name),
+		    phone = COALESCE($3::varchar, u.phone),
+		    nomor_registrasi = COALESCE($4::varchar, u.nomor_registrasi),
+		    password_hash = COALESCE($5::text, u.password_hash),
+		    isvalid = COALESCE($6::boolean, u.isvalid)
+		WHERE u.id = $1 AND u.deleted_at IS NULL
+		RETURNING u.id, u.role_id, (SELECT code::text FROM roles WHERE id = u.role_id), u.isvalid, u.name, u.email::text,
+		          u.phone, u.nomor_registrasi, u.password_hash, u.email_verified_at, u.remember_token,
+		          u.created_at, u.updated_at, u.deleted_at
+	`, patch.ID, patch.Name, patch.Phone, patch.NomorRegistrasi, patch.PasswordHash, patch.IsValid))
+}
+
+// Delete melakukan soft delete pada user.
+func (r *Repository) Delete(ctx context.Context, id string) error {
+	db := database.GetExecutor(ctx, r.pool)
+	commandTag, err := db.Exec(ctx, `
+		UPDATE users
+		SET deleted_at = now()
+		WHERE id = $1 AND deleted_at IS NULL
+	`, id)
+	if err != nil {
+		return mapError(err)
+	}
+	if commandTag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
 func (r *Repository) FindByEmail(ctx context.Context, email string) (domain.User, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanUser(db.QueryRow(ctx, `

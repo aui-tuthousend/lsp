@@ -26,6 +26,39 @@ func (h *Handler) Create(ctx context.Context, input *CreateUserInput) (*UserOutp
 	return &UserOutput{Body: toUserDTO(user)}, nil
 }
 
+// Get dipakai admin untuk mengambil satu user.
+func (h *Handler) Get(ctx context.Context, input *GetUserInput) (*UserOutput, error) {
+	user, err := h.service.GetByID(ctx, input.ID)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &UserOutput{Body: toUserDTO(user)}, nil
+}
+
+// Update dipakai admin untuk mengubah sebagian data user.
+func (h *Handler) Update(ctx context.Context, input *UpdateUserInput) (*UserOutput, error) {
+	user, err := h.service.PatchUser(ctx, app.PatchUserCommand{
+		ID:              input.ID,
+		Name:            input.Body.Name,
+		Phone:           input.Body.Phone,
+		NomorRegistrasi: input.Body.NomorRegistrasi,
+		Password:        input.Body.Password,
+		IsValid:         input.Body.IsValid,
+	})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &UserOutput{Body: toUserDTO(user)}, nil
+}
+
+// Delete dipakai admin untuk menghapus (soft delete) user.
+func (h *Handler) Delete(ctx context.Context, input *DeleteUserInput) (*DeleteUserOutput, error) {
+	if err := h.service.DeleteUser(ctx, input.ID); err != nil {
+		return nil, mapError(err)
+	}
+	return &DeleteUserOutput{}, nil
+}
+
 func (h *Handler) Login(ctx context.Context, input *LoginInput) (*AuthOutput, error) {
 	result, err := h.service.Login(ctx, app.LoginCommand{Email: input.Body.Email, Password: input.Body.Password})
 	if err != nil {

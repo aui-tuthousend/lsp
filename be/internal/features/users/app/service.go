@@ -38,6 +38,15 @@ type LoginCommand struct {
 	Password string
 }
 
+type PatchUserCommand struct {
+	ID              string
+	Name            *string
+	Phone           *string
+	NomorRegistrasi *string
+	Password        *string
+	IsValid         *bool
+}
+
 type AuthResult struct {
 	User  domain.User
 	Token string
@@ -68,6 +77,38 @@ func (s *Service) CreateUser(ctx context.Context, cmd CreateUserCommand) (domain
 		}
 	}
 	return user, nil
+}
+
+// PatchUser mengubah sebagian data user (dipakai admin). Bila password diisi,
+// password akan di-hash ulang sebelum disimpan.
+func (s *Service) PatchUser(ctx context.Context, cmd PatchUserCommand) (domain.User, error) {
+	var passwordHash *string
+	if cmd.Password != nil && *cmd.Password != "" {
+		hash, err := bcrypt.GenerateFromPassword([]byte(*cmd.Password), bcrypt.DefaultCost)
+		if err != nil {
+			return domain.User{}, err
+		}
+		value := string(hash)
+		passwordHash = &value
+	}
+	return s.repo.Patch(ctx, domain.UserPatch{
+		ID:              cmd.ID,
+		Name:            cmd.Name,
+		Phone:           cmd.Phone,
+		NomorRegistrasi: cmd.NomorRegistrasi,
+		PasswordHash:    passwordHash,
+		IsValid:         cmd.IsValid,
+	})
+}
+
+// DeleteUser melakukan soft delete pada user (dipakai admin).
+func (s *Service) DeleteUser(ctx context.Context, id string) error {
+	return s.repo.Delete(ctx, id)
+}
+
+// GetByID mengambil satu user berdasarkan id (dipakai admin).
+func (s *Service) GetByID(ctx context.Context, id string) (domain.User, error) {
+	return s.repo.FindByID(ctx, id)
 }
 
 func (s *Service) Login(ctx context.Context, cmd LoginCommand) (AuthResult, error) {
