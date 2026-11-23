@@ -3,7 +3,7 @@ import { createFileRoute } from '@tanstack/react-router'
 import { Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { ConfirmDialog } from '@/components/ui/confirm-dialog'
 import { TUKFormDialog } from './-components/tuk-form-dialog'
 import { useDeleteTuk, useTuks } from './-hooks'
 import type { TUK } from './-types'
@@ -127,30 +127,20 @@ function TuksPage() {
 
       <TUKFormDialog open={formOpen} onOpenChange={setFormOpen} tuk={editing} session={auth} />
 
-      <Dialog open={Boolean(deleting)} onOpenChange={(open) => (!open ? setDeleting(null) : undefined)}>
-        <DialogContent className="max-w-md">
-          <DialogHeader>
-            <DialogTitle>Hapus TUK</DialogTitle>
-            <DialogDescription>Yakin ingin menghapus "{deleting?.name}"? Tindakan ini tidak bisa dibatalkan.</DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button type="button" variant="outline" onClick={() => setDeleting(null)} disabled={remove.isPending}>
-              Batal
-            </Button>
-            <Button
-              type="button"
-              className="bg-rose-600 hover:bg-rose-700"
-              disabled={remove.isPending}
-              onClick={() => {
-                if (!deleting) return
-                remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) })
-              }}
-            >
-              {remove.isPending ? 'Menghapus...' : 'Hapus'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <ConfirmDialog
+        open={Boolean(deleting)}
+        onOpenChange={(open) => (!open ? setDeleting(null) : undefined)}
+        title="Hapus TUK"
+        description={`Yakin ingin menghapus "${deleting?.name}"? Tindakan ini tidak bisa dibatalkan.`}
+        confirmLabel="Hapus"
+        pendingLabel="Menghapus..."
+        destructive
+        pending={remove.isPending}
+        onConfirm={() => {
+          if (!deleting) return
+          remove.mutate(deleting.id, { onSuccess: () => setDeleting(null) })
+        }}
+      />
     </div>
   )
 }
