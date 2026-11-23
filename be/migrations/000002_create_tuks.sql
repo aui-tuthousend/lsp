@@ -9,7 +9,7 @@ CREATE TABLE tuks (
     province       varchar(120) NOT NULL,
     city           varchar(120) NOT NULL,
     address        text         NOT NULL,
-    maps_url       text         NOT NULL,
+    maps_url       text,
     letterhead     text,
     created_at     timestamptz  NOT NULL DEFAULT now(),
     updated_at     timestamptz  NOT NULL DEFAULT now(),

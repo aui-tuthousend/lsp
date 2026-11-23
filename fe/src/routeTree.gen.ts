@@ -18,7 +18,6 @@ import { Route as ManagerRouteRouteImport } from './routes/manager/route'
 import { Route as ValidatorRouteRouteImport } from './routes/validator/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
 import { Route as AdminAsesorProfilesRouteImport } from './routes/admin/asesor-profiles'
-import { Route as AdminTuksRouteImport } from './routes/admin/tuks'
 import { Route as AdminUsersRouteImport } from './routes/admin/users'
 import { Route as AsesiIndexRouteImport } from './routes/asesi/index'
 import { Route as AsesorIndexRouteImport } from './routes/asesor/index'
@@ -28,6 +27,7 @@ import { Route as RegisterIndexRouteImport } from './routes/register/index'
 import { Route as ScanTokenRouteImport } from './routes/scan.$token'
 import { Route as ValidatorIndexRouteImport } from './routes/validator/index'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
+import { Route as AdminTuksIndexRouteImport } from './routes/admin/tuks/index'
 import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
 import { Route as AsesorAssignmentsAssignmentIdRouteImport } from './routes/asesor/assignments.$assignmentId'
 
@@ -76,11 +76,6 @@ const AdminAsesorProfilesRoute = AdminAsesorProfilesRouteImport.update({
   path: '/asesor-profiles',
   getParentRoute: () => AdminRouteRoute,
 } as any)
-const AdminTuksRoute = AdminTuksRouteImport.update({
-  id: '/tuks',
-  path: '/tuks',
-  getParentRoute: () => AdminRouteRoute,
-} as any)
 const AdminUsersRoute = AdminUsersRouteImport.update({
   id: '/users',
   path: '/users',
@@ -126,6 +121,11 @@ const VerifyTokenRoute = VerifyTokenRouteImport.update({
   path: '/verify/$token',
   getParentRoute: () => rootRouteImport,
 } as any)
+const AdminTuksIndexRoute = AdminTuksIndexRouteImport.update({
+  id: '/tuks/',
+  path: '/tuks/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AsesiProfilIndexRoute = AsesiProfilIndexRouteImport.update({
   id: '/profil/',
   path: '/profil/',
@@ -147,7 +147,6 @@ export interface FileRoutesByFullPath {
   '/validator': typeof ValidatorRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
-  '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
   '/asesor/assignments': typeof AsesorAssignmentsRouteWithChildren
   '/scan/$token': typeof ScanTokenRoute
@@ -159,13 +158,13 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/admin/tuks/': typeof AdminTuksIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/login': typeof LoginRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
-  '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
   '/asesor/assignments': typeof AsesorAssignmentsRouteWithChildren
   '/scan/$token': typeof ScanTokenRoute
@@ -177,6 +176,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/validator': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/admin/tuks': typeof AdminTuksIndexRoute
   '/asesi/profil': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesById {
@@ -189,7 +189,6 @@ export interface FileRoutesById {
   '/validator': typeof ValidatorRouteRouteWithChildren
   '/login': typeof LoginRoute
   '/admin/asesor-profiles': typeof AdminAsesorProfilesRoute
-  '/admin/tuks': typeof AdminTuksRoute
   '/admin/users': typeof AdminUsersRoute
   '/asesor/assignments': typeof AsesorAssignmentsRouteWithChildren
   '/scan/$token': typeof ScanTokenRoute
@@ -201,6 +200,7 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/admin/tuks/': typeof AdminTuksIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRouteTypes {
@@ -214,7 +214,6 @@ export interface FileRouteTypes {
     | '/validator'
     | '/login'
     | '/admin/asesor-profiles'
-    | '/admin/tuks'
     | '/admin/users'
     | '/asesor/assignments'
     | '/scan/$token'
@@ -226,13 +225,13 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
+    | '/admin/tuks/'
     | '/asesi/profil/'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
     | '/login'
     | '/admin/asesor-profiles'
-    | '/admin/tuks'
     | '/admin/users'
     | '/asesor/assignments'
     | '/scan/$token'
@@ -244,6 +243,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/validator'
     | '/asesor/assignments/$assignmentId'
+    | '/admin/tuks'
     | '/asesi/profil'
   id:
     | '__root__'
@@ -255,7 +255,6 @@ export interface FileRouteTypes {
     | '/validator'
     | '/login'
     | '/admin/asesor-profiles'
-    | '/admin/tuks'
     | '/admin/users'
     | '/asesor/assignments'
     | '/scan/$token'
@@ -267,6 +266,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
+    | '/admin/tuks/'
     | '/asesi/profil/'
   fileRoutesById: FileRoutesById
 }
@@ -348,13 +348,6 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAsesorProfilesRouteImport
       parentRoute: typeof AdminRouteRoute
     }
-    '/admin/tuks': {
-      id: '/admin/tuks'
-      path: '/tuks'
-      fullPath: '/admin/tuks'
-      preLoaderRoute: typeof AdminTuksRouteImport
-      parentRoute: typeof AdminRouteRoute
-    }
     '/admin/users': {
       id: '/admin/users'
       path: '/users'
@@ -418,6 +411,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof VerifyTokenRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/admin/tuks/': {
+      id: '/admin/tuks/'
+      path: '/tuks'
+      fullPath: '/admin/tuks/'
+      preLoaderRoute: typeof AdminTuksIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/asesi/profil/': {
       id: '/asesi/profil/'
       path: '/profil'
@@ -437,16 +437,16 @@ declare module '@tanstack/react-router' {
 
 interface AdminRouteRouteChildren {
   AdminAsesorProfilesRoute: typeof AdminAsesorProfilesRoute
-  AdminTuksRoute: typeof AdminTuksRoute
   AdminUsersRoute: typeof AdminUsersRoute
   AdminIndexRoute: typeof AdminIndexRoute
+  AdminTuksIndexRoute: typeof AdminTuksIndexRoute
 }
 
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminAsesorProfilesRoute: AdminAsesorProfilesRoute,
-  AdminTuksRoute: AdminTuksRoute,
   AdminUsersRoute: AdminUsersRoute,
   AdminIndexRoute: AdminIndexRoute,
+  AdminTuksIndexRoute: AdminTuksIndexRoute,
 }
 
 const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(

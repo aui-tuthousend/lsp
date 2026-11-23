@@ -24,7 +24,7 @@ type CreateCommand struct {
 	Province   string
 	City       string
 	Address    string
-	MapsURL    string
+	MapsURL    *string
 	Letterhead *string
 }
 

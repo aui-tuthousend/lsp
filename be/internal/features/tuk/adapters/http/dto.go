@@ -37,7 +37,7 @@ type TUKBody struct {
 	Province   string  `json:"province" minLength:"2" maxLength:"120"`
 	City       string  `json:"city" minLength:"2" maxLength:"120"`
 	Address    string  `json:"address" minLength:"5"`
-	MapsURL    string  `json:"maps_url" minLength:"5" doc:"Link Google Maps atau provider maps lain"`
+	MapsURL    *string `json:"maps_url,omitempty" doc:"Link Google Maps atau provider maps lain (opsional)"`
 	Letterhead *string `json:"letterhead,omitempty" doc:"URL/path kop surat TUK"`
 }
 
@@ -68,7 +68,7 @@ type TUKDTO struct {
 	Province   string     `json:"province"`
 	City       string     `json:"city"`
 	Address    string     `json:"address"`
-	MapsURL    string     `json:"maps_url"`
+	MapsURL    *string    `json:"maps_url,omitempty"`
 	Letterhead *string    `json:"letterhead,omitempty"`
 	CreatedAt  time.Time  `json:"created_at"`
 	UpdatedAt  time.Time  `json:"updated_at"`
@@ -101,7 +101,7 @@ type createCommandDTO struct {
 	Province   string
 	City       string
 	Address    string
-	MapsURL    string
+	MapsURL    *string
 	Letterhead *string
 }
 
