@@ -37,7 +37,11 @@ type Repository interface {
 // RolesRepository adalah port untuk master data roles.
 type RolesRepository interface {
 	FindByCode(ctx context.Context, code Role) (RoleRecord, error)
+	FindByID(ctx context.Context, id string) (RoleRecord, error)
 	List(ctx context.Context) ([]RoleRecord, error)
+	Create(ctx context.Context, role RoleRecord) error
+	Patch(ctx context.Context, patch RolePatch) (RoleRecord, error)
+	Delete(ctx context.Context, id string) error
 }
 
 // AsesorProfileInitializer membuat profil asesor default saat user ber-role

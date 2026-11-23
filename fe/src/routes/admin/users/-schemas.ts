@@ -1,6 +1,6 @@
 // Schema & aturan validasi form master user.
 //
-// Role yang tersedia dibatasi ke validator & manager_sertifikasi.
+// Role yang tersedia dibatasi ke validator, manager_sertifikasi, & admin_lsp.
 // Email & password wajib saat create; saat edit password opsional (reset).
 
 import { z } from 'zod'
@@ -9,12 +9,13 @@ const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const PHONE_RE = /^[0-9+\-\s()]{5,20}$/
 
 /** Role yang boleh dikelola di halaman ini. */
-export const MANAGED_ROLES = ['validator', 'manager_sertifikasi'] as const
+export const MANAGED_ROLES = ['validator', 'manager_sertifikasi', 'admin_lsp'] as const
 export type ManagedRole = (typeof MANAGED_ROLES)[number]
 
 export const ROLE_OPTIONS: { value: ManagedRole; label: string }[] = [
   { value: 'validator', label: 'Validator' },
   { value: 'manager_sertifikasi', label: 'Manager Sertifikasi' },
+  { value: 'admin_lsp', label: 'Admin LSP' },
 ]
 
 export function roleLabel(role: string): string {

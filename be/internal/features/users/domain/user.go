@@ -7,6 +7,7 @@ type Role string
 
 const (
 	RoleAdmin              Role = "admin"
+	RoleAdminLSP           Role = "admin_lsp"
 	RoleAsesi              Role = "asesi"
 	RoleAsesor             Role = "asesor"
 	RoleValidator          Role = "validator"
@@ -18,6 +19,14 @@ type RoleRecord struct {
 	ID          string
 	Code        Role
 	Name        string
+	Description *string
+}
+
+// RolePatch adalah perubahan parsial master data role (kirim field yang berubah saja).
+type RolePatch struct {
+	ID          string
+	Code        *Role
+	Name        *string
 	Description *string
 }
 
@@ -40,7 +49,7 @@ type User struct {
 
 func IsValidRole(role Role) bool {
 	switch role {
-	case RoleAdmin, RoleAsesi, RoleAsesor, RoleValidator, RoleManagerSertifikasi:
+	case RoleAdmin, RoleAdminLSP, RoleAsesi, RoleAsesor, RoleValidator, RoleManagerSertifikasi:
 		return true
 	default:
 		return false

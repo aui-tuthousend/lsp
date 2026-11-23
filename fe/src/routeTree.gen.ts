@@ -26,6 +26,7 @@ import { Route as ScanTokenRouteImport } from './routes/scan.$token'
 import { Route as ValidatorIndexRouteImport } from './routes/validator/index'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AdminAsesorIndexRouteImport } from './routes/admin/asesor/index'
+import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
 import { Route as AdminTuksIndexRouteImport } from './routes/admin/tuks/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
 import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
@@ -116,6 +117,11 @@ const AdminAsesorIndexRoute = AdminAsesorIndexRouteImport.update({
   path: '/asesor/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
+  id: '/roles/',
+  path: '/roles/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminTuksIndexRoute = AdminTuksIndexRouteImport.update({
   id: '/tuks/',
   path: '/tuks/',
@@ -157,6 +163,7 @@ export interface FileRoutesByFullPath {
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
+  '/admin/roles/': typeof AdminRolesIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
@@ -175,6 +182,7 @@ export interface FileRoutesByTo {
   '/validator': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor': typeof AdminAsesorIndexRoute
+  '/admin/roles': typeof AdminRolesIndexRoute
   '/admin/tuks': typeof AdminTuksIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
   '/asesi/profil': typeof AsesiProfilIndexRoute
@@ -199,6 +207,7 @@ export interface FileRoutesById {
   '/validator/': typeof ValidatorIndexRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
+  '/admin/roles/': typeof AdminRolesIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
@@ -224,6 +233,7 @@ export interface FileRouteTypes {
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
+    | '/admin/roles/'
     | '/admin/tuks/'
     | '/admin/users/'
     | '/asesi/profil/'
@@ -242,6 +252,7 @@ export interface FileRouteTypes {
     | '/validator'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor'
+    | '/admin/roles'
     | '/admin/tuks'
     | '/admin/users'
     | '/asesi/profil'
@@ -265,6 +276,7 @@ export interface FileRouteTypes {
     | '/validator/'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
+    | '/admin/roles/'
     | '/admin/tuks/'
     | '/admin/users/'
     | '/asesi/profil/'
@@ -404,6 +416,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAsesorIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/roles/': {
+      id: '/admin/roles/'
+      path: '/roles'
+      fullPath: '/admin/roles/'
+      preLoaderRoute: typeof AdminRolesIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/tuks/': {
       id: '/admin/tuks/'
       path: '/tuks'
@@ -438,6 +457,7 @@ declare module '@tanstack/react-router' {
 interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminAsesorIndexRoute: typeof AdminAsesorIndexRoute
+  AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminTuksIndexRoute: typeof AdminTuksIndexRoute
   AdminUsersIndexRoute: typeof AdminUsersIndexRoute
 }
@@ -445,6 +465,7 @@ interface AdminRouteRouteChildren {
 const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminAsesorIndexRoute: AdminAsesorIndexRoute,
+  AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminTuksIndexRoute: AdminTuksIndexRoute,
   AdminUsersIndexRoute: AdminUsersIndexRoute,
 }

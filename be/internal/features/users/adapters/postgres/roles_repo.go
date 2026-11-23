@@ -67,3 +67,55 @@ func (r *RolesRepository) Create(ctx context.Context, role domain.RoleRecord) er
 	`, role.ID, string(role.Code), role.Name, role.Description)
 	return mapError(err)
 }
+
+func (r *RolesRepository) FindByID(ctx context.Context, id string) (domain.RoleRecord, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var role domain.RoleRecord
+	var roleCode string
+	err := db.QueryRow(ctx, `
+		SELECT id, code::text, name, description
+		FROM roles
+		WHERE id = $1
+	`, id).Scan(&role.ID, &roleCode, &role.Name, &role.Description)
+	if err != nil {
+		return domain.RoleRecord{}, mapError(err)
+	}
+	role.Code = domain.Role(roleCode)
+	return role, nil
+}
+
+func (r *RolesRepository) Patch(ctx context.Context, patch domain.RolePatch) (domain.RoleRecord, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var code *string
+	if patch.Code != nil {
+		value := string(*patch.Code)
+		code = &value
+	}
+	var role domain.RoleRecord
+	var roleCode string
+	err := db.QueryRow(ctx, `
+		UPDATE roles
+		SET code = COALESCE($2::varchar, code),
+		    name = COALESCE($3::varchar, name),
+		    description = COALESCE($4::text, description)
+		WHERE id = $1
+		RETURNING id, code::text, name, description
+	`, patch.ID, code, patch.Name, patch.Description).Scan(&role.ID, &roleCode, &role.Name, &role.Description)
+	if err != nil {
+		return domain.RoleRecord{}, mapError(err)
+	}
+	role.Code = domain.Role(roleCode)
+	return role, nil
+}
+
+func (r *RolesRepository) Delete(ctx context.Context, id string) error {
+	db := database.GetExecutor(ctx, r.pool)
+	commandTag, err := db.Exec(ctx, `DELETE FROM roles WHERE id = $1`, id)
+	if err != nil {
+		return mapError(err)
+	}
+	if commandTag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}

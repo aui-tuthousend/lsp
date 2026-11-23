@@ -32,6 +32,7 @@ type userSeed struct {
 // Master data role. Idempoten: role dengan code yang sama akan dilewati.
 var roleSeeds = []roleSeed{
 	{Code: domain.RoleAdmin, Name: "Admin"},
+	{Code: domain.RoleAdminLSP, Name: "Admin LSP"},
 	{Code: domain.RoleAsesi, Name: "Asesi"},
 	{Code: domain.RoleAsesor, Name: "Asesor"},
 	{Code: domain.RoleValidator, Name: "Validator"},

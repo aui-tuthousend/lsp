@@ -26,3 +26,18 @@ func mapError(err error) error {
 		return err
 	}
 }
+
+// mapRoleError memetakan error khusus master data roles.
+func mapRoleError(err error) error {
+	if err == nil {
+		return nil
+	}
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
+		return huma.Error404NotFound("role not found")
+	case errors.Is(err, domain.ErrConflict):
+		return huma.Error409Conflict("role already exists or is in use")
+	default:
+		return err
+	}
+}

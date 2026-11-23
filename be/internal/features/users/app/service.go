@@ -177,3 +177,47 @@ func (s *Service) authResult(user domain.User) (AuthResult, error) {
 	}
 	return AuthResult{User: user, Token: token}, nil
 }
+
+// --- Master data roles ---
+
+type CreateRoleCommand struct {
+	Code        domain.Role
+	Name        string
+	Description *string
+}
+
+func (s *Service) CreateRole(ctx context.Context, cmd CreateRoleCommand) (domain.RoleRecord, error) {
+	role := domain.RoleRecord{ID: id.New(), Code: cmd.Code, Name: cmd.Name, Description: cmd.Description}
+	if err := s.roles.Create(ctx, role); err != nil {
+		return domain.RoleRecord{}, err
+	}
+	return s.roles.FindByID(ctx, role.ID)
+}
+
+type PatchRoleCommand struct {
+	ID          string
+	Code        *domain.Role
+	Name        *string
+	Description *string
+}
+
+func (s *Service) PatchRole(ctx context.Context, cmd PatchRoleCommand) (domain.RoleRecord, error) {
+	return s.roles.Patch(ctx, domain.RolePatch{
+		ID:          cmd.ID,
+		Code:        cmd.Code,
+		Name:        cmd.Name,
+		Description: cmd.Description,
+	})
+}
+
+func (s *Service) GetRole(ctx context.Context, id string) (domain.RoleRecord, error) {
+	return s.roles.FindByID(ctx, id)
+}
+
+func (s *Service) ListRoles(ctx context.Context) ([]domain.RoleRecord, error) {
+	return s.roles.List(ctx)
+}
+
+func (s *Service) DeleteRole(ctx context.Context, id string) error {
+	return s.roles.Delete(ctx, id)
+}

@@ -91,3 +91,63 @@ func (h *Handler) List(ctx context.Context, input *ListUsersInput) (*httpplatfor
 	}
 	return httpplatform.NewPagedResponse(items, input.Page, limit, result.Total), nil
 }
+
+// --- Master data roles ---
+
+func (h *Handler) ListRoles(ctx context.Context, _ *ListRolesInput) (*RoleListOutput, error) {
+	roles, err := h.service.ListRoles(ctx)
+	if err != nil {
+		return nil, mapRoleError(err)
+	}
+	out := &RoleListOutput{}
+	out.Body.Data = make([]RoleDTO, 0, len(roles))
+	for _, role := range roles {
+		out.Body.Data = append(out.Body.Data, toRoleDTO(role))
+	}
+	return out, nil
+}
+
+func (h *Handler) CreateRole(ctx context.Context, input *CreateRoleInput) (*RoleOutput, error) {
+	role, err := h.service.CreateRole(ctx, app.CreateRoleCommand{
+		Code:        domain.Role(input.Body.Code),
+		Name:        input.Body.Name,
+		Description: input.Body.Description,
+	})
+	if err != nil {
+		return nil, mapRoleError(err)
+	}
+	return &RoleOutput{Body: toRoleDTO(role)}, nil
+}
+
+func (h *Handler) GetRole(ctx context.Context, input *GetRoleInput) (*RoleOutput, error) {
+	role, err := h.service.GetRole(ctx, input.ID)
+	if err != nil {
+		return nil, mapRoleError(err)
+	}
+	return &RoleOutput{Body: toRoleDTO(role)}, nil
+}
+
+func (h *Handler) UpdateRole(ctx context.Context, input *UpdateRoleInput) (*RoleOutput, error) {
+	var code *domain.Role
+	if input.Body.Code != nil {
+		value := domain.Role(*input.Body.Code)
+		code = &value
+	}
+	role, err := h.service.PatchRole(ctx, app.PatchRoleCommand{
+		ID:          input.ID,
+		Code:        code,
+		Name:        input.Body.Name,
+		Description: input.Body.Description,
+	})
+	if err != nil {
+		return nil, mapRoleError(err)
+	}
+	return &RoleOutput{Body: toRoleDTO(role)}, nil
+}
+
+func (h *Handler) DeleteRole(ctx context.Context, input *DeleteRoleInput) (*DeleteRoleOutput, error) {
+	if err := h.service.DeleteRole(ctx, input.ID); err != nil {
+		return nil, mapRoleError(err)
+	}
+	return &DeleteRoleOutput{}, nil
+}
