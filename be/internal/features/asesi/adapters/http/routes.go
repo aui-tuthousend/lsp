@@ -38,4 +38,36 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithStatus(204),
 		httpplatform.WithDoc("asesi-profiles-delete", "Delete asesi profile", "Hapus profil data diri asesi.", "Asesi"),
 	)
+
+	// Data pekerjaan asesi (asesi_occupations).
+	huma.Post(api, "/asesi-occupations", handler.CreateOccupation,
+		adminOnly,
+		httpplatform.WithStatus(201),
+		httpplatform.WithDoc("asesi-occupations-create", "Create asesi occupation", "Membuat data pekerjaan asesi.", "Asesi"),
+	)
+	huma.Get(api, "/asesi-occupations", handler.ListOccupations,
+		adminOnly,
+		httpplatform.WithDoc("asesi-occupations-list", "List asesi occupations", "Daftar data pekerjaan asesi.", "Asesi"),
+	)
+	huma.Get(api, "/asesi-occupations/{id}", handler.GetOccupation,
+		adminOnly,
+		httpplatform.WithDoc("asesi-occupations-get", "Get asesi occupation", "Ambil detail data pekerjaan asesi.", "Asesi"),
+	)
+	huma.Patch(api, "/asesi-occupations/{id}", handler.UpdateOccupation,
+		adminOnly,
+		httpplatform.WithDoc("asesi-occupations-update", "Update asesi occupation", "Ubah sebagian data pekerjaan asesi.", "Asesi"),
+	)
+	huma.Delete(api, "/asesi-occupations/{id}", handler.DeleteOccupation,
+		adminOnly,
+		httpplatform.WithStatus(204),
+		httpplatform.WithDoc("asesi-occupations-delete", "Delete asesi occupation", "Hapus data pekerjaan asesi.", "Asesi"),
+	)
+	huma.Get(api, "/users/{user_id}/asesi-occupation", handler.GetOccupationByUser,
+		selfOrAdmin,
+		httpplatform.WithDoc("asesi-occupations-get-by-user", "Get asesi occupation by user", "Ambil data pekerjaan asesi berdasarkan user ID.", "Asesi"),
+	)
+	huma.Put(api, "/users/{user_id}/asesi-occupation", handler.UpsertOccupationByUser,
+		selfOrAdmin,
+		httpplatform.WithDoc("asesi-occupations-upsert-by-user", "Upsert asesi occupation by user", "Isi/perbarui data pekerjaan milik user sendiri (asesi).", "Asesi"),
+	)
 }

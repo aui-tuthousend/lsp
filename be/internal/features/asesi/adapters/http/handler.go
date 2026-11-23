@@ -123,3 +123,105 @@ func (h *Handler) Delete(ctx context.Context, input *DeleteInput) (*DeleteOutput
 	}
 	return &DeleteOutput{}, nil
 }
+
+// --- Data pekerjaan asesi (asesi_occupations) ---
+
+func (h *Handler) CreateOccupation(ctx context.Context, input *CreateOccupationInput) (*OccupationOutput, error) {
+	occupation, err := h.service.CreateOccupation(ctx, app.CreateOccupationCommand{
+		AsesiProfileID:    input.Body.AsesiProfileID,
+		CompanyName:       input.Body.CompanyName,
+		Position:          input.Body.Position,
+		TenureMonths:      input.Body.TenureMonths,
+		SubordinatesCount: input.Body.SubordinatesCount,
+		Address:           input.Body.Address,
+		Province:          input.Body.Province,
+		City:              input.Body.City,
+		District:          input.Body.District,
+		PostalCode:        input.Body.PostalCode,
+		OfficeEmail:       input.Body.OfficeEmail,
+		OfficePhone:       input.Body.OfficePhone,
+	})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &OccupationOutput{Body: toOccupationDTO(occupation)}, nil
+}
+
+// UpsertOccupationByUser membuat/memperbarui data pekerjaan milik asesi sendiri.
+func (h *Handler) UpsertOccupationByUser(ctx context.Context, input *UpsertOccupationByUserInput) (*OccupationOutput, error) {
+	occupation, err := h.service.UpsertOccupationByUser(ctx, app.UpsertOccupationCommand{
+		UserID:            input.UserID,
+		CompanyName:       input.Body.CompanyName,
+		Position:          input.Body.Position,
+		TenureMonths:      input.Body.TenureMonths,
+		SubordinatesCount: input.Body.SubordinatesCount,
+		Address:           input.Body.Address,
+		Province:          input.Body.Province,
+		City:              input.Body.City,
+		District:          input.Body.District,
+		PostalCode:        input.Body.PostalCode,
+		OfficeEmail:       input.Body.OfficeEmail,
+		OfficePhone:       input.Body.OfficePhone,
+	})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &OccupationOutput{Body: toOccupationDTO(occupation)}, nil
+}
+
+func (h *Handler) UpdateOccupation(ctx context.Context, input *UpdateOccupationInput) (*OccupationOutput, error) {
+	occupation, err := h.service.PatchOccupation(ctx, app.PatchOccupationCommand{
+		ID:                input.ID,
+		CompanyName:       input.Body.CompanyName,
+		Position:          input.Body.Position,
+		TenureMonths:      input.Body.TenureMonths,
+		SubordinatesCount: input.Body.SubordinatesCount,
+		Address:           input.Body.Address,
+		Province:          input.Body.Province,
+		City:              input.Body.City,
+		District:          input.Body.District,
+		PostalCode:        input.Body.PostalCode,
+		OfficeEmail:       input.Body.OfficeEmail,
+		OfficePhone:       input.Body.OfficePhone,
+	})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &OccupationOutput{Body: toOccupationDTO(occupation)}, nil
+}
+
+func (h *Handler) GetOccupation(ctx context.Context, input *GetOccupationInput) (*OccupationOutput, error) {
+	occupation, err := h.service.GetOccupation(ctx, input.ID)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &OccupationOutput{Body: toOccupationDTO(occupation)}, nil
+}
+
+func (h *Handler) GetOccupationByUser(ctx context.Context, input *GetOccupationByUserInput) (*OccupationOutput, error) {
+	occupation, err := h.service.GetOccupationByUserID(ctx, input.UserID)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &OccupationOutput{Body: toOccupationDTO(occupation)}, nil
+}
+
+func (h *Handler) ListOccupations(ctx context.Context, input *ListOccupationInput) (*httpplatform.PagedResponse[OccupationDTO], error) {
+	limit := input.SafeLimit()
+	result, err := h.service.ListOccupations(ctx, limit, input.Offset())
+	if err != nil {
+		return nil, mapError(err)
+	}
+	items := make([]OccupationDTO, 0, len(result.Items))
+	for _, item := range result.Items {
+		items = append(items, toOccupationDTO(item))
+	}
+	return httpplatform.NewPagedResponse(items, input.Page, limit, result.Total), nil
+}
+
+func (h *Handler) DeleteOccupation(ctx context.Context, input *DeleteOccupationInput) (*DeleteOccupationOutput, error) {
+	if err := h.service.DeleteOccupation(ctx, input.ID); err != nil {
+		return nil, mapError(err)
+	}
+	return &DeleteOccupationOutput{}, nil
+}

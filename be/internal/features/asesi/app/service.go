@@ -148,3 +148,123 @@ func (s *Service) List(ctx context.Context, limit, offset int) (domain.ListResul
 func (s *Service) Delete(ctx context.Context, id string) error {
 	return s.repo.Delete(ctx, id)
 }
+
+// --- Data pekerjaan asesi (asesi_occupations) ---
+
+type CreateOccupationCommand struct {
+	AsesiProfileID    string
+	CompanyName       string
+	Position          string
+	TenureMonths      *int
+	SubordinatesCount *int
+	Address           string
+	Province          string
+	City              string
+	District          string
+	PostalCode        *string
+	OfficeEmail       *string
+	OfficePhone       *string
+}
+
+func (s *Service) CreateOccupation(ctx context.Context, cmd CreateOccupationCommand) (domain.Occupation, error) {
+	occupation := domain.Occupation{
+		ID:                id.New(),
+		AsesiProfileID:    cmd.AsesiProfileID,
+		CompanyName:       cmd.CompanyName,
+		Position:          cmd.Position,
+		TenureMonths:      cmd.TenureMonths,
+		SubordinatesCount: cmd.SubordinatesCount,
+		Address:           cmd.Address,
+		Province:          cmd.Province,
+		City:              cmd.City,
+		District:          cmd.District,
+		PostalCode:        cmd.PostalCode,
+		OfficeEmail:       cmd.OfficeEmail,
+		OfficePhone:       cmd.OfficePhone,
+	}
+	if err := s.repo.CreateOccupation(ctx, occupation); err != nil {
+		return domain.Occupation{}, err
+	}
+	return s.repo.FindOccupationByID(ctx, occupation.ID)
+}
+
+// UpsertOccupationCommand membuat/memperbarui data pekerjaan milik user (asesi) sendiri.
+type UpsertOccupationCommand struct {
+	UserID            string
+	CompanyName       string
+	Position          string
+	TenureMonths      *int
+	SubordinatesCount *int
+	Address           string
+	Province          string
+	City              string
+	District          string
+	PostalCode        *string
+	OfficeEmail       *string
+	OfficePhone       *string
+}
+
+func (s *Service) UpsertOccupationByUser(ctx context.Context, cmd UpsertOccupationCommand) (domain.Occupation, error) {
+	return s.repo.UpsertOccupationByUser(ctx, cmd.UserID, domain.Occupation{
+		ID:                id.New(),
+		CompanyName:       cmd.CompanyName,
+		Position:          cmd.Position,
+		TenureMonths:      cmd.TenureMonths,
+		SubordinatesCount: cmd.SubordinatesCount,
+		Address:           cmd.Address,
+		Province:          cmd.Province,
+		City:              cmd.City,
+		District:          cmd.District,
+		PostalCode:        cmd.PostalCode,
+		OfficeEmail:       cmd.OfficeEmail,
+		OfficePhone:       cmd.OfficePhone,
+	})
+}
+
+type PatchOccupationCommand struct {
+	ID                string
+	CompanyName       *string
+	Position          *string
+	TenureMonths      *int
+	SubordinatesCount *int
+	Address           *string
+	Province          *string
+	City              *string
+	District          *string
+	PostalCode        *string
+	OfficeEmail       *string
+	OfficePhone       *string
+}
+
+func (s *Service) PatchOccupation(ctx context.Context, cmd PatchOccupationCommand) (domain.Occupation, error) {
+	return s.repo.PatchOccupation(ctx, domain.OccupationPatch{
+		ID:                cmd.ID,
+		CompanyName:       cmd.CompanyName,
+		Position:          cmd.Position,
+		TenureMonths:      cmd.TenureMonths,
+		SubordinatesCount: cmd.SubordinatesCount,
+		Address:           cmd.Address,
+		Province:          cmd.Province,
+		City:              cmd.City,
+		District:          cmd.District,
+		PostalCode:        cmd.PostalCode,
+		OfficeEmail:       cmd.OfficeEmail,
+		OfficePhone:       cmd.OfficePhone,
+	})
+}
+
+func (s *Service) GetOccupation(ctx context.Context, id string) (domain.Occupation, error) {
+	return s.repo.FindOccupationByID(ctx, id)
+}
+
+func (s *Service) GetOccupationByUserID(ctx context.Context, userID string) (domain.Occupation, error) {
+	return s.repo.FindOccupationByUserID(ctx, userID)
+}
+
+func (s *Service) ListOccupations(ctx context.Context, limit, offset int) (domain.OccupationListResult, error) {
+	return s.repo.ListOccupations(ctx, domain.ListParams{Limit: limit, Offset: offset})
+}
+
+func (s *Service) DeleteOccupation(ctx context.Context, id string) error {
+	return s.repo.DeleteOccupation(ctx, id)
+}

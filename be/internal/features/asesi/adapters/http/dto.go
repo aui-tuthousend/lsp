@@ -183,3 +183,124 @@ func parseOptionalDate(value *string) (*time.Time, error) {
 	}
 	return &t, nil
 }
+
+// --- Data pekerjaan asesi (asesi_occupations) ---
+
+type CreateOccupationInput struct {
+	Body OccupationBody `json:"body"`
+}
+
+type UpsertOccupationByUserInput struct {
+	UserID string             `path:"user_id"`
+	Body   OccupationSelfBody `json:"body"`
+}
+
+type UpdateOccupationInput struct {
+	ID   string              `path:"id"`
+	Body OccupationPatchBody `json:"body"`
+}
+
+type GetOccupationInput struct {
+	ID string `path:"id"`
+}
+
+type GetOccupationByUserInput struct {
+	UserID string `path:"user_id"`
+}
+
+type DeleteOccupationInput struct {
+	ID string `path:"id"`
+}
+
+type ListOccupationInput struct {
+	httpplatform.PaginationQuery
+}
+
+type OccupationBody struct {
+	AsesiProfileID    string  `json:"asesi_profile_id" minLength:"1" maxLength:"32"`
+	CompanyName       string  `json:"company_name" minLength:"1" maxLength:"100"`
+	Position          string  `json:"position" minLength:"1" maxLength:"100"`
+	TenureMonths      *int    `json:"tenure_months,omitempty" minimum:"0" doc:"Lama bekerja (bulan)"`
+	SubordinatesCount *int    `json:"subordinates_count,omitempty" minimum:"0" doc:"Jumlah bawahan"`
+	Address           string  `json:"address" minLength:"1"`
+	Province          string  `json:"province" minLength:"1" maxLength:"100"`
+	City              string  `json:"city" minLength:"1" maxLength:"100"`
+	District          string  `json:"district" minLength:"1" maxLength:"100"`
+	PostalCode        *string `json:"postal_code,omitempty" maxLength:"10"`
+	OfficeEmail       *string `json:"office_email,omitempty" format:"email" maxLength:"255"`
+	OfficePhone       *string `json:"office_phone,omitempty" maxLength:"20"`
+}
+
+// OccupationSelfBody dipakai asesi untuk mengisi data pekerjaannya sendiri
+// (asesi_profile_id di-resolve dari user_id pada path).
+type OccupationSelfBody struct {
+	CompanyName       string  `json:"company_name" minLength:"1" maxLength:"100"`
+	Position          string  `json:"position" minLength:"1" maxLength:"100"`
+	TenureMonths      *int    `json:"tenure_months,omitempty" minimum:"0" doc:"Lama bekerja (bulan)"`
+	SubordinatesCount *int    `json:"subordinates_count,omitempty" minimum:"0" doc:"Jumlah bawahan"`
+	Address           string  `json:"address" minLength:"1"`
+	Province          string  `json:"province" minLength:"1" maxLength:"100"`
+	City              string  `json:"city" minLength:"1" maxLength:"100"`
+	District          string  `json:"district" minLength:"1" maxLength:"100"`
+	PostalCode        *string `json:"postal_code,omitempty" maxLength:"10"`
+	OfficeEmail       *string `json:"office_email,omitempty" format:"email" maxLength:"255"`
+	OfficePhone       *string `json:"office_phone,omitempty" maxLength:"20"`
+}
+
+type OccupationPatchBody struct {
+	CompanyName       *string `json:"company_name,omitempty" minLength:"1" maxLength:"100"`
+	Position          *string `json:"position,omitempty" minLength:"1" maxLength:"100"`
+	TenureMonths      *int    `json:"tenure_months,omitempty" minimum:"0"`
+	SubordinatesCount *int    `json:"subordinates_count,omitempty" minimum:"0"`
+	Address           *string `json:"address,omitempty" minLength:"1"`
+	Province          *string `json:"province,omitempty" minLength:"1" maxLength:"100"`
+	City              *string `json:"city,omitempty" minLength:"1" maxLength:"100"`
+	District          *string `json:"district,omitempty" minLength:"1" maxLength:"100"`
+	PostalCode        *string `json:"postal_code,omitempty" maxLength:"10"`
+	OfficeEmail       *string `json:"office_email,omitempty" format:"email" maxLength:"255"`
+	OfficePhone       *string `json:"office_phone,omitempty" maxLength:"20"`
+}
+
+type OccupationOutput struct {
+	Body OccupationDTO `json:"body"`
+}
+
+type OccupationDTO struct {
+	ID                string    `json:"id"`
+	AsesiProfileID    string    `json:"asesi_profile_id"`
+	CompanyName       string    `json:"company_name"`
+	Position          string    `json:"position"`
+	TenureMonths      *int      `json:"tenure_months,omitempty"`
+	SubordinatesCount *int      `json:"subordinates_count,omitempty"`
+	Address           string    `json:"address"`
+	Province          string    `json:"province"`
+	City              string    `json:"city"`
+	District          string    `json:"district"`
+	PostalCode        *string   `json:"postal_code,omitempty"`
+	OfficeEmail       *string   `json:"office_email,omitempty"`
+	OfficePhone       *string   `json:"office_phone,omitempty"`
+	CreatedAt         time.Time `json:"created_at"`
+	UpdatedAt         time.Time `json:"updated_at"`
+}
+
+type DeleteOccupationOutput struct{}
+
+func toOccupationDTO(o domain.Occupation) OccupationDTO {
+	return OccupationDTO{
+		ID:                o.ID,
+		AsesiProfileID:    o.AsesiProfileID,
+		CompanyName:       o.CompanyName,
+		Position:          o.Position,
+		TenureMonths:      o.TenureMonths,
+		SubordinatesCount: o.SubordinatesCount,
+		Address:           o.Address,
+		Province:          o.Province,
+		City:              o.City,
+		District:          o.District,
+		PostalCode:        o.PostalCode,
+		OfficeEmail:       o.OfficeEmail,
+		OfficePhone:       o.OfficePhone,
+		CreatedAt:         o.CreatedAt,
+		UpdatedAt:         o.UpdatedAt,
+	}
+}

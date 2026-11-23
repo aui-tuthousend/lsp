@@ -137,6 +137,163 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 	return nil
 }
 
+// --- Data pekerjaan asesi (asesi_occupations) ---
+
+func (r *Repository) CreateOccupation(ctx context.Context, occupation domain.Occupation) error {
+	db := database.GetExecutor(ctx, r.pool)
+	_, err := db.Exec(ctx, `
+		INSERT INTO asesi_occupations (
+			id, asesi_profile_id, company_name, position, tenure_months, subordinates_count,
+			address, province, city, district, postal_code, office_email, office_phone
+		)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	`, occupation.ID, occupation.AsesiProfileID, occupation.CompanyName, occupation.Position, occupation.TenureMonths, occupation.SubordinatesCount,
+		occupation.Address, occupation.Province, occupation.City, occupation.District, occupation.PostalCode, occupation.OfficeEmail, occupation.OfficePhone)
+	return mapError(err)
+}
+
+func (r *Repository) PatchOccupation(ctx context.Context, patch domain.OccupationPatch) (domain.Occupation, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	return scanOccupation(db.QueryRow(ctx, `
+		UPDATE asesi_occupations AS o
+		SET company_name = COALESCE($2::varchar, company_name),
+		    position = COALESCE($3::varchar, position),
+		    tenure_months = COALESCE($4::integer, tenure_months),
+		    subordinates_count = COALESCE($5::integer, subordinates_count),
+		    address = COALESCE($6::text, address),
+		    province = COALESCE($7::varchar, province),
+		    city = COALESCE($8::varchar, city),
+		    district = COALESCE($9::varchar, district),
+		    postal_code = COALESCE($10::varchar, postal_code),
+		    office_email = COALESCE($11::citext, office_email),
+		    office_phone = COALESCE($12::varchar, office_phone)
+		WHERE o.id = $1
+		RETURNING `+occupationColumns,
+		patch.ID, patch.CompanyName, patch.Position, patch.TenureMonths, patch.SubordinatesCount,
+		patch.Address, patch.Province, patch.City, patch.District, patch.PostalCode, patch.OfficeEmail, patch.OfficePhone))
+}
+
+func (r *Repository) FindOccupationByID(ctx context.Context, id string) (domain.Occupation, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	return scanOccupation(db.QueryRow(ctx, `SELECT `+occupationColumns+` FROM asesi_occupations o WHERE o.id = $1`, id))
+}
+
+func (r *Repository) FindOccupationByUserID(ctx context.Context, userID string) (domain.Occupation, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	return scanOccupation(db.QueryRow(ctx, `
+		SELECT `+occupationColumns+`
+		FROM asesi_occupations o
+		JOIN asesi_profiles p ON p.id = o.asesi_profile_id
+		WHERE p.user_id = $1
+	`, userID))
+}
+
+// UpsertOccupationByUser membuat atau memperbarui data pekerjaan milik user
+// (asesi). asesi_profile_id di-resolve dari user_id; bila profil tidak ada,
+// NOT NULL/FK akan gagal dan dipetakan ke ErrNotFound.
+func (r *Repository) UpsertOccupationByUser(ctx context.Context, userID string, occupation domain.Occupation) (domain.Occupation, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	return scanOccupation(db.QueryRow(ctx, `
+		INSERT INTO asesi_occupations (
+			id, asesi_profile_id, company_name, position, tenure_months, subordinates_count,
+			address, province, city, district, postal_code, office_email, office_phone
+		)
+		VALUES (
+			$1, (SELECT id FROM asesi_profiles WHERE user_id = $2), $3, $4, $5, $6,
+			$7, $8, $9, $10, $11, $12, $13
+		)
+		ON CONFLICT (asesi_profile_id) DO UPDATE SET
+		    company_name = EXCLUDED.company_name,
+		    position = EXCLUDED.position,
+		    tenure_months = EXCLUDED.tenure_months,
+		    subordinates_count = EXCLUDED.subordinates_count,
+		    address = EXCLUDED.address,
+		    province = EXCLUDED.province,
+		    city = EXCLUDED.city,
+		    district = EXCLUDED.district,
+		    postal_code = EXCLUDED.postal_code,
+		    office_email = EXCLUDED.office_email,
+		    office_phone = EXCLUDED.office_phone
+		RETURNING `+occupationColumns,
+		occupation.ID, userID, occupation.CompanyName, occupation.Position, occupation.TenureMonths, occupation.SubordinatesCount,
+		occupation.Address, occupation.Province, occupation.City, occupation.District, occupation.PostalCode, occupation.OfficeEmail, occupation.OfficePhone))
+}
+
+func (r *Repository) ListOccupations(ctx context.Context, params domain.ListParams) (domain.OccupationListResult, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	rows, err := db.Query(ctx, `
+		SELECT `+occupationColumns+`, COUNT(*) OVER() AS total_count
+		FROM asesi_occupations o
+		ORDER BY o.created_at DESC
+		LIMIT $1 OFFSET $2
+	`, params.Limit, params.Offset)
+	if err != nil {
+		return domain.OccupationListResult{}, mapError(err)
+	}
+	defer rows.Close()
+
+	items := make([]domain.Occupation, 0)
+	total := 0
+	for rows.Next() {
+		item, rowTotal, err := scanOccupationWithTotal(rows)
+		if err != nil {
+			return domain.OccupationListResult{}, err
+		}
+		total = rowTotal
+		items = append(items, item)
+	}
+	if err := rows.Err(); err != nil {
+		return domain.OccupationListResult{}, mapError(err)
+	}
+	if len(items) == 0 && params.Offset > 0 {
+		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM asesi_occupations`).Scan(&total); err != nil {
+			return domain.OccupationListResult{}, mapError(err)
+		}
+	}
+	return domain.OccupationListResult{Items: items, Total: total}, nil
+}
+
+func (r *Repository) DeleteOccupation(ctx context.Context, id string) error {
+	db := database.GetExecutor(ctx, r.pool)
+	commandTag, err := db.Exec(ctx, `DELETE FROM asesi_occupations WHERE id = $1`, id)
+	if err != nil {
+		return mapError(err)
+	}
+	if commandTag.RowsAffected() == 0 {
+		return domain.ErrNotFound
+	}
+	return nil
+}
+
+const occupationColumns = `o.id, o.asesi_profile_id, o.company_name, o.position, o.tenure_months, o.subordinates_count,
+	o.address, o.province, o.city, o.district, o.postal_code, o.office_email, o.office_phone,
+	o.created_at, o.updated_at`
+
+func scanOccupation(row pgx.Row) (domain.Occupation, error) {
+	var o domain.Occupation
+	if err := row.Scan(
+		&o.ID, &o.AsesiProfileID, &o.CompanyName, &o.Position, &o.TenureMonths, &o.SubordinatesCount,
+		&o.Address, &o.Province, &o.City, &o.District, &o.PostalCode, &o.OfficeEmail, &o.OfficePhone,
+		&o.CreatedAt, &o.UpdatedAt,
+	); err != nil {
+		return domain.Occupation{}, mapError(err)
+	}
+	return o, nil
+}
+
+func scanOccupationWithTotal(rows pgx.Rows) (domain.Occupation, int, error) {
+	var o domain.Occupation
+	var total int
+	if err := rows.Scan(
+		&o.ID, &o.AsesiProfileID, &o.CompanyName, &o.Position, &o.TenureMonths, &o.SubordinatesCount,
+		&o.Address, &o.Province, &o.City, &o.District, &o.PostalCode, &o.OfficeEmail, &o.OfficePhone,
+		&o.CreatedAt, &o.UpdatedAt, &total,
+	); err != nil {
+		return domain.Occupation{}, 0, mapError(err)
+	}
+	return o, total, nil
+}
+
 func selectProfileSQL() string {
 	return `
 		SELECT id, user_id, full_name, nik, phone, gender::text, birth_place, birth_date,
@@ -237,6 +394,10 @@ func mapError(err error) error {
 		case "23505":
 			return domain.ErrConflict
 		case "23503":
+			return domain.ErrNotFound
+		case "23502":
+			// NOT NULL violation dari subquery asesi_profile_id yang kosong
+			// (upsert data pekerjaan saat profil asesi tidak ada).
 			return domain.ErrNotFound
 		case "23514":
 			if pgErr.ConstraintName == "ck_asesi_profiles_domicile" {
