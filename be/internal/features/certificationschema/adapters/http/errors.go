@@ -1,0 +1,22 @@
+package http
+
+import (
+	"errors"
+
+	"github.com/danielgtaylor/huma/v2"
+	"lsp/internal/features/certificationschema/domain"
+)
+
+func mapError(err error) error {
+	if err == nil {
+		return nil
+	}
+	switch {
+	case errors.Is(err, domain.ErrNotFound):
+		return huma.Error404NotFound("certification schema not found")
+	case errors.Is(err, domain.ErrConflict):
+		return huma.Error409Conflict("certification schema already exists")
+	default:
+		return err
+	}
+}

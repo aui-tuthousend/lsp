@@ -13,6 +13,7 @@ import (
 	asesihttp "lsp/internal/features/asesi/adapters/http"
 	asesorhttp "lsp/internal/features/asesor/adapters/http"
 	asesorpg "lsp/internal/features/asesor/adapters/postgres"
+	schemahttp "lsp/internal/features/certificationschema/adapters/http"
 	notificationshttp "lsp/internal/features/notifications/adapters/http"
 	registrationhttp "lsp/internal/features/registration/adapters/http"
 	tukhttp "lsp/internal/features/tuk/adapters/http"
@@ -76,6 +77,8 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	uploadshttp.RegisterRoutes(api, uploadsModule.Handler)
 	tukModule := newTUKModule(pool)
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
+	schemaModule := newSchemaModule(pool)
+	schemahttp.RegisterRoutes(api, schemaModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
 	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
@@ -91,7 +94,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		Uploads:       uploadsModule,
 		Asesor:        asesorModule,
 		TUK:           tukModule,
-		Schema:        newSchemaModule(),
+		Schema:        schemaModule,
 		APL01:         newAPL01Module(),
 		APL02:         newAPL02Module(),
 		Portfolio:     newPortfolioModule(objStorage),
