@@ -2,6 +2,7 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -73,20 +74,23 @@ function ProfilPage() {
 
   return (
     <form onSubmit={submit} className="space-y-4">
-      {/* Tabel users — data akun, hanya baca dari halaman ini. */}
-      <Card>
-        <CardHeader>
-          <CardTitle className="text-base">Data Akun</CardTitle>
-          <p className="text-xs text-slate-500">Berasal dari tabel users. Tidak dapat diubah dari halaman ini.</p>
-        </CardHeader>
-        <CardContent className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          <InfoItem label="Email" value={account?.email} />
-          <InfoItem label="Nama Akun" value={account?.name} />
-          <InfoItem label="Role" value={account?.role} />
-          <InfoItem label="Nomor Registrasi" value={account?.nomor_registrasi} />
-          <InfoItem label="Telepon" value={account?.phone} />
-          <InfoItem label="Verifikasi Email" value={account?.email_verified_at ? 'Terverifikasi' : 'Belum terverifikasi'} />
-        </CardContent>
+      {/* Tabel users — data akun (accordion, hanya baca). */}
+      <Card className="px-6">
+        <Accordion type="single" collapsible defaultValue="account">
+          <AccordionItem value="account">
+            <AccordionTrigger className="text-base">Data Akun</AccordionTrigger>
+            <AccordionContent>
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <InfoItem label="Email" value={account?.email} />
+                <InfoItem label="Nama Akun" value={account?.name} />
+                <InfoItem label="Role" value={account?.role} />
+                <InfoItem label="Nomor Registrasi" value={account?.nomor_registrasi} />
+                <InfoItem label="Telepon" value={account?.phone} />
+                <InfoItem label="Verifikasi Email" value={account?.email_verified_at ? 'Terverifikasi' : 'Belum terverifikasi'} />
+              </div>
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </Card>
 
       {/* Tabel asesi_profiles — data profil, bisa diubah lewat PATCH. */}
