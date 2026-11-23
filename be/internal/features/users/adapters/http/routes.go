@@ -15,6 +15,9 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 	huma.Get(api, "/auth/me", handler.GetMe,
 		httpplatform.WithDoc("auth-me", "Get current user", "Return current authenticated user profile.", "Auth"),
 	)
+	huma.Patch(api, "/auth/me", handler.UpdateMe,
+		httpplatform.WithDoc("auth-update-me", "Update current user", "Ubah data akun user sendiri (nama & telepon).", "Auth"),
+	)
 	huma.Post(api, "/users", handler.Create,
 		auth.RequireRoles(string(domain.RoleAdmin)),
 		httpplatform.WithStatus(201),

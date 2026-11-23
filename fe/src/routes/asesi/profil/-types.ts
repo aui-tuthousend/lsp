@@ -93,3 +93,43 @@ export type UserAccount = {
   created_at: string
   updated_at: string
 }
+
+/** Body self-update akun (PATCH /auth/me) — hanya nama & telepon. */
+export type UpdateAccountBody = {
+  name?: string
+  phone?: string
+}
+
+/** Data pekerjaan asesi seperti dikembalikan backend (tabel `asesi_occupations`). */
+export type AsesiOccupation = {
+  id: string
+  asesi_profile_id: string
+  company_name: string
+  position: string
+  tenure_months?: number | null
+  subordinates_count?: number | null
+  address: string
+  province: string
+  city: string
+  district: string
+  postal_code?: string | null
+  office_email?: string | null
+  office_phone?: string | null
+  created_at: string
+  updated_at: string
+}
+
+/** Body upsert data pekerjaan (PUT /users/{user_id}/asesi-occupation). */
+export type UpsertOccupationBody = {
+  company_name: string
+  position: string
+  tenure_months?: number
+  subordinates_count?: number
+  address: string
+  province: string
+  city: string
+  district: string
+  postal_code?: string
+  office_email?: string
+  office_phone?: string
+}

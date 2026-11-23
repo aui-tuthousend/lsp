@@ -1,10 +1,11 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { ApiError } from '@/lib/api'
 import type { Session } from '@/lib/auth/types'
 import { qk } from '@/lib/query-keys'
 import { asesiProfileKeys } from './-queryKeys'
 import { asesiProfileService } from './-service'
-import type { CreateAsesiProfileBody, ListAsesiProfilesParams, UpdateAsesiProfileBody } from './-types'
+import type { CreateAsesiProfileBody, ListAsesiProfilesParams, UpdateAccountBody, UpdateAsesiProfileBody, UpsertOccupationBody } from './-types'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Silakan coba lagi'
@@ -96,3 +97,52 @@ export function useUpdateAsesiProfile(session: Session | null) {
 //     },
 //   })
 // }
+
+/** Data pekerjaan asesi milik user; null bila belum pernah diisi (404). */
+export function useOccupationByUser(userId: string, session: Session | null) {
+  return useQuery({
+    queryKey: asesiProfileKeys.occupationByUser(userId),
+    queryFn: async () => {
+      try {
+        return await asesiProfileService.getOccupationByUser(userId, session)
+      } catch (error) {
+        if (error instanceof ApiError && error.status === 404) return null
+        throw error
+      }
+    },
+    enabled: Boolean(userId && session),
+  })
+}
+
+/** Isi/perbarui data pekerjaan milik user sendiri (upsert). */
+export function useUpsertOccupation(session: Session | null) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: ({ userId, body }: { userId: string; body: UpsertOccupationBody }) =>
+      asesiProfileService.upsertOccupationByUser(userId, body, session),
+    onSuccess: (_occupation, variables) => {
+      void queryClient.invalidateQueries({ queryKey: asesiProfileKeys.occupationByUser(variables.userId) })
+      toast.success('Data pekerjaan disimpan')
+    },
+    onError: (error) => {
+      toast.error('Gagal menyimpan data pekerjaan', { description: errorMessage(error) })
+    },
+  })
+}
+
+/** Ubah data akun sendiri (nama & telepon). */
+export function useUpdateMe(session: Session | null) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (body: UpdateAccountBody) => asesiProfileService.updateMe(body, session),
+    onSuccess: (account) => {
+      queryClient.setQueryData(qk.me, account)
+      toast.success('Data akun diperbarui')
+    },
+    onError: (error) => {
+      toast.error('Gagal memperbarui data akun', { description: errorMessage(error) })
+    },
+  })
+}

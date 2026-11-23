@@ -7,4 +7,5 @@ export const asesiProfileKeys = {
   details: () => [...asesiProfileKeys.all, 'detail'] as const,
   detail: (id: string) => [...asesiProfileKeys.details(), id] as const,
   byUser: (userId: string) => [...asesiProfileKeys.details(), 'user', userId] as const,
+  occupationByUser: (userId: string) => [...asesiProfileKeys.all, 'occupation', 'user', userId] as const,
 }

@@ -1,4 +1,4 @@
-import type { AsesiProfile, EducationLevel, Gender, UpdateAsesiProfileBody } from './-types'
+import type { AsesiOccupation, AsesiProfile, EducationLevel, Gender, UpdateAccountBody, UpdateAsesiProfileBody, UpsertOccupationBody, UserAccount } from './-types'
 
 // Konstanta, tipe, dan helper murni untuk form profil asesi. State form tetap
 // page-local di komponen; di sini hanya bagian yang bebas dari React.
@@ -132,5 +132,110 @@ export function validate(values: ProfileFormValues): string | null {
   if (!values.province.trim() || !values.city.trim() || !values.district.trim() || !values.village.trim()) {
     return 'Wilayah (provinsi, kota, kecamatan, desa) wajib diisi'
   }
+  return null
+}
+
+/** Kelas kontrol bersama untuk input/textarea/select di form profil. */
+export const controlClass =
+  'flex h-10 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200'
+
+// --- Form Data Akun (tabel `users`) ---
+
+export type AccountFormValues = {
+  name: string
+  phone: string
+}
+
+export const EMPTY_ACCOUNT_FORM: AccountFormValues = { name: '', phone: '' }
+
+export function toAccountForm(account: UserAccount): AccountFormValues {
+  return { name: account.name, phone: account.phone ?? '' }
+}
+
+/** Kirim hanya field yang berubah (partial update PATCH /auth/me). */
+export function diffAccount(values: AccountFormValues, baseline: AccountFormValues): UpdateAccountBody {
+  const patch: UpdateAccountBody = {}
+  if (values.name.trim() !== baseline.name.trim()) patch.name = values.name.trim()
+  if (values.phone.trim() !== baseline.phone.trim()) patch.phone = values.phone.trim()
+  return patch
+}
+
+export function validateAccount(values: AccountFormValues): string | null {
+  if (values.name.trim().length < 2) return 'Nama minimal 2 karakter'
+  return null
+}
+
+// --- Form Data Pekerjaan (tabel `asesi_occupations`) ---
+
+export type OccupationFormValues = {
+  company_name: string
+  position: string
+  tenure_months: string
+  subordinates_count: string
+  address: string
+  province: string
+  city: string
+  district: string
+  postal_code: string
+  office_email: string
+  office_phone: string
+}
+
+export const EMPTY_OCCUPATION_FORM: OccupationFormValues = {
+  company_name: '',
+  position: '',
+  tenure_months: '',
+  subordinates_count: '',
+  address: '',
+  province: '',
+  city: '',
+  district: '',
+  postal_code: '',
+  office_email: '',
+  office_phone: '',
+}
+
+export function toOccupationForm(occupation: AsesiOccupation): OccupationFormValues {
+  return {
+    company_name: occupation.company_name,
+    position: occupation.position,
+    tenure_months: occupation.tenure_months != null ? String(occupation.tenure_months) : '',
+    subordinates_count: occupation.subordinates_count != null ? String(occupation.subordinates_count) : '',
+    address: occupation.address,
+    province: occupation.province,
+    city: occupation.city,
+    district: occupation.district,
+    postal_code: occupation.postal_code ?? '',
+    office_email: occupation.office_email ?? '',
+    office_phone: occupation.office_phone ?? '',
+  }
+}
+
+/** Bentuk payload upsert (PUT) — kirim seluruh field yang dibutuhkan. */
+export function toOccupationBody(values: OccupationFormValues): UpsertOccupationBody {
+  return {
+    company_name: values.company_name.trim(),
+    position: values.position.trim(),
+    tenure_months: values.tenure_months.trim() ? Number(values.tenure_months) : undefined,
+    subordinates_count: values.subordinates_count.trim() ? Number(values.subordinates_count) : undefined,
+    address: values.address.trim(),
+    province: values.province.trim(),
+    city: values.city.trim(),
+    district: values.district.trim(),
+    postal_code: values.postal_code.trim() || undefined,
+    office_email: values.office_email.trim() || undefined,
+    office_phone: values.office_phone.trim() || undefined,
+  }
+}
+
+export function occupationDirty(values: OccupationFormValues, baseline: OccupationFormValues): boolean {
+  return JSON.stringify(toOccupationBody(values)) !== JSON.stringify(toOccupationBody(baseline))
+}
+
+export function validateOccupation(values: OccupationFormValues): string | null {
+  if (!values.company_name.trim()) return 'Nama perusahaan wajib diisi'
+  if (!values.position.trim()) return 'Jabatan wajib diisi'
+  if (!values.address.trim()) return 'Alamat wajib diisi'
+  if (!values.province.trim() || !values.city.trim() || !values.district.trim()) return 'Provinsi, kota, kecamatan wajib diisi'
   return null
 }

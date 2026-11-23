@@ -1,10 +1,13 @@
 import type { Session } from '@/lib/auth/types'
 import { apiFetch, type PagedResponse } from '@/lib/api'
 import type {
+  AsesiOccupation,
   AsesiProfile,
   CreateAsesiProfileBody,
   ListAsesiProfilesParams,
+  UpdateAccountBody,
   UpdateAsesiProfileBody,
+  UpsertOccupationBody,
   UserAccount,
 } from './-types'
 
@@ -51,4 +54,19 @@ export const asesiProfileService = {
   // remove(id: string, session: Session | null) {
   //   return apiFetch<void>(`${BASE}/${id}`, session, { method: 'DELETE' })
   // },
+
+  /** Data pekerjaan asesi milik user (GET /users/{id}/asesi-occupation). */
+  getOccupationByUser(userId: string, session: Session | null) {
+    return apiFetch<AsesiOccupation>(`/users/${userId}/asesi-occupation`, session)
+  },
+
+  /** Isi/perbarui data pekerjaan milik user sendiri (PUT upsert). */
+  upsertOccupationByUser(userId: string, body: UpsertOccupationBody, session: Session | null) {
+    return apiFetch<AsesiOccupation>(`/users/${userId}/asesi-occupation`, session, { method: 'PUT', body: JSON.stringify(body) })
+  },
+
+  /** Ubah data akun sendiri (PATCH /auth/me). */
+  updateMe(body: UpdateAccountBody, session: Session | null) {
+    return apiFetch<UserAccount>('/auth/me', session, { method: 'PATCH', body: JSON.stringify(body) })
+  },
 }

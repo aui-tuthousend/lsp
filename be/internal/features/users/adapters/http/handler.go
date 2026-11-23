@@ -79,6 +79,19 @@ func (h *Handler) GetMe(ctx context.Context, input *EmptyInput) (*UserOutput, er
 	return &UserOutput{Body: toUserDTO(user)}, nil
 }
 
+// UpdateMe dipakai user yang login untuk mengubah data akunnya sendiri.
+func (h *Handler) UpdateMe(ctx context.Context, input *UpdateMeInput) (*UserOutput, error) {
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return nil, mapError(domain.ErrInvalidCredentials)
+	}
+	user, err := h.service.PatchUser(ctx, app.PatchUserCommand{ID: claims.UserID, Name: input.Body.Name, Phone: input.Body.Phone})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &UserOutput{Body: toUserDTO(user)}, nil
+}
+
 func (h *Handler) List(ctx context.Context, input *ListUsersInput) (*httpplatform.PagedResponse[UserDTO], error) {
 	limit := input.SafeLimit()
 	result, err := h.service.List(ctx, limit, input.Offset(), input.Roles)

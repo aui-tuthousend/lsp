@@ -194,7 +194,7 @@ func (r *Repository) FindOccupationByUserID(ctx context.Context, userID string) 
 func (r *Repository) UpsertOccupationByUser(ctx context.Context, userID string, occupation domain.Occupation) (domain.Occupation, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanOccupation(db.QueryRow(ctx, `
-		INSERT INTO asesi_occupations (
+		INSERT INTO asesi_occupations AS o (
 			id, asesi_profile_id, company_name, position, tenure_months, subordinates_count,
 			address, province, city, district, postal_code, office_email, office_phone
 		)

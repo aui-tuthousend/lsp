@@ -10,6 +10,17 @@ export type PagedResponse<T> = {
   }
 }
 
+/** Error HTTP dengan status code, agar pemanggil bisa membedakan 404/4xx/5xx. */
+export class ApiError extends Error {
+  readonly status: number
+
+  constructor(status: number, message: string) {
+    super(message)
+    this.name = 'ApiError'
+    this.status = status
+  }
+}
+
 export async function apiFetch<T>(path: string, session?: Session | null, init?: RequestInit): Promise<T> {
   const headers = new Headers(init?.headers)
   headers.set('Accept', 'application/json')
@@ -19,7 +30,7 @@ export async function apiFetch<T>(path: string, session?: Session | null, init?:
   const res = await fetch(`${API_BASE_URL}${path}`, { ...init, headers })
   if (!res.ok) {
     const message = await res.text().catch(() => '')
-    throw new Error(message || `Request failed with status ${res.status}`)
+    throw new ApiError(res.status, message || `Request failed with status ${res.status}`)
   }
   if (res.status === 204) return undefined as T
   return res.json() as Promise<T>

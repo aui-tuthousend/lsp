@@ -52,6 +52,17 @@ type DeleteUserInput struct {
 
 type DeleteUserOutput struct{}
 
+// UpdateMeInput/UpdateMeBody dipakai user yang login untuk mengubah akunnya
+// sendiri (hanya nama & telepon).
+type UpdateMeInput struct {
+	Body UpdateMeBody `json:"body"`
+}
+
+type UpdateMeBody struct {
+	Name  *string `json:"name,omitempty" minLength:"2" maxLength:"255"`
+	Phone *string `json:"phone,omitempty" maxLength:"20"`
+}
+
 type EmptyInput struct{}
 
 type ListUsersInput struct {
