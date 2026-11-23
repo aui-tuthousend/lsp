@@ -86,16 +86,21 @@ func (r *Repository) FindByID(ctx context.Context, id string) (domain.User, erro
 
 func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain.ListResult, error) {
 	db := database.GetExecutor(ctx, r.pool)
+	// roles = nil saat tanpa filter (terkirim sebagai NULL).
+	var roles any
+	if len(params.Roles) > 0 {
+		roles = params.Roles
+	}
 	rows, err := db.Query(ctx, `
-		SELECT u.id, u.role_id, r.name::text, u.isvalid, u.name, u.email::text, u.phone, u.nomor_registrasi, u.password_hash,
+		SELECT u.id, u.role_id, r.code::text, u.isvalid, u.name, u.email::text, u.phone, u.nomor_registrasi, u.password_hash,
 		       u.email_verified_at, u.remember_token, u.created_at, u.updated_at, u.deleted_at,
 		       COUNT(*) OVER() AS total_count
 		FROM users u
 		JOIN roles r ON r.id = u.role_id
-		WHERE u.deleted_at IS NULL
+		WHERE u.deleted_at IS NULL AND ($3::text[] IS NULL OR r.code::text = ANY($3::text[]))
 		ORDER BY u.created_at DESC
 		LIMIT $1 OFFSET $2
-	`, params.Limit, params.Offset)
+	`, params.Limit, params.Offset, roles)
 	if err != nil {
 		return domain.ListResult{}, mapError(err)
 	}
@@ -115,7 +120,12 @@ func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain
 		return domain.ListResult{}, mapError(err)
 	}
 	if len(users) == 0 && params.Offset > 0 {
-		if err := db.QueryRow(ctx, `SELECT COUNT(*) FROM users WHERE deleted_at IS NULL`).Scan(&total); err != nil {
+		if err := db.QueryRow(ctx, `
+			SELECT COUNT(*)
+			FROM users u
+			JOIN roles r ON r.id = u.role_id
+			WHERE u.deleted_at IS NULL AND ($1::text[] IS NULL OR r.code::text = ANY($1::text[]))
+		`, roles).Scan(&total); err != nil {
 			return domain.ListResult{}, mapError(err)
 		}
 	}

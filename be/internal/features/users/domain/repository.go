@@ -5,6 +5,8 @@ import "context"
 type ListParams struct {
 	Limit  int
 	Offset int
+	// Roles membatasi hasil ke kode role tertentu; kosong = tanpa filter.
+	Roles []string
 }
 
 type ListResult struct {

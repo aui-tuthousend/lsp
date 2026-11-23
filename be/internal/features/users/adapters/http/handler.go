@@ -81,7 +81,7 @@ func (h *Handler) GetMe(ctx context.Context, input *EmptyInput) (*UserOutput, er
 
 func (h *Handler) List(ctx context.Context, input *ListUsersInput) (*httpplatform.PagedResponse[UserDTO], error) {
 	limit := input.SafeLimit()
-	result, err := h.service.List(ctx, limit, input.Offset())
+	result, err := h.service.List(ctx, limit, input.Offset(), input.Roles)
 	if err != nil {
 		return nil, mapError(err)
 	}

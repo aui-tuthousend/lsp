@@ -56,6 +56,7 @@ type EmptyInput struct{}
 
 type ListUsersInput struct {
 	httpplatform.PaginationQuery
+	Roles []string `query:"roles" doc:"Filter kode role (bisa berulang)"`
 }
 
 type AuthOutput struct {

@@ -132,8 +132,8 @@ func (s *Service) GetMe(ctx context.Context, claims auth.UserClaims) (domain.Use
 	return s.repo.FindByID(ctx, claims.UserID)
 }
 
-func (s *Service) List(ctx context.Context, limit, offset int) (domain.ListResult, error) {
-	return s.repo.List(ctx, domain.ListParams{Limit: limit, Offset: offset})
+func (s *Service) List(ctx context.Context, limit, offset int, roles []string) (domain.ListResult, error) {
+	return s.repo.List(ctx, domain.ListParams{Limit: limit, Offset: offset, Roles: roles})
 }
 
 // newUser memvalidasi role, me-resolve role_id dari master data, meng-hash
