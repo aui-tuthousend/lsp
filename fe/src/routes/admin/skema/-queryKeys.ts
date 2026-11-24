@@ -6,4 +6,5 @@ export const schemaKeys = {
   list: (params: ListSchemaParams = {}) => [...schemaKeys.lists(), params] as const,
   trees: () => [...schemaKeys.all, 'tree'] as const,
   tree: (id: string) => [...schemaKeys.trees(), id] as const,
+  requirements: (schemaId: string) => [...schemaKeys.all, 'requirements', schemaId] as const,
 }

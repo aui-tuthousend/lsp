@@ -26,6 +26,7 @@ import { Route as ScanTokenRouteImport } from './routes/scan.$token'
 import { Route as ValidatorIndexRouteImport } from './routes/validator/index'
 import { Route as VerifyTokenRouteImport } from './routes/verify.$token'
 import { Route as AdminAsesorIndexRouteImport } from './routes/admin/asesor/index'
+import { Route as AdminDokumenIndexRouteImport } from './routes/admin/dokumen/index'
 import { Route as AdminRolesIndexRouteImport } from './routes/admin/roles/index'
 import { Route as AdminSkemaIndexRouteImport } from './routes/admin/skema/index'
 import { Route as AdminSkemaSchemaIdRouteImport } from './routes/admin/skema/$schemaId'
@@ -119,6 +120,11 @@ const AdminAsesorIndexRoute = AdminAsesorIndexRouteImport.update({
   path: '/asesor/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AdminDokumenIndexRoute = AdminDokumenIndexRouteImport.update({
+  id: '/dokumen/',
+  path: '/dokumen/',
+  getParentRoute: () => AdminRouteRoute,
+} as any)
 const AdminRolesIndexRoute = AdminRolesIndexRouteImport.update({
   id: '/roles/',
   path: '/roles/',
@@ -176,6 +182,7 @@ export interface FileRoutesByFullPath {
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
+  '/admin/dokumen/': typeof AdminDokumenIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
   '/admin/skema/': typeof AdminSkemaIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
@@ -197,6 +204,7 @@ export interface FileRoutesByTo {
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor': typeof AdminAsesorIndexRoute
+  '/admin/dokumen': typeof AdminDokumenIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
   '/admin/skema': typeof AdminSkemaIndexRoute
   '/admin/tuks': typeof AdminTuksIndexRoute
@@ -224,6 +232,7 @@ export interface FileRoutesById {
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
+  '/admin/dokumen/': typeof AdminDokumenIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
   '/admin/skema/': typeof AdminSkemaIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
@@ -252,6 +261,7 @@ export interface FileRouteTypes {
     | '/admin/skema/$schemaId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
+    | '/admin/dokumen/'
     | '/admin/roles/'
     | '/admin/skema/'
     | '/admin/tuks/'
@@ -273,6 +283,7 @@ export interface FileRouteTypes {
     | '/admin/skema/$schemaId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor'
+    | '/admin/dokumen'
     | '/admin/roles'
     | '/admin/skema'
     | '/admin/tuks'
@@ -299,6 +310,7 @@ export interface FileRouteTypes {
     | '/admin/skema/$schemaId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
+    | '/admin/dokumen/'
     | '/admin/roles/'
     | '/admin/skema/'
     | '/admin/tuks/'
@@ -440,6 +452,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminAsesorIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/admin/dokumen/': {
+      id: '/admin/dokumen/'
+      path: '/dokumen'
+      fullPath: '/admin/dokumen/'
+      preLoaderRoute: typeof AdminDokumenIndexRouteImport
+      parentRoute: typeof AdminRouteRoute
+    }
     '/admin/roles/': {
       id: '/admin/roles/'
       path: '/roles'
@@ -496,6 +515,7 @@ interface AdminRouteRouteChildren {
   AdminIndexRoute: typeof AdminIndexRoute
   AdminSkemaSchemaIdRoute: typeof AdminSkemaSchemaIdRoute
   AdminAsesorIndexRoute: typeof AdminAsesorIndexRoute
+  AdminDokumenIndexRoute: typeof AdminDokumenIndexRoute
   AdminRolesIndexRoute: typeof AdminRolesIndexRoute
   AdminSkemaIndexRoute: typeof AdminSkemaIndexRoute
   AdminTuksIndexRoute: typeof AdminTuksIndexRoute
@@ -506,6 +526,7 @@ const AdminRouteRouteChildren: AdminRouteRouteChildren = {
   AdminIndexRoute: AdminIndexRoute,
   AdminSkemaSchemaIdRoute: AdminSkemaSchemaIdRoute,
   AdminAsesorIndexRoute: AdminAsesorIndexRoute,
+  AdminDokumenIndexRoute: AdminDokumenIndexRoute,
   AdminRolesIndexRoute: AdminRolesIndexRoute,
   AdminSkemaIndexRoute: AdminSkemaIndexRoute,
   AdminTuksIndexRoute: AdminTuksIndexRoute,

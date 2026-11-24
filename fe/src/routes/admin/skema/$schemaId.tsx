@@ -1,16 +1,19 @@
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { ArrowLeft, Loader2, Pencil, Plus, Trash2 } from 'lucide-react'
+import { ArrowLeft, Loader2, Pencil, Plus, Save, Trash2 } from 'lucide-react'
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Checkbox } from '@/components/ui/checkbox'
 import { ConfirmDialog } from '@/components/ui/confirm-dialog'
+import { Switch } from '@/components/ui/switch'
+import { useDocumentTypes } from '@/routes/admin/dokumen/-hooks'
 import { CriteriaFormDialog } from './-components/criteria-form-dialog'
 import { ElementFormDialog } from './-components/element-form-dialog'
 import { SchemaFormDialog } from './-components/schema-form-dialog'
 import { UnitFormDialog } from './-components/unit-form-dialog'
-import { useDeleteCriteria, useDeleteElement, useDeleteUnit, useSchemaTree } from './-hooks'
-import type { CompetencyUnit, CompetencyUnitCriteria, CompetencyUnitElement } from './-types'
+import { useDeleteCriteria, useDeleteElement, useDeleteUnit, useReplaceRequirements, useRequirements, useSchemaTree } from './-hooks'
+import type { CompetencyUnit, CompetencyUnitCriteria, CompetencyUnitElement, RequirementItem } from './-types'
 
 export const Route = createFileRoute('/admin/skema/$schemaId')({
   component: SchemaDetailPage,
@@ -46,6 +49,54 @@ function SchemaDetailPage() {
   })
   const [deletingCriteria, setDeletingCriteria] = useState<CompetencyUnitCriteria | null>(null)
   const removeCriteria = useDeleteCriteria(schemaId, auth)
+
+  // Persyaratan dokumen
+  const { data: docTypesData, isLoading: docTypesLoading } = useDocumentTypes({ page: 1, limit: 100 }, auth)
+  const { data: requirementsData } = useRequirements(schemaId, auth)
+  const replaceRequirements = useReplaceRequirements(schemaId, auth)
+  const docTypes = docTypesData?.data ?? []
+
+  // Draf editor: document_type_id -> is_required (hanya yang terceklis).
+  const [draft, setDraft] = useState<Record<string, boolean>>({})
+  const [draftSchemaId, setDraftSchemaId] = useState<string | null>(null)
+  const baseline = useMemo(() => {
+    const map: Record<string, boolean> = {}
+    for (const requirement of requirementsData?.data ?? []) map[requirement.document_type_id] = requirement.is_required
+    return map
+  }, [requirementsData])
+
+  // Isi draf sekali per skema, setelah data persyaratan selesai dimuat.
+  useEffect(() => {
+    if (requirementsData === undefined || draftSchemaId === schemaId) return
+    setDraft(baseline)
+    setDraftSchemaId(schemaId)
+  }, [requirementsData, baseline, draftSchemaId, schemaId])
+
+  const requirementsReady = draftSchemaId === schemaId
+  const requirementsDirty = useMemo(() => {
+    const draftIds = Object.keys(draft)
+    const baseIds = Object.keys(baseline)
+    if (draftIds.length !== baseIds.length) return true
+    return draftIds.some((id) => baseline[id] !== draft[id])
+  }, [draft, baseline])
+
+  function toggleRequirement(documentTypeId: string, checked: boolean) {
+    setDraft((prev) => {
+      const next = { ...prev }
+      if (checked) next[documentTypeId] = true
+      else delete next[documentTypeId]
+      return next
+    })
+  }
+
+  function setRequirementRequired(documentTypeId: string, isRequired: boolean) {
+    setDraft((prev) => ({ ...prev, [documentTypeId]: isRequired }))
+  }
+
+  function saveRequirements() {
+    const items: RequirementItem[] = Object.entries(draft).map(([document_type_id, is_required]) => ({ document_type_id, is_required }))
+    replaceRequirements.mutate({ items })
+  }
 
   if (isLoading) {
     return (
@@ -235,6 +286,81 @@ function SchemaDetailPage() {
           )}
         </CardContent>
       </Card>
+
+      <div className="space-y-4">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <div>
+            <h2 className="text-base font-semibold text-slate-900">Dokumen Persyaratan</h2>
+            <p className="text-sm text-slate-500">Centang jenis dokumen yang dipersyaratkan, lalu tandai wajib atau opsional.</p>
+          </div>
+          <div className="flex items-center gap-2">
+            {requirementsDirty ? <span className="text-xs font-medium text-amber-600">Belum disimpan</span> : null}
+            <Button
+              className="gap-2"
+              disabled={!requirementsReady || !requirementsDirty || replaceRequirements.isPending}
+              onClick={saveRequirements}
+            >
+              {replaceRequirements.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
+              {replaceRequirements.isPending ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+          </div>
+        </div>
+
+        <Card>
+          <CardContent className="p-0">
+            {docTypesLoading || !requirementsReady ? (
+              <div className="flex items-center gap-2 p-6 text-sm text-slate-500">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Memuat...
+              </div>
+            ) : docTypes.length === 0 ? (
+              <p className="p-6 text-sm text-slate-500">
+                Belum ada master jenis dokumen. Tambahkan dulu di{' '}
+                <Link to="/admin/dokumen" className="font-medium text-slate-900 underline">
+                  Master Jenis Dokumen
+                </Link>
+                .
+              </p>
+            ) : (
+              <ul className="divide-y divide-slate-100">
+                {docTypes.map((docType) => {
+                  const checked = docType.id in draft
+                  const isRequired = draft[docType.id] ?? true
+                  return (
+                    <li key={docType.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3">
+                      <Checkbox
+                        name={`doc-type-${docType.id}`}
+                        checked={checked}
+                        onChange={(event) => toggleRequirement(docType.id, event.target.checked)}
+                        label={
+                          <span className="flex flex-wrap items-baseline gap-2">
+                            <span className="font-medium text-slate-900">{docType.label}</span>
+                            <code className="rounded bg-slate-100 px-1.5 py-0.5 text-xs font-medium text-slate-600">{docType.code}</code>
+                          </span>
+                        }
+                      />
+                      {checked ? (
+                        <div className="flex items-center gap-2">
+                          <span className={isRequired ? 'text-xs font-medium text-amber-700' : 'text-xs font-medium text-slate-500'}>
+                            {isRequired ? 'Wajib' : 'Opsional'}
+                          </span>
+                          <Switch
+                            checked={isRequired}
+                            onCheckedChange={(value) => setRequirementRequired(docType.id, value)}
+                            aria-label={`Tandai ${docType.label} wajib`}
+                          />
+                        </div>
+                      ) : (
+                        <span className="text-xs text-slate-400">Tidak dipersyaratkan</span>
+                      )}
+                    </li>
+                  )
+                })}
+              </ul>
+            )}
+          </CardContent>
+        </Card>
+      </div>
 
       <SchemaFormDialog open={schemaFormOpen} onOpenChange={setSchemaFormOpen} schema={tree} session={auth} />
 

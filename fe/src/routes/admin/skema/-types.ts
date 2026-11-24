@@ -4,6 +4,8 @@
 // `SchemaDTO`, `UnitDTO`, `ElementDTO`, `CriteriaDTO` dan tree `SchemaTreeDTO`.
 // Struktur: skema -> unit kompetensi -> elemen -> kriteria unjuk kerja (KUK).
 
+import type { DocumentType } from '../dokumen/-types'
+
 /** Skema sertifikasi seperti dikembalikan backend. */
 export type CertificationSchema = {
   id: string
@@ -99,4 +101,29 @@ export type UnitNode = CompetencyUnit & {
 /** Skema beserta struktur lengkapnya (GET /certification-schemas/{id}). */
 export type SchemaTree = CertificationSchema & {
   units: UnitNode[]
+}
+
+/**
+ * Persyaratan dokumen milik sebuah skema. Field `document_type` di-embed dari
+ * backend (modul documentrequirements) agar tidak perlu lookup terpisah.
+ */
+export type SchemaDocumentRequirement = {
+  id: string
+  certification_schema_id: string
+  document_type_id: string
+  is_required: boolean
+  created_at: string
+  updated_at: string
+  document_type: DocumentType
+}
+
+/** Satu baris pilihan dokumen untuk sebuah skema (PUT set-semantik). */
+export type RequirementItem = {
+  document_type_id: string
+  is_required: boolean
+}
+
+/** Body PUT /certification-schemas/{id}/document-requirements — daftar lengkap. */
+export type ReplaceRequirementsBody = {
+  items: RequirementItem[]
 }

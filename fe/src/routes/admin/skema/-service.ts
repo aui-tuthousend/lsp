@@ -10,6 +10,8 @@ import type {
   CreateSchemaBody,
   CreateUnitBody,
   ListSchemaParams,
+  ReplaceRequirementsBody,
+  SchemaDocumentRequirement,
   SchemaTree,
   UpdateCriteriaBody,
   UpdateElementBody,
@@ -21,6 +23,11 @@ const SCHEMAS = '/certification-schemas'
 const UNITS = '/competency-units'
 const ELEMENTS = '/competency-unit-elements'
 const CRITERIA = '/competency-unit-criteria'
+
+/** Respons daftar persyaratan dokumen: { data: SchemaDocumentRequirement[] }. */
+export type RequirementsResponse = {
+  data: SchemaDocumentRequirement[]
+}
 
 function queryString(params: ListSchemaParams): string {
   const search = new URLSearchParams()
@@ -87,5 +94,15 @@ export const schemaService = {
 
   removeCriteria(id: string, session: Session | null) {
     return apiFetch<void>(`${CRITERIA}/${id}`, session, { method: 'DELETE' })
+  },
+
+  /** Daftar persyaratan dokumen milik sebuah skema (dengan jenis dokumen). */
+  listRequirements(schemaId: string, session: Session | null) {
+    return apiFetch<RequirementsResponse>(`${SCHEMAS}/${schemaId}/document-requirements`, session)
+  },
+
+  /** Ganti seluruh persyaratan dokumen sebuah skema dengan daftar yang dikirim. */
+  replaceRequirements(schemaId: string, body: ReplaceRequirementsBody, session: Session | null) {
+    return apiFetch<RequirementsResponse>(`${SCHEMAS}/${schemaId}/document-requirements`, session, { method: 'PUT', body: JSON.stringify(body) })
   },
 }

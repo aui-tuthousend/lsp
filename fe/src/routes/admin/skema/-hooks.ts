@@ -9,6 +9,7 @@ import type {
   CreateSchemaBody,
   CreateUnitBody,
   ListSchemaParams,
+  ReplaceRequirementsBody,
   UpdateCriteriaBody,
   UpdateElementBody,
   UpdateSchemaBody,
@@ -223,6 +224,33 @@ export function useDeleteCriteria(schemaId: string, session: Session | null) {
     },
     onError: (error) => {
       toast.error('Gagal menghapus KUK', { description: errorMessage(error) })
+    },
+  })
+}
+
+// --- Persyaratan dokumen per skema ---
+
+/** Daftar persyaratan dokumen milik sebuah skema. */
+export function useRequirements(schemaId: string, session: Session | null) {
+  return useQuery({
+    queryKey: schemaKeys.requirements(schemaId),
+    queryFn: () => schemaService.listRequirements(schemaId, session),
+    enabled: Boolean(session) && Boolean(schemaId),
+  })
+}
+
+/** Ganti seluruh persyaratan dokumen sebuah skema (set-semantik). */
+export function useReplaceRequirements(schemaId: string, session: Session | null) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: (body: ReplaceRequirementsBody) => schemaService.replaceRequirements(schemaId, body, session),
+    onSuccess: (result) => {
+      queryClient.setQueryData(schemaKeys.requirements(schemaId), result)
+      toast.success('Persyaratan dokumen berhasil disimpan')
+    },
+    onError: (error) => {
+      toast.error('Gagal menyimpan persyaratan dokumen', { description: errorMessage(error) })
     },
   })
 }

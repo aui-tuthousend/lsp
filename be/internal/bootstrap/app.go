@@ -14,6 +14,7 @@ import (
 	asesorhttp "lsp/internal/features/asesor/adapters/http"
 	asesorpg "lsp/internal/features/asesor/adapters/postgres"
 	schemahttp "lsp/internal/features/certificationschema/adapters/http"
+	docreqhttp "lsp/internal/features/documentrequirements/adapters/http"
 	notificationshttp "lsp/internal/features/notifications/adapters/http"
 	registrationhttp "lsp/internal/features/registration/adapters/http"
 	tukhttp "lsp/internal/features/tuk/adapters/http"
@@ -28,22 +29,23 @@ import (
 )
 
 type App struct {
-	Config        config.Config
-	Router        *stdhttp.ServeMux
-	Handler       stdhttp.Handler
-	API           huma.API
-	Users         *UsersModule
-	Notifications *NotificationsModule
-	Registration  *RegistrationModule
-	Asesi         *AsesiModule
-	Uploads       *UploadsModule
-	Asesor        *AsesorModule
-	TUK           *TUKModule
-	Schema        *SchemaModule
-	APL01         *APL01Module
-	APL02         *APL02Module
-	Portfolio     *PortfolioModule
-	ObjectStorage storage.ObjectStorage
+	Config          config.Config
+	Router          *stdhttp.ServeMux
+	Handler         stdhttp.Handler
+	API             huma.API
+	Users           *UsersModule
+	Notifications   *NotificationsModule
+	Registration    *RegistrationModule
+	Asesi           *AsesiModule
+	Uploads         *UploadsModule
+	Asesor          *AsesorModule
+	TUK             *TUKModule
+	Schema          *SchemaModule
+	DocRequirements *DocumentRequirementsModule
+	APL01           *APL01Module
+	APL02           *APL02Module
+	Portfolio       *PortfolioModule
+	ObjectStorage   storage.ObjectStorage
 }
 
 func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *redis.Client, objStorage storage.ObjectStorage) (*App, error) {
@@ -79,26 +81,29 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	schemaModule := newSchemaModule(pool)
 	schemahttp.RegisterRoutes(api, schemaModule.Handler)
+	docReqModule := newDocumentRequirementsModule(pool, txManager)
+	docreqhttp.RegisterRoutes(api, docReqModule.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
 	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
 
 	app := &App{
-		Config:        cfg,
-		Router:        mux,
-		API:           api,
-		Users:         usersModule,
-		Notifications: notificationsModule,
-		Registration:  registrationModule,
-		Asesi:         asesiModule,
-		Uploads:       uploadsModule,
-		Asesor:        asesorModule,
-		TUK:           tukModule,
-		Schema:        schemaModule,
-		APL01:         newAPL01Module(),
-		APL02:         newAPL02Module(),
-		Portfolio:     newPortfolioModule(objStorage),
-		ObjectStorage: objStorage,
+		Config:          cfg,
+		Router:          mux,
+		API:             api,
+		Users:           usersModule,
+		Notifications:   notificationsModule,
+		Registration:    registrationModule,
+		Asesi:           asesiModule,
+		Uploads:         uploadsModule,
+		Asesor:          asesorModule,
+		TUK:             tukModule,
+		Schema:          schemaModule,
+		DocRequirements: docReqModule,
+		APL01:           newAPL01Module(),
+		APL02:           newAPL02Module(),
+		Portfolio:       newPortfolioModule(objStorage),
+		ObjectStorage:   objStorage,
 	}
 	app.Handler = httpplatform.Chain(mux,
 		httpplatform.RequestID,
