@@ -2,12 +2,15 @@
 -- Baris diisi oleh seeder (cmd/seed), id digenerate di Go.
 
 CREATE TABLE document_types (
-    id             varchar(32)     PRIMARY KEY,          -- short uuid, digenerate di Go
-    code           varchar(50)     NOT NULL,             -- 'ktp','ijazah','sertifikat_pelatihan',...
-    label          varchar(255)    NOT NULL,
-    created_at     timestamptz     NOT NULL DEFAULT now(),
-    updated_at     timestamptz     NOT NULL DEFAULT now(),
-    CONSTRAINT uq_document_types_code UNIQUE (code)
+    id                 varchar(32)  PRIMARY KEY,          -- short uuid, digenerate di Go
+    code               varchar(50)  NOT NULL,             -- 'ktp','ijazah','sertifikat_pelatihan',...
+    label              varchar(255) NOT NULL,
+    -- MIME yang diizinkan untuk diunggah (subset allowlist uploads purpose 'document').
+    allowed_mime_types varchar[]    NOT NULL DEFAULT ARRAY['application/pdf', 'image/jpeg', 'image/png']::varchar[],
+    created_at         timestamptz  NOT NULL DEFAULT now(),
+    updated_at         timestamptz  NOT NULL DEFAULT now(),
+    CONSTRAINT uq_document_types_code UNIQUE (code),
+    CONSTRAINT ck_document_types_allowed_mime_types CHECK (array_length(allowed_mime_types, 1) >= 1)
 );
 
 -- Dokumen wajib per skema (inilah penentu "dokumen relevan" APL.02).

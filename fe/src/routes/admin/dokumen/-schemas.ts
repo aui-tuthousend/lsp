@@ -4,9 +4,17 @@
 
 import { z } from 'zod'
 
+/** Pilihan tipe berkas yang boleh diunggah (MIME). */
+export const MIME_OPTIONS: { value: string; label: string }[] = [
+  { value: 'application/pdf', label: 'PDF' },
+  { value: 'image/jpeg', label: 'JPG' },
+  { value: 'image/png', label: 'PNG' },
+]
+
 export const documentTypeFormSchema = z.object({
   code: z.string().trim().min(1, 'Kode wajib diisi').max(50, 'Maksimal 50 karakter'),
   label: z.string().trim().min(1, 'Label wajib diisi').max(255, 'Maksimal 255 karakter'),
+  allowed_mime_types: z.array(z.string()).min(1, 'Pilih minimal satu tipe berkas'),
 })
 
 export type DocumentTypeFormValues = z.infer<typeof documentTypeFormSchema>

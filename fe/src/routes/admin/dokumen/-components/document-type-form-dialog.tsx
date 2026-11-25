@@ -2,23 +2,26 @@ import { useEffect, useState, type FormEvent } from 'react'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { Button } from '@/components/ui/button'
+import { Checkbox } from '@/components/ui/checkbox'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import type { Session } from '@/lib/auth/types'
 import { useCreateDocumentType, useUpdateDocumentType } from '../-hooks'
-import { validateDocumentTypeForm, type DocumentTypeFormValues } from '../-schemas'
+import { MIME_OPTIONS, validateDocumentTypeForm, type DocumentTypeFormValues } from '../-schemas'
 import type { CreateDocumentTypeBody, DocumentType, UpdateDocumentTypeBody } from '../-types'
 
 const EMPTY_FORM: DocumentTypeFormValues = {
   code: '',
   label: '',
+  allowed_mime_types: ['application/pdf'],
 }
 
 function toForm(docType: DocumentType): DocumentTypeFormValues {
   return {
     code: docType.code,
     label: docType.label,
+    allowed_mime_types: docType.allowed_mime_types ?? [],
   }
 }
 
@@ -27,7 +30,14 @@ function toPayload(values: DocumentTypeFormValues): CreateDocumentTypeBody {
   return {
     code: values.code,
     label: values.label,
+    allowed_mime_types: values.allowed_mime_types,
   }
+}
+
+/** Bandingkan nilai, termasuk array (untuk allowed_mime_types). */
+function sameValue(a: unknown, b: unknown): boolean {
+  if (Array.isArray(a) && Array.isArray(b)) return a.length === b.length && a.every((value, index) => value === b[index])
+  return a === b
 }
 
 /** Bandingkan dengan nilai awal; kirim hanya field yang berubah (partial update). */
@@ -36,7 +46,7 @@ function diffPatch(values: DocumentTypeFormValues, baseline: DocumentTypeFormVal
   const prev = toPayload(baseline)
   const patch: Record<string, unknown> = {}
   for (const key of Object.keys(next) as (keyof UpdateDocumentTypeBody)[]) {
-    if (next[key] !== prev[key]) patch[key] = next[key]
+    if (!sameValue(next[key], prev[key])) patch[key] = next[key]
   }
   return patch as UpdateDocumentTypeBody
 }
@@ -77,6 +87,13 @@ export function DocumentTypeFormDialog({
       delete next[key as string]
       return next
     })
+  }
+
+  function toggleMime(value: string, checked: boolean) {
+    set(
+      'allowed_mime_types',
+      checked ? [...values.allowed_mime_types, value] : values.allowed_mime_types.filter((mime) => mime !== value),
+    )
   }
 
   function submit(event: FormEvent<HTMLFormElement>) {
@@ -121,6 +138,25 @@ export function DocumentTypeFormDialog({
               <Input id="label" maxLength={255} value={values.label} onChange={(e) => set('label', e.target.value)} placeholder="mis. KTP" />
             </Field>
           </div>
+
+          <Field
+            label="Tipe Berkas Diizinkan"
+            required
+            error={errors.allowed_mime_types}
+            hint="Berkas yang boleh diunggah untuk jenis dokumen ini."
+          >
+            <div className="flex flex-wrap gap-4">
+              {MIME_OPTIONS.map((option) => (
+                <Checkbox
+                  key={option.value}
+                  id={`mime-${option.value}`}
+                  label={option.label}
+                  checked={values.allowed_mime_types.includes(option.value)}
+                  onChange={(e) => toggleMime(option.value, e.target.checked)}
+                />
+              ))}
+            </div>
+          </Field>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={pending}>

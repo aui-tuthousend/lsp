@@ -20,21 +20,24 @@ func NewService(repo domain.Repository, tx *database.TxManager) *Service {
 // --- Master jenis dokumen ---
 
 type CreateDocumentTypeCommand struct {
-	Code  string
-	Label string
+	Code             string
+	Label            string
+	AllowedMimeTypes []string
 }
 
 type PatchDocumentTypeCommand struct {
-	ID    string
-	Code  *string
-	Label *string
+	ID               string
+	Code             *string
+	Label            *string
+	AllowedMimeTypes []string
 }
 
 func (s *Service) CreateDocumentType(ctx context.Context, cmd CreateDocumentTypeCommand) (domain.DocumentType, error) {
 	docType := domain.DocumentType{
-		ID:    id.New(),
-		Code:  cmd.Code,
-		Label: cmd.Label,
+		ID:               id.New(),
+		Code:             cmd.Code,
+		Label:            cmd.Label,
+		AllowedMimeTypes: cmd.AllowedMimeTypes,
 	}
 	if err := s.repo.CreateDocumentType(ctx, docType); err != nil {
 		return domain.DocumentType{}, err
@@ -44,9 +47,10 @@ func (s *Service) CreateDocumentType(ctx context.Context, cmd CreateDocumentType
 
 func (s *Service) PatchDocumentType(ctx context.Context, cmd PatchDocumentTypeCommand) (domain.DocumentType, error) {
 	return s.repo.PatchDocumentType(ctx, domain.DocumentTypePatch{
-		ID:    cmd.ID,
-		Code:  cmd.Code,
-		Label: cmd.Label,
+		ID:               cmd.ID,
+		Code:             cmd.Code,
+		Label:            cmd.Label,
+		AllowedMimeTypes: cmd.AllowedMimeTypes,
 	})
 }
 

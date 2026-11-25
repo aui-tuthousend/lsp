@@ -19,16 +19,16 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 	return &Repository{pool: pool}
 }
 
-const documentTypeColumns = `id, code, label, created_at, updated_at`
+const documentTypeColumns = `id, code, label, allowed_mime_types, created_at, updated_at`
 
 // --- Master jenis dokumen ---
 
 func (r *Repository) CreateDocumentType(ctx context.Context, docType domain.DocumentType) error {
 	db := database.GetExecutor(ctx, r.pool)
 	_, err := db.Exec(ctx, `
-		INSERT INTO document_types (id, code, label)
-		VALUES ($1, $2, $3)
-	`, docType.ID, docType.Code, docType.Label)
+		INSERT INTO document_types (id, code, label, allowed_mime_types)
+		VALUES ($1, $2, $3, $4)
+	`, docType.ID, docType.Code, docType.Label, docType.AllowedMimeTypes)
 	return mapError(err)
 }
 
@@ -37,15 +37,27 @@ func (r *Repository) PatchDocumentType(ctx context.Context, patch domain.Documen
 	return scanDocumentType(db.QueryRow(ctx, `
 		UPDATE document_types
 		SET code = COALESCE($2::varchar, code),
-		    label = COALESCE($3::varchar, label)
+		    label = COALESCE($3::varchar, label),
+		    allowed_mime_types = COALESCE($4::varchar[], allowed_mime_types)
 		WHERE id = $1
 		RETURNING `+documentTypeColumns,
-		patch.ID, patch.Code, patch.Label))
+		patch.ID, patch.Code, patch.Label, patch.AllowedMimeTypes))
 }
 
 func (r *Repository) FindDocumentTypeByID(ctx context.Context, id string) (domain.DocumentType, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanDocumentType(db.QueryRow(ctx, `SELECT `+documentTypeColumns+` FROM document_types WHERE id = $1`, id))
+}
+
+// AllowedMimeTypes mengembalikan daftar MIME yang diizinkan untuk sebuah jenis
+// dokumen. Dipakai modul uploads saat menegakkan aturan unggah (purpose 'document').
+func (r *Repository) AllowedMimeTypes(ctx context.Context, id string) ([]string, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var types []string
+	if err := db.QueryRow(ctx, `SELECT allowed_mime_types FROM document_types WHERE id = $1`, id).Scan(&types); err != nil {
+		return nil, mapError(err)
+	}
+	return types, nil
 }
 
 func (r *Repository) ListDocumentTypes(ctx context.Context, params domain.ListParams) (domain.DocumentTypeListResult, error) {
@@ -100,7 +112,7 @@ func (r *Repository) ListRequirementsBySchema(ctx context.Context, schemaID stri
 	db := database.GetExecutor(ctx, r.pool)
 	rows, err := db.Query(ctx, `
 		SELECT r.id, r.certification_schema_id, r.document_type_id, r.is_required, r.created_at, r.updated_at,
-		       dt.id, dt.code, dt.label, dt.created_at, dt.updated_at
+		       dt.id, dt.code, dt.label, dt.allowed_mime_types, dt.created_at, dt.updated_at
 		FROM schema_document_requirements r
 		JOIN document_types dt ON dt.id = r.document_type_id
 		WHERE r.certification_schema_id = $1
@@ -152,7 +164,7 @@ func (r *Repository) UpsertRequirement(ctx context.Context, requirement domain.S
 
 func scanDocumentType(row pgx.Row) (domain.DocumentType, error) {
 	var dt domain.DocumentType
-	if err := row.Scan(&dt.ID, &dt.Code, &dt.Label, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
+	if err := row.Scan(&dt.ID, &dt.Code, &dt.Label, &dt.AllowedMimeTypes, &dt.CreatedAt, &dt.UpdatedAt); err != nil {
 		return domain.DocumentType{}, mapError(err)
 	}
 	return dt, nil
@@ -161,7 +173,7 @@ func scanDocumentType(row pgx.Row) (domain.DocumentType, error) {
 func scanDocumentTypeWithTotal(rows pgx.Rows) (domain.DocumentType, int, error) {
 	var dt domain.DocumentType
 	var total int
-	if err := rows.Scan(&dt.ID, &dt.Code, &dt.Label, &dt.CreatedAt, &dt.UpdatedAt, &total); err != nil {
+	if err := rows.Scan(&dt.ID, &dt.Code, &dt.Label, &dt.AllowedMimeTypes, &dt.CreatedAt, &dt.UpdatedAt, &total); err != nil {
 		return domain.DocumentType{}, 0, mapError(err)
 	}
 	return dt, total, nil
@@ -171,7 +183,7 @@ func scanRequirementDetail(row pgx.Row) (domain.RequirementDetail, error) {
 	var d domain.RequirementDetail
 	if err := row.Scan(
 		&d.ID, &d.CertificationSchemaID, &d.DocumentTypeID, &d.IsRequired, &d.CreatedAt, &d.UpdatedAt,
-		&d.DocumentType.ID, &d.DocumentType.Code, &d.DocumentType.Label, &d.DocumentType.CreatedAt, &d.DocumentType.UpdatedAt,
+		&d.DocumentType.ID, &d.DocumentType.Code, &d.DocumentType.Label, &d.DocumentType.AllowedMimeTypes, &d.DocumentType.CreatedAt, &d.DocumentType.UpdatedAt,
 	); err != nil {
 		return domain.RequirementDetail{}, mapError(err)
 	}

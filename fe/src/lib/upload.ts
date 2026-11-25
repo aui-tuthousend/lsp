@@ -12,11 +12,17 @@ type PresignResponse = {
 /**
  * Unggah file langsung ke object storage lewat presigned URL, lalu kembalikan
  * object key-nya. Backend hanya menyimpan key ini (bucket privat).
+ * `documentTypeId` wajib untuk purpose `document` agar tipe berkas dibatasi
+ * sesuai jenis dokumen (divalidasi backend saat presign).
  */
-export async function uploadFile(file: File, purpose: UploadPurpose): Promise<string> {
+export async function uploadFile(file: File, purpose: UploadPurpose, documentTypeId?: string): Promise<string> {
   const presign = await apiFetch<PresignResponse>('/uploads/presign', null, {
     method: 'POST',
-    body: JSON.stringify({ purpose, content_type: file.type }),
+    body: JSON.stringify({
+      purpose,
+      content_type: file.type,
+      ...(documentTypeId ? { document_type_id: documentTypeId } : {}),
+    }),
   })
 
   const res = await fetch(presign.upload_url, {

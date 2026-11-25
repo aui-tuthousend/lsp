@@ -42,13 +42,15 @@ type ReplaceRequirementsInput struct {
 // --- Body ---
 
 type DocumentTypeBody struct {
-	Code  string `json:"code" minLength:"1" maxLength:"50" doc:"Kode unik, mis. 'ktp'"`
-	Label string `json:"label" minLength:"1" maxLength:"255" doc:"Label tampilan, mis. 'KTP'"`
+	Code             string   `json:"code" minLength:"1" maxLength:"50" doc:"Kode unik, mis. 'ktp'"`
+	Label            string   `json:"label" minLength:"1" maxLength:"255" doc:"Label tampilan, mis. 'KTP'"`
+	AllowedMimeTypes []string `json:"allowed_mime_types" minItems:"1" maxItems:"5" doc:"MIME yang boleh diunggah, mis. ['application/pdf']"`
 }
 
 type DocumentTypePatchBody struct {
-	Code  *string `json:"code,omitempty" minLength:"1" maxLength:"50"`
-	Label *string `json:"label,omitempty" minLength:"1" maxLength:"255"`
+	Code             *string  `json:"code,omitempty" minLength:"1" maxLength:"50"`
+	Label            *string  `json:"label,omitempty" minLength:"1" maxLength:"255"`
+	AllowedMimeTypes []string `json:"allowed_mime_types,omitempty" maxItems:"5"`
 }
 
 type ReplaceRequirementsBody struct {
@@ -79,11 +81,12 @@ type DeleteOutput struct{}
 // --- DTO ---
 
 type DocumentTypeDTO struct {
-	ID        string    `json:"id"`
-	Code      string    `json:"code"`
-	Label     string    `json:"label"`
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	ID               string    `json:"id"`
+	Code             string    `json:"code"`
+	Label            string    `json:"label"`
+	AllowedMimeTypes []string  `json:"allowed_mime_types"`
+	CreatedAt        time.Time `json:"created_at"`
+	UpdatedAt        time.Time `json:"updated_at"`
 }
 
 type RequirementDTO struct {
@@ -99,12 +102,17 @@ type RequirementDTO struct {
 // --- Konversi ---
 
 func toDocumentTypeDTO(dt domain.DocumentType) DocumentTypeDTO {
+	allowed := dt.AllowedMimeTypes
+	if allowed == nil {
+		allowed = []string{}
+	}
 	return DocumentTypeDTO{
-		ID:        dt.ID,
-		Code:      dt.Code,
-		Label:     dt.Label,
-		CreatedAt: dt.CreatedAt,
-		UpdatedAt: dt.UpdatedAt,
+		ID:               dt.ID,
+		Code:             dt.Code,
+		Label:            dt.Label,
+		AllowedMimeTypes: allowed,
+		CreatedAt:        dt.CreatedAt,
+		UpdatedAt:        dt.UpdatedAt,
 	}
 }
 

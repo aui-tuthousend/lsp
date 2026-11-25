@@ -213,7 +213,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     const items = await Promise.all(
       requirementItems.map(async (requirement) => {
         const file = docFiles[requirement.document_type_id]
-        const uploaded = file ? await uploadFile(file, 'document') : undefined
+        const uploaded = file ? await uploadFile(file, 'document', requirement.document_type_id) : undefined
         return {
           document_type_id: requirement.document_type_id,
           file_url: uploaded ?? existingDocuments[requirement.document_type_id] ?? null,

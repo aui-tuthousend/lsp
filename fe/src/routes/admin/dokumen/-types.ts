@@ -8,6 +8,8 @@ export type DocumentType = {
   id: string
   code: string
   label: string
+  /** MIME yang boleh diunggah untuk jenis dokumen ini. */
+  allowed_mime_types: string[]
   created_at: string
   updated_at: string
 }
@@ -16,6 +18,7 @@ export type DocumentType = {
 export type CreateDocumentTypeBody = {
   code: string
   label: string
+  allowed_mime_types: string[]
 }
 
 /** Body update parsial (PATCH /document-types/{id}). */

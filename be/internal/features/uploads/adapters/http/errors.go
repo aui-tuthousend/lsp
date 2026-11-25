@@ -18,6 +18,8 @@ func mapError(err error) error {
 		return huma.Error400BadRequest("invalid upload purpose")
 	case errors.Is(err, app.ErrInvalidContentType):
 		return huma.Error400BadRequest("content type not allowed for this purpose")
+	case errors.Is(err, app.ErrDocumentTypeNotFound):
+		return huma.Error400BadRequest("document type not found")
 	default:
 		return err
 	}

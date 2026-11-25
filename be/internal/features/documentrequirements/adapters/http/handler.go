@@ -19,8 +19,9 @@ func NewHandler(service *app.Service) *Handler {
 
 func (h *Handler) CreateDocumentType(ctx context.Context, input *CreateDocumentTypeInput) (*DocumentTypeOutput, error) {
 	docType, err := h.service.CreateDocumentType(ctx, app.CreateDocumentTypeCommand{
-		Code:  input.Body.Code,
-		Label: input.Body.Label,
+		Code:             input.Body.Code,
+		Label:            input.Body.Label,
+		AllowedMimeTypes: input.Body.AllowedMimeTypes,
 	})
 	if err != nil {
 		return nil, mapError(err)
@@ -30,9 +31,10 @@ func (h *Handler) CreateDocumentType(ctx context.Context, input *CreateDocumentT
 
 func (h *Handler) UpdateDocumentType(ctx context.Context, input *UpdateDocumentTypeInput) (*DocumentTypeOutput, error) {
 	docType, err := h.service.PatchDocumentType(ctx, app.PatchDocumentTypeCommand{
-		ID:    input.ID,
-		Code:  input.Body.Code,
-		Label: input.Body.Label,
+		ID:               input.ID,
+		Code:             input.Body.Code,
+		Label:            input.Body.Label,
+		AllowedMimeTypes: input.Body.AllowedMimeTypes,
 	})
 	if err != nil {
 		return nil, mapError(err)

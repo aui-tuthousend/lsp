@@ -11,8 +11,8 @@ type UploadsModule struct {
 	Handler *uploadshttp.Handler
 }
 
-func newUploadsModule(objStorage storage.ObjectStorage) *UploadsModule {
-	service := uploadsapp.NewService(objStorage)
+func newUploadsModule(objStorage storage.ObjectStorage, docTypes uploadsapp.DocumentTypeResolver) *UploadsModule {
+	service := uploadsapp.NewService(objStorage, docTypes)
 	handler := uploadshttp.NewHandler(service)
 	return &UploadsModule{Service: service, Handler: handler}
 }

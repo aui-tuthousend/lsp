@@ -1,6 +1,22 @@
 import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 import { FileField } from './file-field'
 import type { SchemaDocumentRequirement } from '../-types'
+
+const FALLBACK_ACCEPT = 'image/jpeg,image/png,application/pdf'
+
+function formatMime(mime: string): string {
+  if (mime === 'application/pdf') return 'PDF'
+  if (mime === 'image/jpeg') return 'JPG'
+  if (mime === 'image/png') return 'PNG'
+  return mime
+}
+
+/** Nilai `accept` untuk input file berdasarkan tipe berkas yang diizinkan jenis dokumen. */
+function acceptFor(requirement: SchemaDocumentRequirement): string {
+  const allowed = requirement.document_type.allowed_mime_types ?? []
+  return allowed.length > 0 ? allowed.join(',') : FALLBACK_ACCEPT
+}
 
 export type StepDocumentsProps = {
   requirements: SchemaDocumentRequirement[]
@@ -30,19 +46,28 @@ export function StepDocuments({ requirements, loading, files, existing, errors, 
 
   return (
     <div className="space-y-5">
-      {requirements.map((requirement) => (
-        <FileField
-          key={requirement.id}
-          id={`doc-${requirement.document_type_id}`}
-          label={requirement.document_type.label}
-          accept="image/jpeg,image/png,application/pdf"
-          required={requirement.is_required}
-          file={files[requirement.document_type_id] ?? null}
-          hasExisting={Boolean(existing[requirement.document_type_id])}
-          error={errors[requirement.document_type_id]}
-          onPick={(file) => onPick(requirement.document_type_id, file)}
-        />
-      ))}
+      {requirements.map((requirement) => {
+        const allowed = requirement.document_type.allowed_mime_types ?? []
+        return (
+          <FileField
+            key={requirement.id}
+            id={`doc-${requirement.document_type_id}`}
+            label={requirement.document_type.label}
+            accept={acceptFor(requirement)}
+            required={requirement.is_required}
+            file={files[requirement.document_type_id] ?? null}
+            hasExisting={Boolean(existing[requirement.document_type_id])}
+            error={errors[requirement.document_type_id]}
+            onPick={(file) => {
+              if (file && allowed.length > 0 && !allowed.includes(file.type)) {
+                toast.error(`${requirement.document_type.label} harus ${allowed.map(formatMime).join(', ')}`)
+                return
+              }
+              onPick(requirement.document_type_id, file)
+            }}
+          />
+        )
+      })}
     </div>
   )
 }
