@@ -182,7 +182,11 @@ func (s *Service) PutSchedule(ctx context.Context, cmd PutScheduleCommand) (doma
 // Status permohonan tetap DRAFT sampai asesi memverifikasi via QR (lihat Verify).
 // Token mentah dikembalikan sekali (untuk ditampilkan sebagai QR); yang
 // tersimpan hanya hash-nya.
-func (s *Service) Submit(ctx context.Context, applicationID string) (SubmitResult, error) {
+//
+// Idempoten bila `existingToken` (token yang dikirim klien) masih aktif
+// (menunggu & belum kedaluwarsa) untuk permohonan ini: token yang sama
+// dikembalikan tanpa menerbitkan token baru.
+func (s *Service) Submit(ctx context.Context, applicationID, existingToken string) (SubmitResult, error) {
 	application, err := s.repo.FindApplicationByID(ctx, applicationID)
 	if err != nil {
 		return SubmitResult{}, err
@@ -194,11 +198,26 @@ func (s *Service) Submit(ctx context.Context, applicationID string) (SubmitResul
 		return SubmitResult{}, err
 	}
 
+	now := time.Now().UTC()
+
+	// Pakai ulang token yang sama bila klien masih memegang token aktif.
+	if existingToken != "" {
+		if sig, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(existingToken)); err == nil &&
+			sig.ApplicationID == applicationID &&
+			sig.Status == domain.SignaturePending &&
+			now.Before(sig.ExpiresAt) {
+			detail, err := s.Detail(ctx, applicationID)
+			if err != nil {
+				return SubmitResult{}, err
+			}
+			return SubmitResult{Application: detail, VerifyToken: existingToken}, nil
+		}
+	}
+
 	rawToken, tokenHash, err := newToken()
 	if err != nil {
 		return SubmitResult{}, err
 	}
-	now := time.Now().UTC()
 	err = s.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		if err := s.repo.RevokeActiveSignatures(txCtx, applicationID, domain.EntityPermohonan, domain.SignerAsesi, now); err != nil {
 			return err
@@ -233,6 +252,9 @@ func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgen
 		return domain.ApplicationDetail{}, err
 	}
 	if signature.Status != domain.SignaturePending {
+		if signature.Status == domain.SignatureUsed {
+			return domain.ApplicationDetail{}, domain.ErrTokenUsed
+		}
 		return domain.ApplicationDetail{}, domain.ErrInvalidToken
 	}
 	now := time.Now().UTC()
@@ -262,6 +284,23 @@ func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgen
 	// Publish setelah commit, best-effort (dipakai FE untuk toast realtime).
 	s.publishVerified(ctx, application)
 	return s.Detail(ctx, signature.ApplicationID)
+}
+
+// VerifyStatus mengembalikan status token verifikasi tanpa memakainya. Dipakai
+// laman verifikasi untuk menampilkan "sudah diverifikasi" tanpa tombol.
+func (s *Service) VerifyStatus(ctx context.Context, userID, token string) (domain.FormSignature, domain.Application, error) {
+	signature, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(token))
+	if err != nil {
+		return domain.FormSignature{}, domain.Application{}, err
+	}
+	application, err := s.repo.FindApplicationByID(ctx, signature.ApplicationID)
+	if err != nil {
+		return domain.FormSignature{}, domain.Application{}, err
+	}
+	if application.UserID != userID {
+		return domain.FormSignature{}, domain.Application{}, domain.ErrNotFound
+	}
+	return signature, application, nil
 }
 
 // publishVerified mengirim event SSE ke topic user asesi (best-effort).

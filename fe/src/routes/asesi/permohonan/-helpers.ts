@@ -57,3 +57,18 @@ export function formatDateTime(value?: string | null): string {
 /** Kelas kontrol bersama untuk textarea (input/select memakai komponen UI). */
 export const textareaClass =
   'flex min-h-20 w-full rounded-md border border-slate-200 bg-white px-3 py-2 text-sm text-slate-900 outline-none transition placeholder:text-slate-400 focus:border-slate-400 focus:ring-2 focus:ring-slate-200'
+
+// Token QR disimpan di browser karena server hanya menyimpan hash-nya, sehingga
+// token yang sama bisa ditampilkan lagi setelah refresh/re-submit.
+const VERIFY_TOKEN_PREFIX = 'apl01:verify-token:'
+
+/** Token QR terakhir yang diketahui browser untuk sebuah permohonan. */
+export function readVerifyToken(applicationId: string): string | null {
+  if (typeof window === 'undefined') return null
+  return window.localStorage.getItem(VERIFY_TOKEN_PREFIX + applicationId)
+}
+
+export function writeVerifyToken(applicationId: string, token: string): void {
+  if (typeof window === 'undefined') return
+  window.localStorage.setItem(VERIFY_TOKEN_PREFIX + applicationId, token)
+}

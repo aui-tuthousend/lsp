@@ -132,12 +132,12 @@ export function usePutSchedule(id: string, session: Session | null) {
   })
 }
 
-/** Submit permohonan + terbitkan token QR. */
+/** Submit permohonan + terbitkan token QR (token aktif yang dikirim dipakai ulang). */
 export function useSubmit(id: string, session: Session | null) {
   const queryClient = useQueryClient()
 
   return useMutation({
-    mutationFn: () => apl01Service.submit(id, session),
+    mutationFn: (verifyToken: string | null) => apl01Service.submit(id, verifyToken, session),
     onSuccess: (result) => cacheDetail(queryClient, result.application),
     onError: (error) => {
       toast.error('Gagal mengajukan permohonan', { description: errorMessage(error) })

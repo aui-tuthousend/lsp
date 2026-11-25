@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from '@tanstack/react-router'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { CheckCircle2, Loader2, ShieldCheck, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
@@ -11,18 +11,45 @@ export const Route = createFileRoute('/verify/$token')({
   component: VerifyPage,
 })
 
-type VerifyState = 'idle' | 'submitting' | 'done' | 'error'
+type VerifyState = 'checking' | 'idle' | 'submitting' | 'done' | 'already' | 'invalid' | 'error'
 
 /**
- * Laman verifikasi QR APL-01. Dibuka dari hasil scan QR (`/verify/{token}`),
- * lalu asesi menekan "Setuju" untuk memverifikasi permohonan.
+ * Laman verifikasi QR APL-01. Dibuka dari hasil scan QR (`/verify/{token}`).
+ * Saat dibuka, status token dicek lebih dulu: bila sudah dipakai, halaman hanya
+ * menampilkan keterangan "sudah terverifikasi" tanpa tombol verifikasi.
  */
 function VerifyPage() {
   const { token } = Route.useParams()
   const { auth } = Route.useRouteContext()
-  const [state, setState] = useState<VerifyState>('idle')
+  const [state, setState] = useState<VerifyState>('checking')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<ApplicationDetail | null>(null)
+
+  useEffect(() => {
+    if (!auth) return
+    let active = true
+    setState('checking')
+    apl01Service
+      .verifyStatus(token, auth)
+      .then((status) => {
+        if (!active) return
+        if (status.status === 'dipakai') {
+          setMessage(status.application_code ? `Permohonan ${status.application_code} sudah diverifikasi.` : '')
+          setState('already')
+        } else if (status.status === 'menunggu') {
+          setState('idle')
+        } else {
+          setState('invalid')
+        }
+      })
+      .catch((error) => {
+        if (!active) return
+        setState(error instanceof ApiError && error.status === 404 ? 'invalid' : 'error')
+      })
+    return () => {
+      active = false
+    }
+  }, [auth, token])
 
   async function confirm() {
     setState('submitting')
@@ -31,6 +58,11 @@ function VerifyPage() {
       setResult(detail)
       setState('done')
     } catch (error) {
+      if (error instanceof ApiError && error.status === 409) {
+        setMessage('')
+        setState('already')
+        return
+      }
       setMessage(
         error instanceof ApiError && error.status === 400
           ? 'Token tidak valid atau sudah kedaluwarsa.'
@@ -62,14 +94,27 @@ function VerifyPage() {
                 Masuk
               </Link>
             </>
-          ) : state === 'done' ? (
+          ) : state === 'checking' || state === 'submitting' ? (
+            <div className="flex items-center justify-center gap-2 py-6 text-sm text-slate-500">
+              <Loader2 className="h-4 w-4 animate-spin" />
+              {state === 'submitting' ? 'Memverifikasi...' : 'Memeriksa status token...'}
+            </div>
+          ) : state === 'done' || state === 'already' ? (
             <div className="space-y-2 text-center">
               <CheckCircle2 className="mx-auto h-10 w-10 text-emerald-500" />
-              <p className="text-sm font-medium text-slate-900">Anda telah menyetujui</p>
-              {result ? (
+              <p className="text-sm font-medium text-slate-900">
+                {state === 'done' ? 'Anda telah menyetujui' : 'Token sudah terverifikasi'}
+              </p>
+              {state === 'done' && result ? (
                 <p className="text-sm text-slate-500">Permohonan {result.application.code} telah diverifikasi.</p>
               ) : null}
+              {state === 'already' && message ? <p className="text-sm text-slate-500">{message}</p> : null}
               <p className="text-xs text-slate-400">Anda bisa menutup halaman ini.</p>
+            </div>
+          ) : state === 'invalid' ? (
+            <div className="space-y-2 text-center">
+              <XCircle className="mx-auto h-10 w-10 text-rose-500" />
+              <p className="text-sm text-rose-600">Token tidak valid atau sudah kedaluwarsa.</p>
             </div>
           ) : state === 'error' ? (
             <div className="space-y-2 text-center">
@@ -81,12 +126,8 @@ function VerifyPage() {
               <p className="text-sm text-slate-600">
                 Tekan tombol di bawah untuk menyetujui dan memverifikasi permohonan APL-01 Anda.
               </p>
-              <Button className="w-full gap-2" onClick={() => void confirm()} disabled={state === 'submitting'}>
-                {state === 'submitting' ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <CheckCircle2 className="h-4 w-4" />
-                )}
+              <Button className="w-full gap-2" onClick={() => void confirm()}>
+                <CheckCircle2 className="h-4 w-4" />
                 Setuju &amp; Verifikasi
               </Button>
             </>

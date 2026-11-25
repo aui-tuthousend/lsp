@@ -11,6 +11,7 @@ import type {
   SchemaDocumentRequirement,
   SubmitResult,
   TUK,
+  VerifyTokenStatus,
 } from './-types'
 
 const BASE = '/apl01'
@@ -84,9 +85,12 @@ export const apl01Service = {
     })
   },
 
-  /** Submit permohonan + terbitkan token QR. */
-  submit(id: string, session: Session | null) {
-    return apiFetch<SubmitResult>(`${BASE}/${id}/submit`, session, { method: 'POST' })
+  /** Submit permohonan + terbitkan token QR (token aktif yang dikirim dipakai ulang). */
+  submit(id: string, verifyToken: string | null, session: Session | null) {
+    return apiFetch<SubmitResult>(`${BASE}/${id}/submit`, session, {
+      method: 'POST',
+      body: JSON.stringify({ verify_token: verifyToken ?? undefined }),
+    })
   },
 
   /** Konfirmasi hasil scan QR (token menentukan permohonan). */
@@ -95,6 +99,11 @@ export const apl01Service = {
       method: 'POST',
       body: JSON.stringify({ token }),
     })
+  },
+
+  /** Status token verifikasi tanpa memakainya (untuk laman verifikasi). */
+  verifyStatus(token: string, session: Session | null) {
+    return apiFetch<VerifyTokenStatus>(`${BASE}/verify/${token}`, session)
   },
 
   /** Master skema sertifikasi aktif (untuk step 2). */

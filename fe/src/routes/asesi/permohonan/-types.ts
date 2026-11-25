@@ -135,3 +135,11 @@ export type SubmitResult = {
   application: ApplicationDetail
   verify_token: string
 }
+
+/** Status token verifikasi (GET /apl01/verify/{token}). */
+export type VerifyTokenStatus = {
+  status: SignatureStatus
+  application_code?: string
+  expires_at: string
+  verified_at?: string | null
+}

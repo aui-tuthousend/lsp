@@ -129,7 +129,7 @@ func (h *Handler) PutSchedule(ctx context.Context, input *PutScheduleInput) (*Ap
 }
 
 func (h *Handler) Submit(ctx context.Context, input *SubmitInput) (*SubmitOutput, error) {
-	result, err := h.service.Submit(ctx, input.ID)
+	result, err := h.service.Submit(ctx, input.ID, derefString(input.Body.VerifyToken))
 	if err != nil {
 		return nil, mapError(err)
 	}
@@ -149,6 +149,24 @@ func (h *Handler) Verify(ctx context.Context, input *VerifyInput) (*ApplicationO
 		return nil, mapError(err)
 	}
 	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+}
+
+// VerifyStatus mengembalikan status token verifikasi tanpa memakainya.
+func (h *Handler) VerifyStatus(ctx context.Context, input *VerifyStatusInput) (*VerifyStatusOutput, error) {
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return nil, huma.Error401Unauthorized("unauthenticated")
+	}
+	signature, application, err := h.service.VerifyStatus(ctx, claims.UserID, input.Token)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &VerifyStatusOutput{Body: VerifyStatusDTO{
+		Status:          string(signature.Status),
+		ApplicationCode: application.Code,
+		ExpiresAt:       signature.ExpiresAt,
+		VerifiedAt:      signature.UsedAt,
+	}}, nil
 }
 
 func (h *Handler) Decide(ctx context.Context, input *DecideInput) (*ApplicationOutput, error) {
@@ -174,6 +192,13 @@ func headerValue(value string) *string {
 		return nil
 	}
 	return &value
+}
+
+func derefString(value *string) string {
+	if value == nil {
+		return ""
+	}
+	return *value
 }
 
 // clientIP mengambil IP klien dari header X-Forwarded-For (nilai pertama).

@@ -47,13 +47,18 @@ type PutScheduleInput struct {
 }
 
 type SubmitInput struct {
-	ID string `path:"id"`
+	ID   string     `path:"id"`
+	Body SubmitBody `json:"body"`
 }
 
 type VerifyInput struct {
 	UserAgent    string     `header:"User-Agent"`
 	ForwardedFor string     `header:"X-Forwarded-For"`
 	Body         VerifyBody `json:"body"`
+}
+
+type VerifyStatusInput struct {
+	Token string `path:"token" minLength:"1" maxLength:"200" doc:"Token hasil scan QR"`
 }
 
 type DecideInput struct {
@@ -91,6 +96,10 @@ type VerifyBody struct {
 	Token string `json:"token" minLength:"1" doc:"Token hasil scan QR"`
 }
 
+type SubmitBody struct {
+	VerifyToken *string `json:"verify_token,omitempty" maxLength:"200" doc:"Token QR yang sudah dimiliki; bila masih aktif, token yang sama dipakai ulang (tidak diterbitkan baru)"`
+}
+
 type DecideBody struct {
 	Decision string  `json:"decision" enum:"APPROVED,REJECTED" doc:"Hasil verifikasi admin"`
 	Note     *string `json:"note,omitempty" doc:"Catatan verifikasi"`
@@ -110,6 +119,17 @@ type SubmitOutput struct {
 type SubmitDTO struct {
 	Application ApplicationDetailDTO `json:"application"`
 	VerifyToken string               `json:"verify_token" doc:"Token mentah untuk ditampilkan sebagai QR (hanya muncul sekali)"`
+}
+
+type VerifyStatusOutput struct {
+	Body VerifyStatusDTO `json:"body"`
+}
+
+type VerifyStatusDTO struct {
+	Status          string     `json:"status" doc:"menunggu | dipakai | kadaluarsa | dibatalkan"`
+	ApplicationCode string     `json:"application_code,omitempty"`
+	ExpiresAt       time.Time  `json:"expires_at"`
+	VerifiedAt      *time.Time `json:"verified_at,omitempty"`
 }
 
 // --- DTO ---

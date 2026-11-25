@@ -60,6 +60,10 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		asesiOnly,
 		httpplatform.WithDoc("apl01-verify", "Verify APL-01 via QR", "Konfirmasi hasil scan QR (tandatangan asesi); token menentukan permohonan.", "APL-01"),
 	)
+	huma.Get(api, "/apl01/verify/{token}", handler.VerifyStatus,
+		asesiOnly,
+		httpplatform.WithDoc("apl01-verify-status", "Get QR verification status", "Status token verifikasi tanpa memakainya (menunggu/dipakai/...).", "APL-01"),
+	)
 
 	// Verifikasi admin (APPROVED/REJECTED + plotting asesor).
 	huma.Post(api, "/apl01/{id}/decision", handler.Decide,

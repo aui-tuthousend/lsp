@@ -26,11 +26,13 @@ export type StepDocumentsProps = {
   /** Object key tersimpan (dari detail permohonan), per `document_type_id`. */
   existing: Record<string, string | null>
   errors: Record<string, string>
+  /** Nonaktifkan kontrol saat proses unggah/simpan berjalan. */
+  disabled?: boolean
   onPick: (documentTypeId: string, file: File | null) => void
 }
 
 /** Step 3 — unggah bukti kelengkapan sesuai skema terpilih. */
-export function StepDocuments({ requirements, loading, files, existing, errors, onPick }: StepDocumentsProps) {
+export function StepDocuments({ requirements, loading, files, existing, errors, disabled, onPick }: StepDocumentsProps) {
   if (loading) {
     return (
       <div className="flex items-center gap-2 text-sm text-slate-500">
@@ -58,6 +60,7 @@ export function StepDocuments({ requirements, loading, files, existing, errors, 
             file={files[requirement.document_type_id] ?? null}
             hasExisting={Boolean(existing[requirement.document_type_id])}
             error={errors[requirement.document_type_id]}
+            disabled={disabled}
             onPick={(file) => {
               if (file && allowed.length > 0 && !allowed.includes(file.type)) {
                 toast.error(`${requirement.document_type.label} harus ${allowed.map(formatMime).join(', ')}`)

@@ -11,11 +11,13 @@ export type FileFieldProps = {
   hasExisting?: boolean
   required?: boolean
   error?: string
+  /** Nonaktifkan kontrol saat proses unggah/simpan berjalan. */
+  disabled?: boolean
   onPick: (file: File | null) => void
 }
 
 /** Kontrol unggah berkas sederhana (native input, dipicu oleh tombol). */
-export function FileField({ id, label, accept, file, hasExisting, required, error, onPick }: FileFieldProps) {
+export function FileField({ id, label, accept, file, hasExisting, required, error, disabled, onPick }: FileFieldProps) {
   const inputRef = useRef<HTMLInputElement>(null)
 
   function clear() {
@@ -36,9 +38,17 @@ export function FileField({ id, label, accept, file, hasExisting, required, erro
           type="file"
           accept={accept}
           className="hidden"
+          disabled={disabled}
           onChange={(event) => onPick(event.target.files?.[0] ?? null)}
         />
-        <Button type="button" variant="outline" size="sm" className="gap-1.5" onClick={() => inputRef.current?.click()}>
+        <Button
+          type="button"
+          variant="outline"
+          size="sm"
+          className="gap-1.5"
+          disabled={disabled}
+          onClick={() => inputRef.current?.click()}
+        >
           <Paperclip className="h-4 w-4" />
           {file ? 'Ganti berkas' : 'Pilih berkas'}
         </Button>
@@ -48,7 +58,8 @@ export function FileField({ id, label, accept, file, hasExisting, required, erro
             <button
               type="button"
               aria-label="Batalkan berkas"
-              className="text-slate-400 transition-colors hover:text-rose-600"
+              disabled={disabled}
+              className="text-slate-400 transition-colors hover:text-rose-600 disabled:opacity-50 disabled:hover:text-slate-400"
               onClick={clear}
             >
               <X className="h-3.5 w-3.5" />

@@ -23,6 +23,7 @@ import {
 } from '../profil/-store'
 import { useAsesiProfileByUser, useOccupationByUser, useUpdateAsesiProfile, useUpsertOccupation } from '../profil/-hooks'
 import { useApplication, usePutData, usePutDocuments, usePutSchedule, useSubmit, useUpdateStep, useSchemaOptions, useSchemaRequirements, useTukOptions } from './-hooks'
+import { readVerifyToken, writeVerifyToken } from './-helpers'
 import { QrPanel } from './-components/qr-panel'
 import { StepCertification } from './-components/step-certification'
 import { StepDocuments } from './-components/step-documents'
@@ -97,6 +98,9 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   const [occupationValues, setOccupationValues] = useState<OccupationFormValues>(EMPTY_OCCUPATION_FORM)
   const [profileBaseline, setProfileBaseline] = useState<ProfileFormValues>(EMPTY_FORM)
   const [filesUploading, setFilesUploading] = useState(false)
+  // Menandai aksi Lanjut/Ajukan berjalan, termasuk fase unggah berkas yang
+  // tidak tercatat sebagai mutation (agar tombol terkunci selama proses).
+  const [actionPending, setActionPending] = useState(false)
 
   const [hydratedId, setHydratedId] = useState<string | null>(null)
   const hydratedProfileId = useRef<string | null>(null)
@@ -133,6 +137,11 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     setOccupationValues(form)
   }, [occupationQuery.data])
 
+  // Pulihkan token QR tersimpan (server hanya menyimpan hash) agar QR tetap sama.
+  useEffect(() => {
+    setVerifyToken(readVerifyToken(applicationId))
+  }, [applicationId])
+
   // Event SSE: setelah asesi memverifikasi via QR, arahkan ke beranda.
   useAppEvent('apl01.verified', (event) => {
     if (event.data?.application_id !== applicationId) return
@@ -149,8 +158,15 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     return map
   }, [detail.documents])
 
+  const verifyBadge = useMemo(() => {
+    const signatures = detail.signatures.filter((sig) => sig.entity === 'permohonan' && sig.role === 'asesi')
+    return signatures.some((sig) => sig.status === 'dipakai')
+      ? { label: 'Sudah diverifikasi', className: 'bg-emerald-100 text-emerald-700' }
+      : { label: 'Menunggu dipindai', className: 'bg-amber-100 text-amber-700' }
+  }, [detail.signatures])
+
   const current = STEPS[step]
-  const saving = updateStep.isPending || putData.isPending || putDocuments.isPending || putSchedule.isPending || submit.isPending || updateProfile.isPending || upsertOccupation.isPending || filesUploading
+  const saving = actionPending || updateStep.isPending || putData.isPending || putDocuments.isPending || putSchedule.isPending || submit.isPending || updateProfile.isPending || upsertOccupation.isPending || filesUploading
 
   async function saveIdentity(): Promise<boolean> {
     const profileError = validate(profileValues)
@@ -245,6 +261,8 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }
 
   async function goNext() {
+    if (actionPending) return
+    setActionPending(true)
     try {
       const ok =
         step === 0 ? await saveIdentity() : step === 1 ? await saveCertification() : step === 2 ? await saveDocuments() : false
@@ -255,6 +273,8 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       // error sudah ditangani toast pada masing-masing mutation
+    } finally {
+      setActionPending(false)
     }
   }
 
@@ -265,13 +285,18 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }
 
   async function handleSubmit() {
+    if (actionPending) return
+    setActionPending(true)
     try {
       if (!(await saveSchedule())) return
-      const result = await submit.mutateAsync()
+      const result = await submit.mutateAsync(readVerifyToken(applicationId))
       setVerifyToken(result.verify_token)
+      writeVerifyToken(applicationId, result.verify_token)
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch {
       // error sudah ditangani toast
+    } finally {
+      setActionPending(false)
     }
   }
 
@@ -317,6 +342,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             files={docFiles}
             existing={existingDocuments}
             errors={errors}
+            disabled={saving}
             onPick={(documentTypeId, file) => setDocFiles((prev) => ({ ...prev, [documentTypeId]: file }))}
           />
         )
@@ -341,22 +367,6 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     }
   }
 
-  if (verifyToken) {
-    return (
-      <div className="space-y-4">
-        <div>
-          <h1 className="text-lg font-semibold text-slate-900">Verifikasi Permohonan</h1>
-          <p className="text-sm text-slate-500">Permohonan {detail.application.code} menunggu verifikasi QR.</p>
-        </div>
-        <Card>
-          <CardContent className="p-6">
-            <QrPanel token={verifyToken} />
-          </CardContent>
-        </Card>
-      </div>
-    )
-  }
-
   return (
     <div className="space-y-5">
       <div>
@@ -378,6 +388,25 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
           {renderStep()}
         </CardContent>
       </Card>
+
+      {step === STEPS.length - 1 && verifyToken ? (
+        <Card>
+          <CardContent className="space-y-4 p-4 sm:p-6">
+            <div className="flex flex-col items-center gap-2 text-center">
+              <h2 className="text-base font-semibold text-slate-900">Verifikasi Permohonan</h2>
+              <span
+                className={cn(
+                  'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium',
+                  verifyBadge.className,
+                )}
+              >
+                {verifyBadge.label}
+              </span>
+            </div>
+            <QrPanel token={verifyToken} />
+          </CardContent>
+        </Card>
+      ) : null}
 
       <div className="flex items-center justify-between gap-3">
         <Button type="button" variant="outline" onClick={goBack} disabled={step === 0 || saving} className="gap-1.5">
