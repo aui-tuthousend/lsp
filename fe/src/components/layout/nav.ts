@@ -13,7 +13,7 @@ export type NavSection = {
   items: NavItem[]
 }
 
-const ALL: Role[] = ['admin', 'asesi', 'asesor', 'validator', 'manager_sertifikasi']
+const ALL: Role[] = ['admin', 'admin_lsp', 'asesi', 'asesor', 'validator', 'manager_sertifikasi']
 
 export const navSections: NavSection[] = [
   {

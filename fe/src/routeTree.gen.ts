@@ -11,12 +11,14 @@
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as AdminRouteRouteImport } from './routes/admin/route'
+import { Route as Admin_lspRouteRouteImport } from './routes/admin_lsp/route'
 import { Route as AsesiRouteRouteImport } from './routes/asesi/route'
 import { Route as AsesorRouteRouteImport } from './routes/asesor/route'
 import { Route as LoginRouteImport } from './routes/login'
 import { Route as ManagerRouteRouteImport } from './routes/manager/route'
 import { Route as ValidatorRouteRouteImport } from './routes/validator/route'
 import { Route as AdminIndexRouteImport } from './routes/admin/index'
+import { Route as Admin_lspIndexRouteImport } from './routes/admin_lsp/index'
 import { Route as AsesiIndexRouteImport } from './routes/asesi/index'
 import { Route as AsesorIndexRouteImport } from './routes/asesor/index'
 import { Route as AsesorAssignmentsRouteImport } from './routes/asesor/assignments'
@@ -44,6 +46,11 @@ const IndexRoute = IndexRouteImport.update({
 const AdminRouteRoute = AdminRouteRouteImport.update({
   id: '/admin',
   path: '/admin',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const Admin_lspRouteRoute = Admin_lspRouteRouteImport.update({
+  id: '/admin_lsp',
+  path: '/admin_lsp',
   getParentRoute: () => rootRouteImport,
 } as any)
 const AsesiRouteRoute = AsesiRouteRouteImport.update({
@@ -75,6 +82,11 @@ const AdminIndexRoute = AdminIndexRouteImport.update({
   id: '/',
   path: '/',
   getParentRoute: () => AdminRouteRoute,
+} as any)
+const Admin_lspIndexRoute = Admin_lspIndexRouteImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => Admin_lspRouteRoute,
 } as any)
 const AsesiIndexRoute = AsesiIndexRouteImport.update({
   id: '/',
@@ -172,6 +184,7 @@ const AsesorAssignmentsAssignmentIdRoute =
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/admin_lsp': typeof Admin_lspRouteRouteWithChildren
   '/asesi': typeof AsesiRouteRouteWithChildren
   '/asesor': typeof AsesorRouteRouteWithChildren
   '/manager': typeof ManagerRouteRouteWithChildren
@@ -181,6 +194,7 @@ export interface FileRoutesByFullPath {
   '/scan/$token': typeof ScanTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin_lsp/': typeof Admin_lspIndexRoute
   '/asesi/': typeof AsesiIndexRoute
   '/asesor/': typeof AsesorIndexRoute
   '/manager/': typeof ManagerIndexRoute
@@ -204,6 +218,7 @@ export interface FileRoutesByTo {
   '/scan/$token': typeof ScanTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/admin': typeof AdminIndexRoute
+  '/admin_lsp': typeof Admin_lspIndexRoute
   '/asesi': typeof AsesiIndexRoute
   '/asesor': typeof AsesorIndexRoute
   '/manager': typeof ManagerIndexRoute
@@ -224,6 +239,7 @@ export interface FileRoutesById {
   __root__: typeof rootRouteImport
   '/': typeof IndexRoute
   '/admin': typeof AdminRouteRouteWithChildren
+  '/admin_lsp': typeof Admin_lspRouteRouteWithChildren
   '/asesi': typeof AsesiRouteRouteWithChildren
   '/asesor': typeof AsesorRouteRouteWithChildren
   '/manager': typeof ManagerRouteRouteWithChildren
@@ -233,6 +249,7 @@ export interface FileRoutesById {
   '/scan/$token': typeof ScanTokenRoute
   '/verify/$token': typeof VerifyTokenRoute
   '/admin/': typeof AdminIndexRoute
+  '/admin_lsp/': typeof Admin_lspIndexRoute
   '/asesi/': typeof AsesiIndexRoute
   '/asesor/': typeof AsesorIndexRoute
   '/manager/': typeof ManagerIndexRoute
@@ -254,6 +271,7 @@ export interface FileRouteTypes {
   fullPaths:
     | '/'
     | '/admin'
+    | '/admin_lsp'
     | '/asesi'
     | '/asesor'
     | '/manager'
@@ -263,6 +281,7 @@ export interface FileRouteTypes {
     | '/scan/$token'
     | '/verify/$token'
     | '/admin/'
+    | '/admin_lsp/'
     | '/asesi/'
     | '/asesor/'
     | '/manager/'
@@ -286,6 +305,7 @@ export interface FileRouteTypes {
     | '/scan/$token'
     | '/verify/$token'
     | '/admin'
+    | '/admin_lsp'
     | '/asesi'
     | '/asesor'
     | '/manager'
@@ -305,6 +325,7 @@ export interface FileRouteTypes {
     | '__root__'
     | '/'
     | '/admin'
+    | '/admin_lsp'
     | '/asesi'
     | '/asesor'
     | '/manager'
@@ -314,6 +335,7 @@ export interface FileRouteTypes {
     | '/scan/$token'
     | '/verify/$token'
     | '/admin/'
+    | '/admin_lsp/'
     | '/asesi/'
     | '/asesor/'
     | '/manager/'
@@ -334,6 +356,7 @@ export interface FileRouteTypes {
 export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   AdminRouteRoute: typeof AdminRouteRouteWithChildren
+  Admin_lspRouteRoute: typeof Admin_lspRouteRouteWithChildren
   AsesiRouteRoute: typeof AsesiRouteRouteWithChildren
   AsesorRouteRoute: typeof AsesorRouteRouteWithChildren
   ManagerRouteRoute: typeof ManagerRouteRouteWithChildren
@@ -358,6 +381,13 @@ declare module '@tanstack/react-router' {
       path: '/admin'
       fullPath: '/admin'
       preLoaderRoute: typeof AdminRouteRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/admin_lsp': {
+      id: '/admin_lsp'
+      path: '/admin_lsp'
+      fullPath: '/admin_lsp'
+      preLoaderRoute: typeof Admin_lspRouteRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/asesi': {
@@ -401,6 +431,13 @@ declare module '@tanstack/react-router' {
       fullPath: '/admin/'
       preLoaderRoute: typeof AdminIndexRouteImport
       parentRoute: typeof AdminRouteRoute
+    }
+    '/admin_lsp/': {
+      id: '/admin_lsp/'
+      path: '/'
+      fullPath: '/admin_lsp/'
+      preLoaderRoute: typeof Admin_lspIndexRouteImport
+      parentRoute: typeof Admin_lspRouteRoute
     }
     '/asesi/': {
       id: '/asesi/'
@@ -557,6 +594,18 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
   AdminRouteRouteChildren,
 )
 
+interface Admin_lspRouteRouteChildren {
+  Admin_lspIndexRoute: typeof Admin_lspIndexRoute
+}
+
+const Admin_lspRouteRouteChildren: Admin_lspRouteRouteChildren = {
+  Admin_lspIndexRoute: Admin_lspIndexRoute,
+}
+
+const Admin_lspRouteRouteWithChildren = Admin_lspRouteRoute._addFileChildren(
+  Admin_lspRouteRouteChildren,
+)
+
 interface AsesiRouteRouteChildren {
   AsesiIndexRoute: typeof AsesiIndexRoute
   AsesiPermohonanApplicationIdRoute: typeof AsesiPermohonanApplicationIdRoute
@@ -625,6 +674,7 @@ const ValidatorRouteRouteWithChildren = ValidatorRouteRoute._addFileChildren(
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   AdminRouteRoute: AdminRouteRouteWithChildren,
+  Admin_lspRouteRoute: Admin_lspRouteRouteWithChildren,
   AsesiRouteRoute: AsesiRouteRouteWithChildren,
   AsesorRouteRoute: AsesorRouteRouteWithChildren,
   ManagerRouteRoute: ManagerRouteRouteWithChildren,
