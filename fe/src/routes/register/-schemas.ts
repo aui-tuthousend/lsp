@@ -1,12 +1,9 @@
-// Schema & aturan validasi form pendaftaran asesi (4 step) beserta helper
-// pencarian wilayah berdasarkan kode pos.
+// Schema & aturan validasi form pendaftaran asesi (4 step).
 //
 // - Schema tiap step dipakai untuk memvalidasi saat user menekan "Lanjut".
 // - `createAsesiProfilesSchema` adalah schema gabungan seluruh form.
-// - `lookupPostalCode` mengisi provinsi/kota/kecamatan/desa otomatis dari kode pos.
 
 import { z } from 'zod'
-import type { PostalCodeResult } from './-types'
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
 const NIK_RE = /^\d{16}$/
@@ -155,38 +152,4 @@ export function validateStep(step: number, values: unknown): StepValidation {
 export function validateAll(values: unknown): StepValidation {
   const result = createAsesiProfilesSchema.safeParse(values)
   return result.success ? { ok: true, errors: {} } : { ok: false, errors: toErrorMap(result.error) }
-}
-
-// ── Pencarian wilayah dari kode pos ──────────────────────────────────────────
-const KODEPOS_ENDPOINT = 'https://kodepos.vercel.app/search'
-
-type KodeposItem = {
-  code: number | string
-  village: string
-  district: string
-  regency: string
-  province: string
-}
-
-/**
- * Cari provinsi/kota/kecamatan/desa berdasarkan kode pos (5 digit).
- * Mengembalikan `null` bila kode pos tidak ditemukan.
- */
-export async function lookupPostalCode(postalCode: string): Promise<PostalCodeResult | null> {
-  const code = postalCode.trim()
-  if (!POSTAL_RE.test(code)) return null
-
-  const res = await fetch(`${KODEPOS_ENDPOINT}?q=${encodeURIComponent(code)}`)
-  if (!res.ok) throw new Error(`Pencarian kode pos gagal (${res.status})`)
-
-  const json = (await res.json()) as { data?: KodeposItem[] }
-  const match = json.data?.find((item) => String(item.code) === code)
-  if (!match) return null
-
-  return {
-    province: match.province,
-    city: match.regency,
-    district: match.district,
-    village: match.village,
-  }
 }

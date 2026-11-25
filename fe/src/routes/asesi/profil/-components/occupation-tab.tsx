@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { AddressFields } from '@/components/ui/address-fields'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -108,27 +109,15 @@ export function OccupationTab({ session }: { session: Session | null }) {
                 />
               </Field>
 
-              <Field label="Provinsi" htmlFor="province" required>
-                <Input id="province" maxLength={100} value={values.province} onChange={(e) => set('province', e.target.value)} />
-              </Field>
-
-              <Field label="Kota / Kabupaten" htmlFor="city" required>
-                <Input id="city" maxLength={100} value={values.city} onChange={(e) => set('city', e.target.value)} />
-              </Field>
-
-              <Field label="Kecamatan" htmlFor="district" required>
-                <Input id="district" maxLength={100} value={values.district} onChange={(e) => set('district', e.target.value)} />
-              </Field>
-
-              <Field label="Kode Pos" htmlFor="postal_code">
-                <Input
-                  id="postal_code"
-                  inputMode="numeric"
-                  maxLength={10}
-                  value={values.postal_code}
-                  onChange={(e) => set('postal_code', e.target.value.replace(/\D/g, ''))}
-                />
-              </Field>
+              <AddressFields
+                values={values}
+                withVillage={false}
+                lockRegion
+                onChange={(key, value) => {
+                  if (key !== 'village') set(key, value)
+                }}
+                className="sm:col-span-2"
+              />
 
               <Field label="Email Kantor" htmlFor="office_email">
                 <Input id="office_email" type="email" maxLength={255} value={values.office_email} onChange={(e) => set('office_email', e.target.value)} />

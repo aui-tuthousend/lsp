@@ -11,6 +11,8 @@ export type TUK = {
   email: string
   province: string
   city: string
+  district: string
+  village: string
   address: string
   maps_url?: string | null
   letterhead?: string | null
@@ -28,6 +30,8 @@ export type CreateTUKBody = {
   email: string
   province: string
   city: string
+  district: string
+  village: string
   address: string
   maps_url?: string
   letterhead?: string

@@ -8,6 +8,8 @@ CREATE TABLE tuks (
     email          citext       NOT NULL,
     province       varchar(120) NOT NULL,
     city           varchar(120) NOT NULL,
+    district       varchar(120) NOT NULL,
+    village        varchar(120) NOT NULL,
     address        text         NOT NULL,
     maps_url       text,
     letterhead     text,

@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { AddressFields } from '@/components/ui/address-fields'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Field } from '@/components/ui/field'
@@ -195,31 +196,7 @@ export function ProfileTab({ session }: { session: Session | null }) {
                 </Field>
               ) : null}
 
-              <Field label="Kode Pos" htmlFor="postal_code">
-                <Input
-                  id="postal_code"
-                  inputMode="numeric"
-                  maxLength={5}
-                  value={values.postal_code}
-                  onChange={(e) => set('postal_code', e.target.value.replace(/\D/g, ''))}
-                />
-              </Field>
-
-              <Field label="Provinsi" htmlFor="province" required>
-                <Input id="province" value={values.province} onChange={(e) => set('province', e.target.value)} />
-              </Field>
-
-              <Field label="Kota / Kabupaten" htmlFor="city" required>
-                <Input id="city" value={values.city} onChange={(e) => set('city', e.target.value)} />
-              </Field>
-
-              <Field label="Kecamatan" htmlFor="district" required>
-                <Input id="district" value={values.district} onChange={(e) => set('district', e.target.value)} />
-              </Field>
-
-              <Field label="Desa / Kelurahan" htmlFor="village" required>
-                <Input id="village" value={values.village} onChange={(e) => set('village', e.target.value)} />
-              </Field>
+              <AddressFields values={values} onChange={(key, value) => set(key, value)} lockRegion className="sm:col-span-2" />
             </div>
 
             <div className="flex justify-end">

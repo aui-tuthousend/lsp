@@ -15,6 +15,8 @@ export const tukFormSchema = z.object({
   email: z.string().trim().max(255, 'Maksimal 255 karakter').regex(EMAIL_RE, 'Format email tidak valid'),
   province: z.string().trim().min(2, 'Provinsi minimal 2 karakter').max(120, 'Maksimal 120 karakter'),
   city: z.string().trim().min(2, 'Kota/Kabupaten minimal 2 karakter').max(120, 'Maksimal 120 karakter'),
+  district: z.string().trim().min(2, 'Kecamatan minimal 2 karakter').max(120, 'Maksimal 120 karakter'),
+  village: z.string().trim().min(2, 'Desa/Kelurahan minimal 2 karakter').max(120, 'Maksimal 120 karakter'),
   address: z.string().trim().min(5, 'Alamat minimal 5 karakter'),
   maps_url: z.string().trim().refine((value) => value === '' || HTTP_URL_RE.test(value), 'Link maps tidak valid'),
   logo: z.string().trim().refine((value) => value === '' || HTTP_URL_RE.test(value), 'URL logo tidak valid'),

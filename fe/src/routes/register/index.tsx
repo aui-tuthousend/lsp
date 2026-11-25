@@ -12,7 +12,7 @@ import { AlamatDomisiliStep } from './-components/alamat-domisili-step'
 import { DataPribadiStep } from './-components/data-pribadi-step'
 import { DokumenStep } from './-components/dokumen-step'
 import { useRegisterAsesi } from './-hooks'
-import { lookupPostalCode, validateAll, validateStep } from './-schemas'
+import { validateAll, validateStep } from './-schemas'
 import { useRegisterDraft } from './-store'
 import type { CreateAsesiProfiles } from './-types'
 
@@ -33,9 +33,7 @@ function RegisterPage() {
   const setStep = useRegisterDraft((state) => state.setStep)
   const values = useRegisterDraft((state) => state.values)
   const storeUpdate = useRegisterDraft((state) => state.update)
-  const patch = useRegisterDraft((state) => state.patch)
   const [errors, setErrors] = useState<Record<string, string>>({})
-  const [postalLoading, setPostalLoading] = useState(false)
   const registerMutation = useRegisterAsesi()
 
   const today = useMemo(() => new Date().toISOString().slice(0, 10), [])
@@ -76,39 +74,6 @@ function RegisterPage() {
     setStep(Math.max(step - 1, 0))
   }
 
-  async function handleLookupPostal() {
-    const code = values.postal_code.trim()
-    if (!/^\d{5}$/.test(code)) {
-      setErrors((prev) => ({ ...prev, postal_code: 'Kode pos harus 5 digit angka' }))
-      return
-    }
-    setPostalLoading(true)
-    try {
-      const result = await lookupPostalCode(code)
-      if (!result) {
-        toast.error('Kode pos tidak ditemukan', { description: 'Pastikan 5 digit kode pos sudah benar.' })
-        return
-      }
-      patch(result)
-      setErrors((prev) => {
-        const next = { ...prev }
-        delete next.postal_code
-        delete next.province
-        delete next.city
-        delete next.district
-        delete next.village
-        return next
-      })
-      toast.success('Wilayah terisi otomatis', {
-        description: `${result.village}, ${result.district}, ${result.city}, ${result.province}`,
-      })
-    } catch {
-      toast.error('Gagal mencari kode pos', { description: 'Periksa koneksi lalu coba lagi.' })
-    } finally {
-      setPostalLoading(false)
-    }
-  }
-
   function handleFinish() {
     if (!validateAll(values).ok) {
       for (let i = 0; i < STEPS.length; i++) {
@@ -130,7 +95,7 @@ function RegisterPage() {
       case 0:
         return <DataPribadiStep values={values} errors={errors} onChange={update} today={today} />
       case 1:
-        return <AlamatDomisiliStep values={values} errors={errors} onChange={update} postalLoading={postalLoading} onLookupPostal={handleLookupPostal} />
+        return <AlamatDomisiliStep values={values} errors={errors} onChange={update} />
       case 2:
         return <DokumenStep values={values} errors={errors} onChange={update} />
       default:

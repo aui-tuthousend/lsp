@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from 'react'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
+import { AddressFields } from '@/components/ui/address-fields'
 import { Button } from '@/components/ui/button'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Field } from '@/components/ui/field'
@@ -17,6 +18,8 @@ const EMPTY_FORM: TUKFormValues = {
   email: '',
   province: '',
   city: '',
+  district: '',
+  village: '',
   address: '',
   maps_url: '',
   logo: '',
@@ -31,6 +34,8 @@ function toForm(tuk: TUK): TUKFormValues {
     email: tuk.email,
     province: tuk.province,
     city: tuk.city,
+    district: tuk.district,
+    village: tuk.village,
     address: tuk.address,
     maps_url: tuk.maps_url ?? '',
     logo: tuk.logo ?? '',
@@ -47,6 +52,8 @@ function toPayload(values: TUKFormValues): CreateTUKBody {
     email: values.email,
     province: values.province,
     city: values.city,
+    district: values.district,
+    village: values.village,
     address: values.address,
     maps_url: values.maps_url || undefined,
     logo: values.logo || undefined,
@@ -149,17 +156,7 @@ export function TUKFormDialog({
               <Input id="phone" inputMode="tel" maxLength={13} value={values.phone} onChange={(e) => set('phone', e.target.value)} placeholder="021xxxxxxx" />
             </Field>
 
-            <Field label="Provinsi" htmlFor="province" required error={errors.province}>
-              <Input id="province" maxLength={50} value={values.province} onChange={(e) => set('province', e.target.value)} />
-            </Field>
-
-            <Field label="Kota / Kabupaten" htmlFor="city" required error={errors.city}>
-              <Input id="city" maxLength={50} value={values.city} onChange={(e) => set('city', e.target.value)} />
-            </Field>
-
-            <Field label="Kode Pos" htmlFor="postal_code" required error={errors.postal_code}>
-              <Input id="postal_code" inputMode="numeric" maxLength={5} value={values.postal_code} onChange={(e) => set('postal_code', e.target.value)} />
-            </Field>
+            <AddressFields values={values} onChange={(key, value) => set(key, value)} lockRegion className="sm:col-span-2" />
 
             <Field label="Alamat" htmlFor="address" required error={errors.address} className="sm:col-span-2">
               <Input id="address" value={values.address} onChange={(e) => set('address', e.target.value)} placeholder="Jalan, nomor, kelurahan" />

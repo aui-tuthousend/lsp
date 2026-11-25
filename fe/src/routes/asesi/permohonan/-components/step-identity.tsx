@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react'
+import { AddressFields } from '@/components/ui/address-fields'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
@@ -121,23 +122,7 @@ export function StepIdentity({
               <textarea id="domicile_address" className={textareaClass} value={profileValues.domicile_address} onChange={(e) => onProfileChange('domicile_address', e.target.value)} />
             </Field>
           ) : null}
-          <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Kode Pos" htmlFor="postal_code" required>
-              <Input id="postal_code" value={profileValues.postal_code} onChange={(e) => onProfileChange('postal_code', e.target.value)} />
-            </Field>
-            <Field label="Provinsi" htmlFor="province" required>
-              <Input id="province" value={profileValues.province} onChange={(e) => onProfileChange('province', e.target.value)} />
-            </Field>
-            <Field label="Kota/Kabupaten" htmlFor="city" required>
-              <Input id="city" value={profileValues.city} onChange={(e) => onProfileChange('city', e.target.value)} />
-            </Field>
-            <Field label="Kecamatan" htmlFor="district" required>
-              <Input id="district" value={profileValues.district} onChange={(e) => onProfileChange('district', e.target.value)} />
-            </Field>
-            <Field label="Desa/Kelurahan" htmlFor="village" required>
-              <Input id="village" value={profileValues.village} onChange={(e) => onProfileChange('village', e.target.value)} />
-            </Field>
-          </div>
+          <AddressFields values={profileValues} onChange={(key, value) => onProfileChange(key, value)} lockRegion />
         </div>
       </Section>
 
@@ -161,18 +146,15 @@ export function StepIdentity({
           <Field label="Telepon Kantor" htmlFor="office_phone">
             <Input id="office_phone" value={occupationValues.office_phone} onChange={(e) => onOccupationChange('office_phone', e.target.value)} />
           </Field>
-          <Field label="Provinsi" htmlFor="occ_province">
-            <Input id="occ_province" value={occupationValues.province} onChange={(e) => onOccupationChange('province', e.target.value)} />
-          </Field>
-          <Field label="Kota/Kabupaten" htmlFor="occ_city">
-            <Input id="occ_city" value={occupationValues.city} onChange={(e) => onOccupationChange('city', e.target.value)} />
-          </Field>
-          <Field label="Kecamatan" htmlFor="occ_district">
-            <Input id="occ_district" value={occupationValues.district} onChange={(e) => onOccupationChange('district', e.target.value)} />
-          </Field>
-          <Field label="Kode Pos" htmlFor="occ_postal_code">
-            <Input id="occ_postal_code" value={occupationValues.postal_code} onChange={(e) => onOccupationChange('postal_code', e.target.value)} />
-          </Field>
+          <AddressFields
+            values={occupationValues}
+            withVillage={false}
+            lockRegion
+            onChange={(key, value) => {
+              if (key !== 'village') onOccupationChange(key, value)
+            }}
+            className="sm:col-span-2"
+          />
           <Field label="Alamat Kantor" htmlFor="occ_address" className="sm:col-span-2">
             <textarea id="occ_address" className={textareaClass} value={occupationValues.address} onChange={(e) => onOccupationChange('address', e.target.value)} />
           </Field>

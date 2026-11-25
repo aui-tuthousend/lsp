@@ -22,9 +22,9 @@ func NewRepository(pool *pgxpool.Pool) *Repository {
 func (r *Repository) Create(ctx context.Context, tuk domain.TUK) error {
 	db := database.GetExecutor(ctx, r.pool)
 	_, err := db.Exec(ctx, `
-		INSERT INTO tuks (id, name, logo, postal_code, phone, email, province, city, address, maps_url, letterhead)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
-	`, tuk.ID, tuk.Name, tuk.Logo, tuk.PostalCode, tuk.Phone, tuk.Email, tuk.Province, tuk.City, tuk.Address, tuk.MapsURL, tuk.Letterhead)
+		INSERT INTO tuks (id, name, logo, postal_code, phone, email, province, city, district, village, address, maps_url, letterhead)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+	`, tuk.ID, tuk.Name, tuk.Logo, tuk.PostalCode, tuk.Phone, tuk.Email, tuk.Province, tuk.City, tuk.District, tuk.Village, tuk.Address, tuk.MapsURL, tuk.Letterhead)
 	return mapError(err)
 }
 
@@ -39,18 +39,20 @@ func (r *Repository) Patch(ctx context.Context, patch domain.Patch) (domain.TUK,
 		    email = COALESCE($6::citext, email),
 		    province = COALESCE($7::varchar, province),
 		    city = COALESCE($8::varchar, city),
-		    address = COALESCE($9::text, address),
-		    maps_url = COALESCE($10::text, maps_url),
-		    letterhead = COALESCE($11::text, letterhead)
+		    district = COALESCE($9::varchar, district),
+		    village = COALESCE($10::varchar, village),
+		    address = COALESCE($11::text, address),
+		    maps_url = COALESCE($12::text, maps_url),
+		    letterhead = COALESCE($13::text, letterhead)
 		WHERE id = $1 AND deleted_at IS NULL
-		RETURNING id, name, logo, postal_code, phone, email::text, province, city, address, maps_url, letterhead, created_at, updated_at, deleted_at
-	`, patch.ID, patch.Name, patch.Logo, patch.PostalCode, patch.Phone, patch.Email, patch.Province, patch.City, patch.Address, patch.MapsURL, patch.Letterhead))
+		RETURNING id, name, logo, postal_code, phone, email::text, province, city, district, village, address, maps_url, letterhead, created_at, updated_at, deleted_at
+	`, patch.ID, patch.Name, patch.Logo, patch.PostalCode, patch.Phone, patch.Email, patch.Province, patch.City, patch.District, patch.Village, patch.Address, patch.MapsURL, patch.Letterhead))
 }
 
 func (r *Repository) FindByID(ctx context.Context, id string) (domain.TUK, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanTUK(db.QueryRow(ctx, `
-		SELECT id, name, logo, postal_code, phone, email::text, province, city, address, maps_url, letterhead, created_at, updated_at, deleted_at
+		SELECT id, name, logo, postal_code, phone, email::text, province, city, district, village, address, maps_url, letterhead, created_at, updated_at, deleted_at
 		FROM tuks
 		WHERE id = $1 AND deleted_at IS NULL
 	`, id))
@@ -59,7 +61,7 @@ func (r *Repository) FindByID(ctx context.Context, id string) (domain.TUK, error
 func (r *Repository) List(ctx context.Context, params domain.ListParams) (domain.ListResult, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	rows, err := db.Query(ctx, `
-		SELECT id, name, logo, postal_code, phone, email::text, province, city, address, maps_url, letterhead, created_at, updated_at, deleted_at,
+		SELECT id, name, logo, postal_code, phone, email::text, province, city, district, village, address, maps_url, letterhead, created_at, updated_at, deleted_at,
 		       COUNT(*) OVER() AS total_count
 		FROM tuks
 		WHERE deleted_at IS NULL
@@ -110,7 +112,7 @@ func (r *Repository) Delete(ctx context.Context, id string) error {
 
 func scanTUK(row pgx.Row) (domain.TUK, error) {
 	var tuk domain.TUK
-	if err := row.Scan(&tuk.ID, &tuk.Name, &tuk.Logo, &tuk.PostalCode, &tuk.Phone, &tuk.Email, &tuk.Province, &tuk.City, &tuk.Address, &tuk.MapsURL, &tuk.Letterhead, &tuk.CreatedAt, &tuk.UpdatedAt, &tuk.DeletedAt); err != nil {
+	if err := row.Scan(&tuk.ID, &tuk.Name, &tuk.Logo, &tuk.PostalCode, &tuk.Phone, &tuk.Email, &tuk.Province, &tuk.City, &tuk.District, &tuk.Village, &tuk.Address, &tuk.MapsURL, &tuk.Letterhead, &tuk.CreatedAt, &tuk.UpdatedAt, &tuk.DeletedAt); err != nil {
 		return domain.TUK{}, mapError(err)
 	}
 	return tuk, nil
@@ -119,7 +121,7 @@ func scanTUK(row pgx.Row) (domain.TUK, error) {
 func scanTUKWithTotal(rows pgx.Rows) (domain.TUK, int, error) {
 	var tuk domain.TUK
 	var total int
-	if err := rows.Scan(&tuk.ID, &tuk.Name, &tuk.Logo, &tuk.PostalCode, &tuk.Phone, &tuk.Email, &tuk.Province, &tuk.City, &tuk.Address, &tuk.MapsURL, &tuk.Letterhead, &tuk.CreatedAt, &tuk.UpdatedAt, &tuk.DeletedAt, &total); err != nil {
+	if err := rows.Scan(&tuk.ID, &tuk.Name, &tuk.Logo, &tuk.PostalCode, &tuk.Phone, &tuk.Email, &tuk.Province, &tuk.City, &tuk.District, &tuk.Village, &tuk.Address, &tuk.MapsURL, &tuk.Letterhead, &tuk.CreatedAt, &tuk.UpdatedAt, &tuk.DeletedAt, &total); err != nil {
 		return domain.TUK{}, 0, mapError(err)
 	}
 	return tuk, total, nil

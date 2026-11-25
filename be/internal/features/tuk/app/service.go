@@ -23,6 +23,8 @@ type CreateCommand struct {
 	Email      string
 	Province   string
 	City       string
+	District   string
+	Village    string
 	Address    string
 	MapsURL    *string
 	Letterhead *string
@@ -37,6 +39,8 @@ type PatchCommand struct {
 	Email      *string
 	Province   *string
 	City       *string
+	District   *string
+	Village    *string
 	Address    *string
 	MapsURL    *string
 	Letterhead *string
@@ -52,6 +56,8 @@ func (s *Service) Create(ctx context.Context, cmd CreateCommand) (domain.TUK, er
 		Email:      cmd.Email,
 		Province:   cmd.Province,
 		City:       cmd.City,
+		District:   cmd.District,
+		Village:    cmd.Village,
 		Address:    cmd.Address,
 		MapsURL:    cmd.MapsURL,
 		Letterhead: cmd.Letterhead,
@@ -72,6 +78,8 @@ func (s *Service) Patch(ctx context.Context, cmd PatchCommand) (domain.TUK, erro
 		Email:      cmd.Email,
 		Province:   cmd.Province,
 		City:       cmd.City,
+		District:   cmd.District,
+		Village:    cmd.Village,
 		Address:    cmd.Address,
 		MapsURL:    cmd.MapsURL,
 		Letterhead: cmd.Letterhead,

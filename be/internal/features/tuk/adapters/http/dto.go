@@ -36,6 +36,8 @@ type TUKBody struct {
 	Email      string  `json:"email" format:"email" maxLength:"255"`
 	Province   string  `json:"province" minLength:"2" maxLength:"120"`
 	City       string  `json:"city" minLength:"2" maxLength:"120"`
+	District   string  `json:"district" minLength:"2" maxLength:"120"`
+	Village    string  `json:"village" minLength:"2" maxLength:"120"`
 	Address    string  `json:"address" minLength:"5"`
 	MapsURL    *string `json:"maps_url,omitempty" doc:"Link Google Maps atau provider maps lain (opsional)"`
 	Letterhead *string `json:"letterhead,omitempty" doc:"URL/path kop surat TUK"`
@@ -49,6 +51,8 @@ type TUKPatchBody struct {
 	Email      *string `json:"email,omitempty" format:"email" maxLength:"255"`
 	Province   *string `json:"province,omitempty" minLength:"2" maxLength:"120"`
 	City       *string `json:"city,omitempty" minLength:"2" maxLength:"120"`
+	District   *string `json:"district,omitempty" minLength:"2" maxLength:"120"`
+	Village    *string `json:"village,omitempty" minLength:"2" maxLength:"120"`
 	Address    *string `json:"address,omitempty" minLength:"5"`
 	MapsURL    *string `json:"maps_url,omitempty" minLength:"5" doc:"Link Google Maps atau provider maps lain"`
 	Letterhead *string `json:"letterhead,omitempty" doc:"URL/path kop surat TUK"`
@@ -67,6 +71,8 @@ type TUKDTO struct {
 	Email      string     `json:"email"`
 	Province   string     `json:"province"`
 	City       string     `json:"city"`
+	District   string     `json:"district"`
+	Village    string     `json:"village"`
 	Address    string     `json:"address"`
 	MapsURL    *string    `json:"maps_url,omitempty"`
 	Letterhead *string    `json:"letterhead,omitempty"`
@@ -86,6 +92,8 @@ func toCreateCommand(body TUKBody) createCommandDTO {
 		Email:      body.Email,
 		Province:   body.Province,
 		City:       body.City,
+		District:   body.District,
+		Village:    body.Village,
 		Address:    body.Address,
 		MapsURL:    body.MapsURL,
 		Letterhead: body.Letterhead,
@@ -100,6 +108,8 @@ type createCommandDTO struct {
 	Email      string
 	Province   string
 	City       string
+	District   string
+	Village    string
 	Address    string
 	MapsURL    *string
 	Letterhead *string
@@ -115,6 +125,8 @@ func toDTO(tuk domain.TUK) TUKDTO {
 		Email:      tuk.Email,
 		Province:   tuk.Province,
 		City:       tuk.City,
+		District:   tuk.District,
+		Village:    tuk.Village,
 		Address:    tuk.Address,
 		MapsURL:    tuk.MapsURL,
 		Letterhead: tuk.Letterhead,

@@ -61,11 +61,3 @@ export type AkunKeamanan = {
 
 /** Payload lengkap pendaftaran asesi (gabungan 4 step). */
 export type CreateAsesiProfiles = DataPribadi & AlamatDomisili & DokumenPendukung & AkunKeamanan
-
-/** Hasil pencarian kode pos → wilayah (provinsi/kota/kecamatan/desa). */
-export type PostalCodeResult = {
-  province: string
-  city: string
-  district: string
-  village: string
-}

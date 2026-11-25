@@ -12,6 +12,8 @@ type TUK struct {
 	Email      string
 	Province   string
 	City       string
+	District   string
+	Village    string
 	Address    string
 	MapsURL    *string
 	Letterhead *string
@@ -29,6 +31,8 @@ type Patch struct {
 	Email      *string
 	Province   *string
 	City       *string
+	District   *string
+	Village    *string
 	Address    *string
 	MapsURL    *string
 	Letterhead *string
