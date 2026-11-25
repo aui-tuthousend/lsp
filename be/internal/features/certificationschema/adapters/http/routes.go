@@ -9,6 +9,9 @@ import (
 
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
+	// Daftar skema boleh dibaca asesi (dipakai saat memilih skema pada APL-01);
+	// mutasi tetap khusus admin.
+	adminOrAsesi := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi))
 
 	// Skema sertifikasi.
 	huma.Post(api, "/certification-schemas", handler.CreateSchema,
@@ -17,7 +20,7 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("certification-schemas-create", "Create certification schema", "Membuat master data skema sertifikasi.", "Certification Schemas"),
 	)
 	huma.Get(api, "/certification-schemas", handler.ListSchemas,
-		adminOnly,
+		adminOrAsesi,
 		httpplatform.WithDoc("certification-schemas-list", "List certification schemas", "Daftar master data skema sertifikasi.", "Certification Schemas"),
 	)
 	huma.Get(api, "/certification-schemas/{id}", handler.GetSchema,

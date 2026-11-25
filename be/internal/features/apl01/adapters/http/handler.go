@@ -140,7 +140,11 @@ func (h *Handler) Submit(ctx context.Context, input *SubmitInput) (*SubmitOutput
 }
 
 func (h *Handler) Verify(ctx context.Context, input *VerifyInput) (*ApplicationOutput, error) {
-	detail, err := h.service.Verify(ctx, input.ID, input.Body.Token, clientIP(input.ForwardedFor), headerValue(input.UserAgent))
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return nil, huma.Error401Unauthorized("unauthenticated")
+	}
+	detail, err := h.service.Verify(ctx, claims.UserID, input.Body.Token, clientIP(input.ForwardedFor), headerValue(input.UserAgent))
 	if err != nil {
 		return nil, mapError(err)
 	}

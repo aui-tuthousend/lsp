@@ -25,6 +25,7 @@ var allowedTypes = map[string]map[string]string{
 	"ktp_file":  {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
 	"cv_file":   {"application/pdf": "pdf"},
 	"npwp_file": {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
+	"document":  {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
 }
 
 // Service membuat presigned URL agar file diunggah langsung dari client ke

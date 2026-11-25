@@ -1,7 +1,7 @@
 import { apiFetch } from './api'
 
-/** Tujuan unggah, sesuai nama field dokumen di profil asesi. */
-export type UploadPurpose = 'photo' | 'ktp_file' | 'cv_file' | 'npwp_file'
+/** Tujuan unggah, sesuai nama field dokumen di profil asesi / bukti APL-01. */
+export type UploadPurpose = 'photo' | 'ktp_file' | 'cv_file' | 'npwp_file' | 'document'
 
 type PresignResponse = {
   object_key: string

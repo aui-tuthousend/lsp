@@ -224,19 +224,15 @@ func (s *Service) Submit(ctx context.Context, applicationID string) (SubmitResul
 	return SubmitResult{Application: detail, VerifyToken: rawToken}, nil
 }
 
-// Verify mengonfirmasi hasil scan QR: menandai token terpakai (single-use),
-// mengubah status permohonan menjadi SUBMITTED, lalu mem-publish event SSE ke
-// topic user asesi.
-func (s *Service) Verify(ctx context.Context, applicationID, token string, ip, userAgent *string) (domain.ApplicationDetail, error) {
-	application, err := s.repo.FindApplicationByID(ctx, applicationID)
-	if err != nil {
-		return domain.ApplicationDetail{}, err
-	}
+// Verify mengonfirmasi hasil scan QR berdasarkan token (permohonan ditentukan
+// oleh token): menandai token terpakai (single-use), mengubah status permohonan
+// menjadi SUBMITTED, lalu mem-publish event SSE ke topic user asesi.
+func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgent *string) (domain.ApplicationDetail, error) {
 	signature, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(token))
 	if err != nil {
 		return domain.ApplicationDetail{}, err
 	}
-	if signature.ApplicationID != applicationID || signature.Status != domain.SignaturePending {
+	if signature.Status != domain.SignaturePending {
 		return domain.ApplicationDetail{}, domain.ErrInvalidToken
 	}
 	now := time.Now().UTC()
@@ -244,11 +240,19 @@ func (s *Service) Verify(ctx context.Context, applicationID, token string, ip, u
 		return domain.ApplicationDetail{}, domain.ErrInvalidToken
 	}
 
+	application, err := s.repo.FindApplicationByID(ctx, signature.ApplicationID)
+	if err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	if application.UserID != userID {
+		return domain.ApplicationDetail{}, domain.ErrInvalidToken
+	}
+
 	err = s.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		if _, err := s.repo.MarkSignatureUsed(txCtx, signature.ID, now, ip, userAgent); err != nil {
 			return err
 		}
-		_, err := s.repo.MarkSubmitted(txCtx, applicationID, now)
+		_, err := s.repo.MarkSubmitted(txCtx, signature.ApplicationID, now)
 		return err
 	})
 	if err != nil {
@@ -257,7 +261,7 @@ func (s *Service) Verify(ctx context.Context, applicationID, token string, ip, u
 
 	// Publish setelah commit, best-effort (dipakai FE untuk toast realtime).
 	s.publishVerified(ctx, application)
-	return s.Detail(ctx, applicationID)
+	return s.Detail(ctx, signature.ApplicationID)
 }
 
 // publishVerified mengirim event SSE ke topic user asesi (best-effort).

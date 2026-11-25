@@ -32,6 +32,7 @@ import { Route as AdminSkemaIndexRouteImport } from './routes/admin/skema/index'
 import { Route as AdminSkemaSchemaIdRouteImport } from './routes/admin/skema/$schemaId'
 import { Route as AdminTuksIndexRouteImport } from './routes/admin/tuks/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AsesiPermohonanApplicationIdRouteImport } from './routes/asesi/permohonan/$applicationId'
 import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
 import { Route as AsesorAssignmentsAssignmentIdRouteImport } from './routes/asesor/assignments.$assignmentId'
 
@@ -150,6 +151,12 @@ const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AsesiPermohonanApplicationIdRoute =
+  AsesiPermohonanApplicationIdRouteImport.update({
+    id: '/permohonan/$applicationId',
+    path: '/permohonan/$applicationId',
+    getParentRoute: () => AsesiRouteRoute,
+  } as any)
 const AsesiProfilIndexRoute = AsesiProfilIndexRouteImport.update({
   id: '/profil/',
   path: '/profil/',
@@ -180,6 +187,7 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
   '/admin/dokumen/': typeof AdminDokumenIndexRoute
@@ -202,6 +210,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/validator': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor': typeof AdminAsesorIndexRoute
   '/admin/dokumen': typeof AdminDokumenIndexRoute
@@ -230,6 +239,7 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
   '/admin/dokumen/': typeof AdminDokumenIndexRoute
@@ -259,6 +269,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/admin/skema/$schemaId'
+    | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
     | '/admin/dokumen/'
@@ -281,6 +292,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/validator'
     | '/admin/skema/$schemaId'
+    | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor'
     | '/admin/dokumen'
@@ -308,6 +320,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/admin/skema/$schemaId'
+    | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
     | '/admin/dokumen/'
@@ -494,6 +507,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/asesi/permohonan/$applicationId': {
+      id: '/asesi/permohonan/$applicationId'
+      path: '/permohonan/$applicationId'
+      fullPath: '/asesi/permohonan/$applicationId'
+      preLoaderRoute: typeof AsesiPermohonanApplicationIdRouteImport
+      parentRoute: typeof AsesiRouteRoute
+    }
     '/asesi/profil/': {
       id: '/asesi/profil/'
       path: '/profil'
@@ -539,11 +559,13 @@ const AdminRouteRouteWithChildren = AdminRouteRoute._addFileChildren(
 
 interface AsesiRouteRouteChildren {
   AsesiIndexRoute: typeof AsesiIndexRoute
+  AsesiPermohonanApplicationIdRoute: typeof AsesiPermohonanApplicationIdRoute
   AsesiProfilIndexRoute: typeof AsesiProfilIndexRoute
 }
 
 const AsesiRouteRouteChildren: AsesiRouteRouteChildren = {
   AsesiIndexRoute: AsesiIndexRoute,
+  AsesiPermohonanApplicationIdRoute: AsesiPermohonanApplicationIdRoute,
   AsesiProfilIndexRoute: AsesiProfilIndexRoute,
 }
 

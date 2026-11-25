@@ -51,7 +51,6 @@ type SubmitInput struct {
 }
 
 type VerifyInput struct {
-	ID           string     `path:"id"`
 	UserAgent    string     `header:"User-Agent"`
 	ForwardedFor string     `header:"X-Forwarded-For"`
 	Body         VerifyBody `json:"body"`

@@ -9,6 +9,9 @@ import (
 
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
+	// Persyaratan dokumen boleh dibaca asesi (dipakai saat mengunggah bukti
+	// kelengkapan APL-01); mutasi tetap khusus admin.
+	adminOrAsesi := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi))
 
 	// Master jenis dokumen.
 	huma.Post(api, "/document-types", handler.CreateDocumentType,
@@ -36,7 +39,7 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 
 	// Persyaratan dokumen per skema (set-semantik: PUT menggantikan seluruh daftar).
 	huma.Get(api, "/certification-schemas/{schema_id}/document-requirements", handler.ListRequirements,
-		adminOnly,
+		adminOrAsesi,
 		httpplatform.WithDoc("document-requirements-list", "List schema document requirements", "Daftar persyaratan dokumen milik sebuah skema.", "Schema Document Requirements"),
 	)
 	huma.Put(api, "/certification-schemas/{schema_id}/document-requirements", handler.ReplaceRequirements,

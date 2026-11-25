@@ -2,7 +2,7 @@ import { useEffect, useRef } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import type { Session } from '@/lib/auth/types'
 import { API_BASE_URL } from '@/lib/api-base'
-import { eventInvalidation, type AppEvent } from './events'
+import { eventInvalidation, emitAppEvent, type AppEvent } from './events'
 
 export function useNotifications(session: Session | null) {
   const queryClient = useQueryClient()
@@ -21,6 +21,7 @@ export function useNotifications(session: Session | null) {
 
       const keys = eventInvalidation[event.type]?.(event) ?? []
       keys.forEach((queryKey) => queryClient.invalidateQueries({ queryKey }))
+      emitAppEvent(event)
     })
 
     return () => {
