@@ -10,6 +10,7 @@ import (
 	"github.com/danielgtaylor/huma/v2/adapters/humago"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
+	apl01http "lsp/internal/features/apl01/adapters/http"
 	asesihttp "lsp/internal/features/asesi/adapters/http"
 	asesorhttp "lsp/internal/features/asesor/adapters/http"
 	asesorpg "lsp/internal/features/asesor/adapters/postgres"
@@ -83,6 +84,8 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	schemahttp.RegisterRoutes(api, schemaModule.Handler)
 	docReqModule := newDocumentRequirementsModule(pool, txManager)
 	docreqhttp.RegisterRoutes(api, docReqModule.Handler)
+	apl01Module := newAPL01Module(pool, txManager, bus)
+	apl01http.RegisterRoutes(api, apl01Module.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
 	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
@@ -100,7 +103,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		TUK:             tukModule,
 		Schema:          schemaModule,
 		DocRequirements: docReqModule,
-		APL01:           newAPL01Module(),
+		APL01:           apl01Module,
 		APL02:           newAPL02Module(),
 		Portfolio:       newPortfolioModule(objStorage),
 		ObjectStorage:   objStorage,
