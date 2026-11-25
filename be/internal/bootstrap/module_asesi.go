@@ -17,7 +17,7 @@ type AsesiModule struct {
 
 func newAsesiModule(pool *pgxpool.Pool, usersRepo *userspg.Repository, objStorage storage.ObjectStorage) *AsesiModule {
 	repo := asesipg.NewRepository(pool)
-	service := asesiapp.NewService(repo, usersRepo)
+	service := asesiapp.NewService(repo, usersRepo, objStorage)
 	handler := asesihttp.NewHandler(service, objStorage)
 	return &AsesiModule{Repository: repo, Service: service, Handler: handler}
 }

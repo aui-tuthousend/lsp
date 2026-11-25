@@ -6,15 +6,17 @@ import (
 
 	"lsp/internal/features/asesi/domain"
 	"lsp/internal/platform/id"
+	"lsp/internal/platform/storage"
 )
 
 type Service struct {
 	repo    domain.Repository
 	checker domain.AsesiChecker
+	files   storage.ObjectStorage
 }
 
-func NewService(repo domain.Repository, checker domain.AsesiChecker) *Service {
-	return &Service{repo: repo, checker: checker}
+func NewService(repo domain.Repository, checker domain.AsesiChecker, files storage.ObjectStorage) *Service {
+	return &Service{repo: repo, checker: checker, files: files}
 }
 
 type CreateCommand struct {
@@ -107,7 +109,11 @@ type PatchCommand struct {
 }
 
 func (s *Service) Patch(ctx context.Context, cmd PatchCommand) (domain.Profile, error) {
-	return s.repo.Patch(ctx, domain.Patch{
+	previous, err := s.repo.FindByID(ctx, cmd.ID)
+	if err != nil {
+		return domain.Profile{}, err
+	}
+	updated, err := s.repo.Patch(ctx, domain.Patch{
 		ID:                cmd.ID,
 		FullName:          cmd.FullName,
 		NIK:               cmd.NIK,
@@ -131,6 +137,36 @@ func (s *Service) Patch(ctx context.Context, cmd PatchCommand) (domain.Profile, 
 		CVFile:            cmd.CVFile,
 		NPWPFile:          cmd.NPWPFile,
 	})
+	if err != nil {
+		return domain.Profile{}, err
+	}
+	s.removeReplacedFiles(ctx, previous, updated)
+	return updated, nil
+}
+
+// removeReplacedFiles menghapus objek lama di object storage saat sebuah berkas
+// diganti melalui Patch. Best-effort: kegagalan hapus tidak menggagalkan
+// permintaan karena nilai baru sudah tersimpan di database.
+func (s *Service) removeReplacedFiles(ctx context.Context, previous, updated domain.Profile) {
+	if s.files == nil {
+		return
+	}
+	pairs := [][2]*string{
+		{previous.Photo, updated.Photo},
+		{previous.KTPFile, updated.KTPFile},
+		{previous.CVFile, updated.CVFile},
+		{previous.NPWPFile, updated.NPWPFile},
+	}
+	for _, pair := range pairs {
+		oldKey, newKey := pair[0], pair[1]
+		if oldKey == nil || *oldKey == "" {
+			continue
+		}
+		if newKey != nil && *newKey == *oldKey {
+			continue
+		}
+		_ = s.files.Delete(ctx, *oldKey)
+	}
 }
 
 func (s *Service) Get(ctx context.Context, id string) (domain.Profile, error) {

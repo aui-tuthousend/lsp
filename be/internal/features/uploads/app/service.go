@@ -22,9 +22,9 @@ const uploadURLExpiry = 10 * time.Minute
 // diizinkan beserta ekstensi file.
 var allowedTypes = map[string]map[string]string{
 	"photo":     {"image/jpeg": "jpg", "image/png": "png"},
-	"ktp_file":  {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
+	"ktp_file":  {"application/pdf": "pdf"},
 	"cv_file":   {"application/pdf": "pdf"},
-	"npwp_file": {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
+	"npwp_file": {"application/pdf": "pdf"},
 	"document":  {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
 }
 

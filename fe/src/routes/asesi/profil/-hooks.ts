@@ -3,9 +3,13 @@ import { toast } from 'sonner'
 import { ApiError } from '@/lib/api'
 import type { Session } from '@/lib/auth/types'
 import { qk } from '@/lib/query-keys'
+import { uploadFile } from '@/lib/upload'
 import { asesiProfileKeys } from './-queryKeys'
 import { asesiProfileService } from './-service'
 import type { CreateAsesiProfileBody, ListAsesiProfilesParams, UpdateAccountBody, UpdateAsesiProfileBody, UpsertOccupationBody } from './-types'
+
+/** Field berkas pendukung pada profil asesi (tabel `asesi_profiles`). */
+export type ProfileFileField = 'photo' | 'ktp_file' | 'cv_file' | 'npwp_file'
 
 function errorMessage(error: unknown): string {
   return error instanceof Error ? error.message : 'Silakan coba lagi'
@@ -78,6 +82,32 @@ export function useUpdateAsesiProfile(session: Session | null) {
     },
     onError: (error) => {
       toast.error('Gagal memperbarui profil', { description: errorMessage(error) })
+    },
+  })
+}
+
+/**
+ * Ganti satu berkas pendukung: unggah berkas baru ke object storage lalu PATCH
+ * profil. Backend otomatis menghapus objek lama saat nilainya berubah.
+ */
+export function useReplaceProfileFile(session: Session | null) {
+  const queryClient = useQueryClient()
+
+  return useMutation({
+    mutationFn: async ({ id, field, file }: { id: string; field: ProfileFileField; file: File }) => {
+      const objectKey = await uploadFile(file, field)
+      const body: UpdateAsesiProfileBody = {}
+      body[field] = objectKey
+      return asesiProfileService.update(id, body, session)
+    },
+    onSuccess: (profile) => {
+      void queryClient.invalidateQueries({ queryKey: asesiProfileKeys.lists() })
+      queryClient.setQueryData(asesiProfileKeys.detail(profile.id), profile)
+      queryClient.setQueryData(asesiProfileKeys.byUser(profile.user_id), profile)
+      toast.success('Berkas diperbarui')
+    },
+    onError: (error) => {
+      toast.error('Gagal memperbarui berkas', { description: errorMessage(error) })
     },
   })
 }

@@ -25,9 +25,9 @@ type DocConfig = {
 
 const DOCS: DocConfig[] = [
   { field: 'photo', label: 'Pas Foto', icon: Camera, accept: 'image/png,image/jpeg', hint: 'JPG/PNG, maks 2MB' },
-  { field: 'ktp_file', label: 'Scan KTP', icon: CreditCard, accept: 'image/png,image/jpeg,application/pdf', hint: 'JPG/PNG/PDF, maks 2MB' },
+  { field: 'ktp_file', label: 'Scan KTP', icon: CreditCard, accept: 'application/pdf', hint: 'PDF, maks 2MB' },
   { field: 'cv_file', label: 'Curriculum Vitae', icon: FileText, accept: 'application/pdf', hint: 'PDF, maks 2MB' },
-  { field: 'npwp_file', label: 'NPWP', icon: Receipt, accept: 'image/png,image/jpeg,application/pdf', hint: 'JPG/PNG/PDF, maks 2MB' },
+  { field: 'npwp_file', label: 'NPWP', icon: Receipt, accept: 'application/pdf', hint: 'PDF, maks 2MB' },
 ]
 
 function formatSize(bytes: number) {

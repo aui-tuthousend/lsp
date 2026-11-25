@@ -71,9 +71,9 @@ export const alamatDomisiliSchema = alamatDomisiliBase.superRefine((value, ctx) 
 // ── Step 3 — Unggah Dokumen Pendukung ────────────────────────────────────────
 export const dokumenPendukungSchema = z.object({
   photo: optionalFile('Pas foto', ['image/jpeg', 'image/png']),
-  ktp_file: optionalFile('Scan KTP', ['image/jpeg', 'image/png', 'application/pdf']),
+  ktp_file: optionalFile('Scan KTP', ['application/pdf']),
   cv_file: optionalFile('CV', ['application/pdf']),
-  npwp_file: optionalFile('NPWP', ['image/jpeg', 'image/png', 'application/pdf']),
+  npwp_file: optionalFile('NPWP', ['application/pdf']),
 })
 
 // ── Step 4 — Email & Keamanan Akun ───────────────────────────────────────────

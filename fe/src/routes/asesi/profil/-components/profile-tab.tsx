@@ -1,4 +1,4 @@
-import { useEffect, useState, type FormEvent } from 'react'
+import { useEffect, useRef, useState, type FormEvent } from 'react'
 import { Loader2, Save } from 'lucide-react'
 import { toast } from 'sonner'
 import { AddressFields } from '@/components/ui/address-fields'
@@ -20,6 +20,7 @@ import {
   type ProfileFormValues,
 } from '../-store'
 import type { EducationLevel } from '../-types'
+import { SupportingFiles } from './supporting-files'
 
 /** Tab "Data Profil" — atribut dari tabel `asesi_profiles` (partial update). */
 export function ProfileTab({ session }: { session: Session | null }) {
@@ -28,11 +29,17 @@ export function ProfileTab({ session }: { session: Session | null }) {
 
   const [values, setValues] = useState<ProfileFormValues>(EMPTY_FORM)
   const [baseline, setBaseline] = useState<ProfileFormValues>(EMPTY_FORM)
+  const [filesUploading, setFilesUploading] = useState(false)
+  const hydratedProfileId = useRef<string | null>(null)
   const today = new Date().toISOString().slice(0, 10)
 
+  // Hidrasi form sekali per profil (id) agar penggantian berkas tidak
+  // mengembalikan perubahan field yang belum disimpan.
   useEffect(() => {
-    if (!profileQuery.data) return
-    const form = toForm(profileQuery.data)
+    const profile = profileQuery.data
+    if (!profile || hydratedProfileId.current === profile.id) return
+    hydratedProfileId.current = profile.id
+    const form = toForm(profile)
     setValues(form)
     setBaseline(form)
   }, [profileQuery.data])
@@ -60,7 +67,7 @@ export function ProfileTab({ session }: { session: Session | null }) {
       toast.info('Tidak ada perubahan untuk disimpan')
       return
     }
-    update.mutate({ id, body: patch })
+    update.mutate({ id, body: patch }, { onSuccess: () => setBaseline(values) })
   }
 
   return (
@@ -200,13 +207,23 @@ export function ProfileTab({ session }: { session: Session | null }) {
             </div>
 
             <div className="flex justify-end">
-              <Button type="submit" disabled={update.isPending || !isDirty} className="gap-2">
+              <Button type="submit" disabled={update.isPending || !isDirty || filesUploading} className="gap-2">
                 {update.isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                 {update.isPending ? 'Menyimpan...' : 'Simpan'}
               </Button>
             </div>
           </form>
         )}
+
+        {profileQuery.data ? (
+          <div className="mt-6 border-t border-slate-200 pt-5">
+            <h3 className="text-sm font-semibold text-slate-700">Berkas Pendukung</h3>
+            <p className="mb-3 text-xs text-slate-500">
+              Pas foto (JPG/PNG) dan dokumen lain (PDF). Mengganti berkas akan menghapus berkas lama.
+            </p>
+            <SupportingFiles session={session} profile={profileQuery.data} onBusyChange={setFilesUploading} />
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   )

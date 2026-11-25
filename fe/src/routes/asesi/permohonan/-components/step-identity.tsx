@@ -4,32 +4,26 @@ import { Checkbox } from '@/components/ui/checkbox'
 import { Field } from '@/components/ui/field'
 import { Input } from '@/components/ui/input'
 import { Select } from '@/components/ui/select'
+import type { Session } from '@/lib/auth/types'
+import { SupportingFiles } from '../../profil/-components/supporting-files'
 import {
   EDUCATION_OPTIONS,
   GENDER_OPTIONS,
   type OccupationFormValues,
   type ProfileFormValues,
 } from '../../profil/-store'
-import type { EducationLevel, Gender } from '../../profil/-types'
+import type { AsesiProfile, EducationLevel, Gender } from '../../profil/-types'
 import { textareaClass } from '../-helpers'
-import { FileField } from './file-field'
-
-/** Berkas identitas pada profil asesi (step 1). */
-export type IdentityFiles = {
-  photo: File | null
-  ktp_file: File | null
-  cv_file: File | null
-  npwp_file: File | null
-}
 
 export type StepIdentityProps = {
   profileValues: ProfileFormValues
   occupationValues: OccupationFormValues
-  files: IdentityFiles
-  existingFiles: Partial<Record<keyof IdentityFiles, string | null>>
+  profile: AsesiProfile
+  session: Session | null
   onProfileChange: <K extends keyof ProfileFormValues>(key: K, value: ProfileFormValues[K]) => void
   onOccupationChange: <K extends keyof OccupationFormValues>(key: K, value: OccupationFormValues[K]) => void
-  onPickFile: (key: keyof IdentityFiles, file: File | null) => void
+  /** Diteruskan ke blok berkas: true saat ada unggahan berjalan. */
+  onFilesBusyChange?: (busy: boolean) => void
 }
 
 function Section({ title, description, children }: { title: string; description?: string; children: ReactNode }) {
@@ -48,11 +42,11 @@ function Section({ title, description, children }: { title: string; description?
 export function StepIdentity({
   profileValues,
   occupationValues,
-  files,
-  existingFiles,
+  profile,
+  session,
   onProfileChange,
   onOccupationChange,
-  onPickFile,
+  onFilesBusyChange,
 }: StepIdentityProps) {
   return (
     <div className="space-y-8">
@@ -161,41 +155,11 @@ export function StepIdentity({
         </div>
       </Section>
 
-      <Section title="Dokumen Pendukung" description="Unggah berkas identitas (JPG/PNG/PDF).">
-        <div className="grid gap-4 sm:grid-cols-2">
-          <FileField
-            id="photo"
-            label="Pas Foto"
-            accept="image/jpeg,image/png"
-            file={files.photo}
-            hasExisting={Boolean(existingFiles.photo)}
-            onPick={(file) => onPickFile('photo', file)}
-          />
-          <FileField
-            id="ktp_file"
-            label="Scan KTP"
-            accept="image/jpeg,image/png,application/pdf"
-            file={files.ktp_file}
-            hasExisting={Boolean(existingFiles.ktp_file)}
-            onPick={(file) => onPickFile('ktp_file', file)}
-          />
-          <FileField
-            id="cv_file"
-            label="CV"
-            accept="application/pdf"
-            file={files.cv_file}
-            hasExisting={Boolean(existingFiles.cv_file)}
-            onPick={(file) => onPickFile('cv_file', file)}
-          />
-          <FileField
-            id="npwp_file"
-            label="NPWP"
-            accept="image/jpeg,image/png,application/pdf"
-            file={files.npwp_file}
-            hasExisting={Boolean(existingFiles.npwp_file)}
-            onPick={(file) => onPickFile('npwp_file', file)}
-          />
-        </div>
+      <Section
+        title="Dokumen Pendukung"
+        description="Pas foto (JPG/PNG) dan dokumen lain (PDF). Mengganti berkas akan menghapus berkas lama."
+      >
+        <SupportingFiles session={session} profile={profile} onBusyChange={onFilesBusyChange} />
       </Section>
     </div>
   )

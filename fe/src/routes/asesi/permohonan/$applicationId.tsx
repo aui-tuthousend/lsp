@@ -1,5 +1,5 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
 import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Layers, Loader2, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -7,7 +7,7 @@ import { Card, CardContent } from '@/components/ui/card'
 import { Stepper } from '@/components/ui/stepper'
 import type { Session } from '@/lib/auth/types'
 import { useAppEvent } from '@/lib/sse/use-app-event'
-import { uploadFile, type UploadPurpose } from '@/lib/upload'
+import { uploadFile } from '@/lib/upload'
 import { cn } from '@/lib/utils'
 import {
   EMPTY_FORM,
@@ -26,7 +26,7 @@ import { useApplication, usePutData, usePutDocuments, usePutSchedule, useSubmit,
 import { QrPanel } from './-components/qr-panel'
 import { StepCertification } from './-components/step-certification'
 import { StepDocuments } from './-components/step-documents'
-import { StepIdentity, type IdentityFiles } from './-components/step-identity'
+import { StepIdentity } from './-components/step-identity'
 import { StepSchedule } from './-components/step-schedule'
 import type { ApplicationDetail, AssessmentMode, AssessmentPurpose } from './-types'
 
@@ -40,13 +40,6 @@ const STEPS = [
   { title: 'Bukti Kelengkapan', description: 'Unggah dokumen sesuai skema yang dipilih.', icon: FileText },
   { title: 'Jadwal Asesmen', description: 'Ajukan metode dan tanggal pelaksanaan.', icon: CalendarDays },
 ] as const
-
-const EMPTY_IDENTITY_FILES: IdentityFiles = { photo: null, ktp_file: null, cv_file: null, npwp_file: null }
-
-async function uploadIfPresent(file: File | null, purpose: UploadPurpose) {
-  if (!file) return undefined
-  return uploadFile(file, purpose)
-}
 
 function PermohonanPage() {
   const { applicationId } = Route.useParams()
@@ -103,9 +96,10 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   const [profileValues, setProfileValues] = useState<ProfileFormValues>(EMPTY_FORM)
   const [occupationValues, setOccupationValues] = useState<OccupationFormValues>(EMPTY_OCCUPATION_FORM)
   const [profileBaseline, setProfileBaseline] = useState<ProfileFormValues>(EMPTY_FORM)
-  const [identityFiles, setIdentityFiles] = useState<IdentityFiles>(EMPTY_IDENTITY_FILES)
+  const [filesUploading, setFilesUploading] = useState(false)
 
   const [hydratedId, setHydratedId] = useState<string | null>(null)
+  const hydratedProfileId = useRef<string | null>(null)
   const requirements = useSchemaRequirements(schemaId, session)
   const tukOptions = useTukOptions(session)
   const minDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
@@ -122,9 +116,13 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     setHydratedId(detail.application.id)
   }, [detail, hydratedId])
 
+  // Hidrasi form profil sekali per profil (id) agar penggantian berkas tidak
+  // mengembalikan perubahan field yang belum disimpan.
   useEffect(() => {
-    if (!profileQuery.data) return
-    const form = toForm(profileQuery.data)
+    const profile = profileQuery.data
+    if (!profile || hydratedProfileId.current === profile.id) return
+    hydratedProfileId.current = profile.id
+    const form = toForm(profile)
     setProfileValues(form)
     setProfileBaseline(form)
   }, [profileQuery.data])
@@ -152,7 +150,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }, [detail.documents])
 
   const current = STEPS[step]
-  const saving = updateStep.isPending || putData.isPending || putDocuments.isPending || putSchedule.isPending || submit.isPending || updateProfile.isPending || upsertOccupation.isPending
+  const saving = updateStep.isPending || putData.isPending || putDocuments.isPending || putSchedule.isPending || submit.isPending || updateProfile.isPending || upsertOccupation.isPending || filesUploading
 
   async function saveIdentity(): Promise<boolean> {
     const profileError = validate(profileValues)
@@ -173,21 +171,10 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
       return false
     }
 
-    const [photo, ktpFile, cvFile, npwpFile] = await Promise.all([
-      uploadIfPresent(identityFiles.photo, 'photo'),
-      uploadIfPresent(identityFiles.ktp_file, 'ktp_file'),
-      uploadIfPresent(identityFiles.cv_file, 'cv_file'),
-      uploadIfPresent(identityFiles.npwp_file, 'npwp_file'),
-    ])
     const patch = diffPatch(profileValues, profileBaseline)
-    if (photo) patch.photo = photo
-    if (ktpFile) patch.ktp_file = ktpFile
-    if (cvFile) patch.cv_file = cvFile
-    if (npwpFile) patch.npwp_file = npwpFile
-
     if (Object.keys(patch).length > 0) {
       await updateProfile.mutateAsync({ id: profileQuery.data.id, body: patch })
-      setIdentityFiles(EMPTY_IDENTITY_FILES)
+      setProfileBaseline(profileValues)
     }
     if (hasOccupation) {
       await upsertOccupation.mutateAsync({ userId: session.id, body: toOccupationBody(occupationValues) })
@@ -291,7 +278,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   function renderStep() {
     switch (step) {
       case 0:
-        return profileQuery.isLoading ? (
+        return profileQuery.isLoading || !profileQuery.data ? (
           <div className="flex items-center gap-2 text-sm text-slate-500">
             <Loader2 className="h-4 w-4 animate-spin" />
             Memuat profil...
@@ -300,16 +287,11 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
           <StepIdentity
             profileValues={profileValues}
             occupationValues={occupationValues}
-            files={identityFiles}
-            existingFiles={{
-              photo: profileQuery.data?.photo,
-              ktp_file: profileQuery.data?.ktp_file,
-              cv_file: profileQuery.data?.cv_file,
-              npwp_file: profileQuery.data?.npwp_file,
-            }}
+            profile={profileQuery.data}
+            session={session}
             onProfileChange={(key, value) => setProfileValues((prev) => ({ ...prev, [key]: value }))}
             onOccupationChange={(key, value) => setOccupationValues((prev) => ({ ...prev, [key]: value }))}
-            onPickFile={(key, file) => setIdentityFiles((prev) => ({ ...prev, [key]: file }))}
+            onFilesBusyChange={setFilesUploading}
           />
         )
       case 1:
