@@ -45,6 +45,9 @@ type Repository interface {
 	// Jadwal asesmen (step 4).
 	UpsertAssessmentSchedule(ctx context.Context, schedule AssessmentSchedule) (AssessmentSchedule, error)
 	FindAssessmentSchedule(ctx context.Context, applicationID string) (AssessmentSchedule, error)
+	// HasScheduleConflict melaporkan apakah asesi pemilik permohonan sudah punya
+	// permohonan lain (status selain REJECTED) pada tanggal jadwal yang sama.
+	HasScheduleConflict(ctx context.Context, applicationID string, date time.Time) (bool, error)
 
 	// Token verifikasi QR.
 	CreateSignature(ctx context.Context, signature FormSignature) error

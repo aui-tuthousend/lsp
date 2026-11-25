@@ -278,6 +278,29 @@ func (r *Repository) FindAssessmentSchedule(ctx context.Context, applicationID s
 	`, applicationID))
 }
 
+// HasScheduleConflict mengecek apakah asesi pemilik permohonan punya permohonan
+// lain (status selain REJECTED) dengan jadwal pada tanggal yang sama.
+func (r *Repository) HasScheduleConflict(ctx context.Context, applicationID string, date time.Time) (bool, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var exists bool
+	err := db.QueryRow(ctx, `
+		SELECT EXISTS (
+		    SELECT 1
+		    FROM assessment_schedules s
+		    JOIN certification_applications a ON a.id = s.application_id
+		    WHERE s.scheduled_date = $2::date
+		      AND a.id <> $1
+		      AND a.status <> 'REJECTED'
+		      AND a.deleted_at IS NULL
+		      AND a.user_id = (SELECT user_id FROM certification_applications WHERE id = $1)
+		)
+	`, applicationID, date.Format(time.DateOnly)).Scan(&exists)
+	if err != nil {
+		return false, mapError(err)
+	}
+	return exists, nil
+}
+
 // --- Token verifikasi QR ---
 
 func (r *Repository) CreateSignature(ctx context.Context, signature domain.FormSignature) error {

@@ -161,10 +161,18 @@ func (s *Service) PutDocuments(ctx context.Context, cmd PutDocumentsCommand) (do
 	return s.Detail(ctx, cmd.ApplicationID)
 }
 
-// PutSchedule menyimpan jadwal asesmen (step 4).
+// PutSchedule menyimpan jadwal asesmen (step 4). Menolak bila asesi sudah punya
+// pengajuan lain pada tanggal yang sama.
 func (s *Service) PutSchedule(ctx context.Context, cmd PutScheduleCommand) (domain.ApplicationDetail, error) {
 	if err := s.ensureDraft(ctx, cmd.ApplicationID); err != nil {
 		return domain.ApplicationDetail{}, err
+	}
+	conflict, err := s.repo.HasScheduleConflict(ctx, cmd.ApplicationID, cmd.ScheduledDate)
+	if err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	if conflict {
+		return domain.ApplicationDetail{}, domain.ErrScheduleConflict
 	}
 	if _, err := s.repo.UpsertAssessmentSchedule(ctx, domain.AssessmentSchedule{
 		ID:            id.New(),

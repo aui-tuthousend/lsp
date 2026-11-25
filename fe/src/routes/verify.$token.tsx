@@ -3,6 +3,14 @@ import { useEffect, useState } from 'react'
 import { CheckCircle2, Loader2, ShieldCheck, XCircle } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog'
 import { ApiError } from '@/lib/api'
 import { apl01Service } from './asesi/permohonan/-service'
 import type { ApplicationDetail } from './asesi/permohonan/-types'
@@ -12,6 +20,9 @@ export const Route = createFileRoute('/verify/$token')({
 })
 
 type VerifyState = 'checking' | 'idle' | 'submitting' | 'done' | 'already' | 'invalid' | 'error'
+
+/** Keterangan QR ini memverifikasi formulir/step apa. */
+const VERIFY_TARGET_LABEL = 'Formulir APL-01 — Langkah 4: Jadwal Asesmen'
 
 /**
  * Laman verifikasi QR APL-01. Dibuka dari hasil scan QR (`/verify/{token}`).
@@ -24,6 +35,7 @@ function VerifyPage() {
   const [state, setState] = useState<VerifyState>('checking')
   const [message, setMessage] = useState('')
   const [result, setResult] = useState<ApplicationDetail | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   useEffect(() => {
     if (!auth) return
@@ -80,6 +92,7 @@ function VerifyPage() {
             <ShieldCheck className="h-5 w-5" />
             Verifikasi Permohonan
           </CardTitle>
+          <p className="text-sm text-slate-500">{VERIFY_TARGET_LABEL}</p>
         </CardHeader>
         <CardContent className="space-y-4">
           {!auth ? (
@@ -124,12 +137,38 @@ function VerifyPage() {
           ) : (
             <>
               <p className="text-sm text-slate-600">
-                Tekan tombol di bawah untuk menyetujui dan memverifikasi permohonan APL-01 Anda.
+                QR ini memverifikasi seluruh data pengajuan <span className="font-medium text-slate-700">Formulir APL-01</span>{' '}
+                Anda (Langkah 1–4). Tekan tombol di bawah untuk menyetujui dan memverifikasi.
               </p>
-              <Button className="w-full gap-2" onClick={() => void confirm()}>
+              <Button className="w-full gap-2" onClick={() => setConfirmOpen(true)}>
                 <CheckCircle2 className="h-4 w-4" />
                 Setuju &amp; Verifikasi
               </Button>
+              <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Konfirmasi Verifikasi</DialogTitle>
+                    <DialogDescription>
+                      Apakah Anda sudah memastikan data yang Anda masukkan sudah benar?
+                    </DialogDescription>
+                  </DialogHeader>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+                      Batal
+                    </Button>
+                    <Button
+                      className="gap-2"
+                      onClick={() => {
+                        setConfirmOpen(false)
+                        void confirm()
+                      }}
+                    >
+                      <CheckCircle2 className="h-4 w-4" />
+                      Ya, Verifikasi
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             </>
           )}
         </CardContent>

@@ -411,6 +411,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
           <CardContent className="space-y-4 p-4 sm:p-6">
             <div className="flex flex-col items-center gap-2 text-center">
               <h2 className="text-base font-semibold text-slate-900">Verifikasi Permohonan</h2>
+              <p className="text-xs text-slate-500">Formulir APL-01 — Langkah 4: Jadwal Asesmen</p>
               <span
                 className={cn(
                   'inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium',

@@ -9,4 +9,7 @@ var (
 	ErrIncomplete   = errors.New("certification application is incomplete")
 	ErrInvalidToken = errors.New("invalid or expired verification token")
 	ErrTokenUsed    = errors.New("verification token already used")
+	// ErrScheduleConflict: asesi sudah punya pengajuan lain pada tanggal jadwal
+	// yang sama.
+	ErrScheduleConflict = errors.New("already have an application on this date")
 )

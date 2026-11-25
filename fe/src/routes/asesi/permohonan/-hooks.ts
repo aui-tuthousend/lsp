@@ -1,5 +1,6 @@
 import { useMutation, useQuery, useQueryClient, type QueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
+import { ApiError } from '@/lib/api'
 import type { Session } from '@/lib/auth/types'
 import { apl01Keys } from './-queryKeys'
 import { apl01Service } from './-service'
@@ -127,6 +128,12 @@ export function usePutSchedule(id: string, session: Session | null) {
     mutationFn: (body: PutScheduleBody) => apl01Service.putSchedule(id, body, session),
     onSuccess: (detail) => cacheDetail(queryClient, detail),
     onError: (error) => {
+      if (error instanceof ApiError && error.status === 409) {
+        toast.error('Tanggal tidak tersedia', {
+          description: 'Anda sudah memiliki pengajuan pada tanggal tersebut. Pilih tanggal lain.',
+        })
+        return
+      }
       toast.error('Gagal menyimpan jadwal', { description: errorMessage(error) })
     },
   })
