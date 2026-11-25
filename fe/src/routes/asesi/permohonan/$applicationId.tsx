@@ -1,7 +1,7 @@
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { toast } from 'sonner'
-import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Layers, Loader2, User } from 'lucide-react'
+import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Layers, Loader2, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Stepper } from '@/components/ui/stepper'
@@ -108,10 +108,14 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   const tukOptions = useTukOptions(session)
   const minDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
+  // Permohonan yang sudah diajukan (bukan draft) ditampilkan read-only.
+  const isReadOnly = detail.application.status !== 'DRAFT'
+
   // Hidrasi state dari server sekali per permohonan.
   useEffect(() => {
     if (hydratedId === detail.application.id) return
-    setStep(Math.min(Math.max(detail.application.current_step - 1, 0), STEPS.length - 1))
+    const readOnly = detail.application.status !== 'DRAFT'
+    setStep(readOnly ? 0 : Math.min(Math.max(detail.application.current_step - 1, 0), STEPS.length - 1))
     setSchemaId(detail.data?.certification_schema_id ?? '')
     setPurpose(detail.data?.purpose ?? '')
     setMode(detail.schedule?.mode ?? '')
@@ -261,6 +265,11 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }
 
   async function goNext() {
+    if (isReadOnly) {
+      setStep((prev) => Math.min(prev + 1, STEPS.length - 1))
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+      return
+    }
     if (actionPending) return
     setActionPending(true)
     try {
@@ -285,7 +294,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }
 
   async function handleSubmit() {
-    if (actionPending) return
+    if (isReadOnly || actionPending) return
     setActionPending(true)
     try {
       if (!(await saveSchedule())) return
@@ -374,6 +383,12 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
         <p className="text-sm text-slate-500">
           {detail.application.code} · Langkah {step + 1} / {STEPS.length}
         </p>
+        {isReadOnly ? (
+          <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
+            <Lock className="h-3.5 w-3.5" />
+            Permohonan sudah diajukan — hanya dapat dilihat
+          </p>
+        ) : null}
       </div>
 
       <Stepper steps={STEPS} current={step} />
@@ -385,7 +400,9 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             <p className="text-sm text-slate-500">{current.description}</p>
           </div>
 
-          {renderStep()}
+          <fieldset disabled={isReadOnly} className="m-0 min-w-0 border-0 p-0">
+            {renderStep()}
+          </fieldset>
         </CardContent>
       </Card>
 
@@ -419,7 +436,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             <ChevronRight className="h-4 w-4" />
           </Button>
         ) : (
-          <Button type="button" onClick={() => void handleSubmit()} disabled={saving} className="gap-1.5">
+          <Button type="button" onClick={() => void handleSubmit()} disabled={isReadOnly || saving} className="gap-1.5">
             <Check className="h-4 w-4" />
             {saving ? 'Memproses...' : 'Ajukan Permohonan'}
           </Button>
