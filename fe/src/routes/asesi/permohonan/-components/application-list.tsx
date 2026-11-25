@@ -10,10 +10,12 @@ export type ApplicationListProps = {
   items: Application[]
   isLoading: boolean
   isError: boolean
+  /** Pesan saat daftar kosong (mis. saat filter status aktif). */
+  emptyMessage?: string
 }
 
 /** Daftar permohonan APL-01 milik asesi (dipakai di beranda). */
-export function ApplicationList({ items, isLoading, isError }: ApplicationListProps) {
+export function ApplicationList({ items, isLoading, isError, emptyMessage }: ApplicationListProps) {
   const navigate = useNavigate()
 
   if (isLoading) {
@@ -33,7 +35,9 @@ export function ApplicationList({ items, isLoading, isError }: ApplicationListPr
     return (
       <div className="flex flex-col items-center gap-2 py-8 text-center">
         <FileText className="h-8 w-8 text-slate-300" />
-        <p className="text-sm text-slate-500">Belum ada permohonan. Mulai dengan menekan tombol di atas.</p>
+        <p className="text-sm text-slate-500">
+          {emptyMessage ?? 'Belum ada permohonan. Mulai dengan menekan tombol di atas.'}
+        </p>
       </div>
     )
   }

@@ -1,9 +1,13 @@
+import { useState } from 'react'
 import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { Plus } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ApplicationList } from './permohonan/-components/application-list'
 import { useCreateDraft, useMyApplications } from './permohonan/-hooks'
+import { STATUS_LABELS } from './permohonan/-helpers'
+import type { ApplicationStatus } from './permohonan/-types'
 
 export const Route = createFileRoute('/asesi/')({
   component: AsesiHome,
@@ -11,10 +15,22 @@ export const Route = createFileRoute('/asesi/')({
 
 const PAGE_SIZE = 20
 
+const STATUS_FILTERS: { value: ApplicationStatus | 'ALL'; label: string }[] = [
+  { value: 'ALL', label: 'Semua' },
+  { value: 'DRAFT', label: STATUS_LABELS.DRAFT },
+  { value: 'SUBMITTED', label: STATUS_LABELS.SUBMITTED },
+  { value: 'APPROVED', label: STATUS_LABELS.APPROVED },
+  { value: 'REJECTED', label: STATUS_LABELS.REJECTED },
+]
+
 function AsesiHome() {
   const { auth } = Route.useRouteContext()
   const navigate = useNavigate()
-  const { data, isLoading, isError } = useMyApplications({ page: 1, limit: PAGE_SIZE }, auth)
+  const [status, setStatus] = useState<ApplicationStatus | 'ALL'>('ALL')
+  const { data, isLoading, isError } = useMyApplications(
+    { page: 1, limit: PAGE_SIZE, status: status === 'ALL' ? undefined : status },
+    auth,
+  )
   const createDraft = useCreateDraft(auth)
 
   function startNew() {
@@ -40,10 +56,34 @@ function AsesiHome() {
 
       <Card>
         <CardHeader>
-          <CardTitle>Permohonan Saya</CardTitle>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <CardTitle>Permohonan Saya</CardTitle>
+            <Tabs
+              value={status}
+              onValueChange={(value) => setStatus(value as ApplicationStatus | 'ALL')}
+              className="w-full min-w-0 sm:w-auto"
+            >
+              <TabsList>
+                {STATUS_FILTERS.map((filter) => (
+                  <TabsTrigger key={filter.value} value={filter.value}>
+                    {filter.label}
+                  </TabsTrigger>
+                ))}
+              </TabsList>
+            </Tabs>
+          </div>
         </CardHeader>
         <CardContent className="p-4">
-          <ApplicationList items={data?.data ?? []} isLoading={isLoading} isError={isError} />
+          <ApplicationList
+            items={data?.data ?? []}
+            isLoading={isLoading}
+            isError={isError}
+            emptyMessage={
+              status === 'ALL'
+                ? undefined
+                : `Tidak ada permohonan berstatus ${STATUS_LABELS[status].toLowerCase()}.`
+            }
+          />
         </CardContent>
       </Card>
     </div>
