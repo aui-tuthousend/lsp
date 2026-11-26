@@ -59,6 +59,8 @@ export type ApplicationDocument = {
   application_id: string
   document_type_id: string
   file_url?: string | null
+  /** URL presigned (bucket privat) untuk pratinjau berkas. */
+  file_view_url?: string | null
   status: DocumentStatus
   note?: string | null
   verified_at?: string | null

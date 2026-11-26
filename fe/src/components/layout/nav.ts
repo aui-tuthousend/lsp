@@ -1,4 +1,4 @@
-import { Building2, ClipboardList, FileText, Home, Layers, ShieldCheck, UserCog, Users } from 'lucide-react'
+import { Building2, ClipboardCheck, ClipboardList, FileText, Home, Layers, ShieldCheck, UserCog, Users } from 'lucide-react'
 import type { Role } from '@/lib/auth/types'
 
 export type NavItem = {
@@ -19,6 +19,10 @@ export const navSections: NavSection[] = [
   {
     title: 'Umum',
     items: [{ label: 'Dashboard', to: '/', icon: Home, roles: ALL }],
+  },
+  {
+    title: 'Sertifikasi',
+    items: [{ label: 'Asesmen Mandiri', to: '/asesi/asesmen-mandiri', icon: ClipboardCheck, roles: ['asesi'] }],
   },
   {
     title: 'Penugasan',

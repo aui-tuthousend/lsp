@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query'
 import { Outlet, useRouter } from '@tanstack/react-router'
 import { LogOut, Menu, PanelLeftClose, PanelLeftOpen, User, X } from 'lucide-react'
 import { useState } from 'react'
@@ -20,12 +21,15 @@ import { Sidebar } from './sidebar'
 
 export function AppShell({ session }: { session: Session }) {
   const router = useRouter()
+  const queryClient = useQueryClient()
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false)
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false)
   useNotifications(session)
 
   async function logout() {
     await logoutFn()
+    // Bersihkan cache agar data milik akun sebelumnya tidak tersisa saat berganti akun.
+    queryClient.clear()
     await router.invalidate()
     toast.success('Berhasil logout')
     await router.navigate({ to: '/login', replace: true })

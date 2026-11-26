@@ -34,6 +34,8 @@ import { Route as AdminSkemaIndexRouteImport } from './routes/admin/skema/index'
 import { Route as AdminSkemaSchemaIdRouteImport } from './routes/admin/skema/$schemaId'
 import { Route as AdminTuksIndexRouteImport } from './routes/admin/tuks/index'
 import { Route as AdminUsersIndexRouteImport } from './routes/admin/users/index'
+import { Route as AsesiAsesmenMandiriIndexRouteImport } from './routes/asesi/asesmen-mandiri/index'
+import { Route as AsesiAsesmenMandiriAssessmentIdRouteImport } from './routes/asesi/asesmen-mandiri/$assessmentId'
 import { Route as AsesiPermohonanApplicationIdRouteImport } from './routes/asesi/permohonan/$applicationId'
 import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
 import { Route as AsesorAssignmentsAssignmentIdRouteImport } from './routes/asesor/assignments.$assignmentId'
@@ -163,6 +165,18 @@ const AdminUsersIndexRoute = AdminUsersIndexRouteImport.update({
   path: '/users/',
   getParentRoute: () => AdminRouteRoute,
 } as any)
+const AsesiAsesmenMandiriIndexRoute =
+  AsesiAsesmenMandiriIndexRouteImport.update({
+    id: '/asesmen-mandiri/',
+    path: '/asesmen-mandiri/',
+    getParentRoute: () => AsesiRouteRoute,
+  } as any)
+const AsesiAsesmenMandiriAssessmentIdRoute =
+  AsesiAsesmenMandiriAssessmentIdRouteImport.update({
+    id: '/asesmen-mandiri/$assessmentId',
+    path: '/asesmen-mandiri/$assessmentId',
+    getParentRoute: () => AsesiRouteRoute,
+  } as any)
 const AsesiPermohonanApplicationIdRoute =
   AsesiPermohonanApplicationIdRouteImport.update({
     id: '/permohonan/$applicationId',
@@ -201,6 +215,7 @@ export interface FileRoutesByFullPath {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
@@ -209,6 +224,7 @@ export interface FileRoutesByFullPath {
   '/admin/skema/': typeof AdminSkemaIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/asesi/asesmen-mandiri/': typeof AsesiAsesmenMandiriIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesByTo {
@@ -225,6 +241,7 @@ export interface FileRoutesByTo {
   '/register': typeof RegisterIndexRoute
   '/validator': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor': typeof AdminAsesorIndexRoute
@@ -233,6 +250,7 @@ export interface FileRoutesByTo {
   '/admin/skema': typeof AdminSkemaIndexRoute
   '/admin/tuks': typeof AdminTuksIndexRoute
   '/admin/users': typeof AdminUsersIndexRoute
+  '/asesi/asesmen-mandiri': typeof AsesiAsesmenMandiriIndexRoute
   '/asesi/profil': typeof AsesiProfilIndexRoute
 }
 export interface FileRoutesById {
@@ -256,6 +274,7 @@ export interface FileRoutesById {
   '/register/': typeof RegisterIndexRoute
   '/validator/': typeof ValidatorIndexRoute
   '/admin/skema/$schemaId': typeof AdminSkemaSchemaIdRoute
+  '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
@@ -264,6 +283,7 @@ export interface FileRoutesById {
   '/admin/skema/': typeof AdminSkemaIndexRoute
   '/admin/tuks/': typeof AdminTuksIndexRoute
   '/admin/users/': typeof AdminUsersIndexRoute
+  '/asesi/asesmen-mandiri/': typeof AsesiAsesmenMandiriIndexRoute
   '/asesi/profil/': typeof AsesiProfilIndexRoute
 }
 export interface FileRouteTypes {
@@ -288,6 +308,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/admin/skema/$schemaId'
+    | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
@@ -296,6 +317,7 @@ export interface FileRouteTypes {
     | '/admin/skema/'
     | '/admin/tuks/'
     | '/admin/users/'
+    | '/asesi/asesmen-mandiri/'
     | '/asesi/profil/'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -312,6 +334,7 @@ export interface FileRouteTypes {
     | '/register'
     | '/validator'
     | '/admin/skema/$schemaId'
+    | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor'
@@ -320,6 +343,7 @@ export interface FileRouteTypes {
     | '/admin/skema'
     | '/admin/tuks'
     | '/admin/users'
+    | '/asesi/asesmen-mandiri'
     | '/asesi/profil'
   id:
     | '__root__'
@@ -342,6 +366,7 @@ export interface FileRouteTypes {
     | '/register/'
     | '/validator/'
     | '/admin/skema/$schemaId'
+    | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
     | '/admin/asesor/'
@@ -350,6 +375,7 @@ export interface FileRouteTypes {
     | '/admin/skema/'
     | '/admin/tuks/'
     | '/admin/users/'
+    | '/asesi/asesmen-mandiri/'
     | '/asesi/profil/'
   fileRoutesById: FileRoutesById
 }
@@ -544,6 +570,20 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AdminUsersIndexRouteImport
       parentRoute: typeof AdminRouteRoute
     }
+    '/asesi/asesmen-mandiri/': {
+      id: '/asesi/asesmen-mandiri/'
+      path: '/asesmen-mandiri'
+      fullPath: '/asesi/asesmen-mandiri/'
+      preLoaderRoute: typeof AsesiAsesmenMandiriIndexRouteImport
+      parentRoute: typeof AsesiRouteRoute
+    }
+    '/asesi/asesmen-mandiri/$assessmentId': {
+      id: '/asesi/asesmen-mandiri/$assessmentId'
+      path: '/asesmen-mandiri/$assessmentId'
+      fullPath: '/asesi/asesmen-mandiri/$assessmentId'
+      preLoaderRoute: typeof AsesiAsesmenMandiriAssessmentIdRouteImport
+      parentRoute: typeof AsesiRouteRoute
+    }
     '/asesi/permohonan/$applicationId': {
       id: '/asesi/permohonan/$applicationId'
       path: '/permohonan/$applicationId'
@@ -608,13 +648,17 @@ const Admin_lspRouteRouteWithChildren = Admin_lspRouteRoute._addFileChildren(
 
 interface AsesiRouteRouteChildren {
   AsesiIndexRoute: typeof AsesiIndexRoute
+  AsesiAsesmenMandiriAssessmentIdRoute: typeof AsesiAsesmenMandiriAssessmentIdRoute
   AsesiPermohonanApplicationIdRoute: typeof AsesiPermohonanApplicationIdRoute
+  AsesiAsesmenMandiriIndexRoute: typeof AsesiAsesmenMandiriIndexRoute
   AsesiProfilIndexRoute: typeof AsesiProfilIndexRoute
 }
 
 const AsesiRouteRouteChildren: AsesiRouteRouteChildren = {
   AsesiIndexRoute: AsesiIndexRoute,
+  AsesiAsesmenMandiriAssessmentIdRoute: AsesiAsesmenMandiriAssessmentIdRoute,
   AsesiPermohonanApplicationIdRoute: AsesiPermohonanApplicationIdRoute,
+  AsesiAsesmenMandiriIndexRoute: AsesiAsesmenMandiriIndexRoute,
   AsesiProfilIndexRoute: AsesiProfilIndexRoute,
 }
 

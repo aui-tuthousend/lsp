@@ -259,6 +259,10 @@ func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgen
 	if err != nil {
 		return domain.ApplicationDetail{}, err
 	}
+	// Token harus milik formulir APL-01 (tabel form_signatures dipakai lintas tahap).
+	if signature.Entity != domain.EntityPermohonan {
+		return domain.ApplicationDetail{}, domain.ErrInvalidToken
+	}
 	if signature.Status != domain.SignaturePending {
 		if signature.Status == domain.SignatureUsed {
 			return domain.ApplicationDetail{}, domain.ErrTokenUsed
@@ -300,6 +304,10 @@ func (s *Service) VerifyStatus(ctx context.Context, userID, token string) (domai
 	signature, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(token))
 	if err != nil {
 		return domain.FormSignature{}, domain.Application{}, err
+	}
+	// Token harus milik formulir APL-01 (tabel form_signatures dipakai lintas tahap).
+	if signature.Entity != domain.EntityPermohonan {
+		return domain.FormSignature{}, domain.Application{}, domain.ErrNotFound
 	}
 	application, err := s.repo.FindApplicationByID(ctx, signature.ApplicationID)
 	if err != nil {

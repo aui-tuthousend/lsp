@@ -7,7 +7,8 @@ import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { ApplicationList } from './permohonan/-components/application-list'
 import { useCreateDraft, useMyApplications } from './permohonan/-hooks'
 import { STATUS_LABELS } from './permohonan/-helpers'
-import type { ApplicationStatus } from './permohonan/-types'
+import type { Application, ApplicationStatus } from './permohonan/-types'
+import { useCreateOrGetAssessment } from './asesmen-mandiri/-hooks'
 
 export const Route = createFileRoute('/asesi/')({
   component: AsesiHome,
@@ -32,11 +33,20 @@ function AsesiHome() {
     auth,
   )
   const createDraft = useCreateDraft(auth)
+  const openAssessment = useCreateOrGetAssessment(auth)
 
   function startNew() {
     createDraft.mutate(undefined, {
       onSuccess: (detail) => {
         void navigate({ to: '/asesi/permohonan/$applicationId', params: { applicationId: detail.application.id } })
+      },
+    })
+  }
+
+  function startAssessment(application: Application) {
+    openAssessment.mutate(application.id, {
+      onSuccess: (detail) => {
+        void navigate({ to: '/asesi/asesmen-mandiri/$assessmentId', params: { assessmentId: detail.assessment.id } })
       },
     })
   }
@@ -78,6 +88,7 @@ function AsesiHome() {
             items={data?.data ?? []}
             isLoading={isLoading}
             isError={isError}
+            onOpenAssessment={startAssessment}
             emptyMessage={
               status === 'ALL'
                 ? undefined

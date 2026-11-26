@@ -1,6 +1,8 @@
 package http
 
 import (
+	"context"
+	"strings"
 	"time"
 
 	"lsp/internal/features/apl01/domain"
@@ -171,7 +173,8 @@ type ApplicationDocumentDTO struct {
 	ID             string     `json:"id"`
 	ApplicationID  string     `json:"application_id"`
 	DocumentTypeID string     `json:"document_type_id"`
-	FileURL        *string    `json:"file_url,omitempty"`
+	FileURL        *string    `json:"file_url,omitempty" doc:"Object key berkas (dipakai saat menyimpan ulang)"`
+	FileViewURL    *string    `json:"file_view_url,omitempty" doc:"URL presigned untuk pratinjau"`
 	Status         string     `json:"status"`
 	Note           *string    `json:"note,omitempty"`
 	VerifiedAt     *time.Time `json:"verified_at,omitempty"`
@@ -222,10 +225,10 @@ func toApplicationDTO(a domain.Application) ApplicationDTO {
 	}
 }
 
-func toApplicationDetailDTO(d domain.ApplicationDetail) ApplicationDetailDTO {
+func (h *Handler) toApplicationDetailDTO(ctx context.Context, d domain.ApplicationDetail) ApplicationDetailDTO {
 	detail := ApplicationDetailDTO{
 		Application: toApplicationDTO(d.Application),
-		Documents:   toApplicationDocumentDTOs(d.Documents),
+		Documents:   h.toApplicationDocumentDTOs(ctx, d.Documents),
 		Signatures:  toFormSignatureDTOs(d.Signatures),
 	}
 	if d.Data != nil {
@@ -250,12 +253,33 @@ func toApplicationDataDTO(d domain.ApplicationData) ApplicationDataDTO {
 	}
 }
 
-func toApplicationDocumentDTO(d domain.ApplicationDocument) ApplicationDocumentDTO {
+// fileURLExpiry adalah masa berlaku presigned GET URL untuk file privat.
+const fileURLExpiry = 15 * time.Minute
+
+// fileURL menandatangani object key menjadi presigned GET URL. Bila storage
+// tidak dikonfigurasi, nilai sudah berupa URL penuh, atau penandatanganan
+// gagal, nilai asli dikembalikan apa adanya.
+func (h *Handler) fileURL(ctx context.Context, key *string) *string {
+	if key == nil || *key == "" {
+		return key
+	}
+	if h.files == nil || strings.HasPrefix(*key, "http://") || strings.HasPrefix(*key, "https://") {
+		return key
+	}
+	url, err := h.files.PresignedGetURL(ctx, *key, fileURLExpiry)
+	if err != nil {
+		return key
+	}
+	return &url
+}
+
+func (h *Handler) toApplicationDocumentDTO(ctx context.Context, d domain.ApplicationDocument) ApplicationDocumentDTO {
 	return ApplicationDocumentDTO{
 		ID:             d.ID,
 		ApplicationID:  d.ApplicationID,
 		DocumentTypeID: d.DocumentTypeID,
 		FileURL:        d.FileURL,
+		FileViewURL:    h.fileURL(ctx, d.FileURL),
 		Status:         string(d.Status),
 		Note:           d.Note,
 		VerifiedAt:     d.VerifiedAt,
@@ -264,10 +288,10 @@ func toApplicationDocumentDTO(d domain.ApplicationDocument) ApplicationDocumentD
 	}
 }
 
-func toApplicationDocumentDTOs(items []domain.ApplicationDocument) []ApplicationDocumentDTO {
+func (h *Handler) toApplicationDocumentDTOs(ctx context.Context, items []domain.ApplicationDocument) []ApplicationDocumentDTO {
 	result := make([]ApplicationDocumentDTO, 0, len(items))
 	for _, item := range items {
-		result = append(result, toApplicationDocumentDTO(item))
+		result = append(result, h.toApplicationDocumentDTO(ctx, item))
 	}
 	return result
 }

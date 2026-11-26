@@ -11,6 +11,7 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/redis/go-redis/v9"
 	apl01http "lsp/internal/features/apl01/adapters/http"
+	apl02http "lsp/internal/features/apl02/adapters/http"
 	asesihttp "lsp/internal/features/asesi/adapters/http"
 	asesorhttp "lsp/internal/features/asesor/adapters/http"
 	asesorpg "lsp/internal/features/asesor/adapters/postgres"
@@ -84,8 +85,10 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 	tukhttp.RegisterRoutes(api, tukModule.Handler)
 	schemaModule := newSchemaModule(pool)
 	schemahttp.RegisterRoutes(api, schemaModule.Handler)
-	apl01Module := newAPL01Module(pool, txManager, bus)
+	apl01Module := newAPL01Module(pool, txManager, bus, objStorage)
 	apl01http.RegisterRoutes(api, apl01Module.Handler)
+	apl02Module := newAPL02Module(pool, txManager, bus, objStorage)
+	apl02http.RegisterRoutes(api, apl02Module.Handler)
 	notificationsModule := newNotificationsModule(ctx, bus)
 	notificationshttp.RegisterRoutes(api, notificationsModule.Handler)
 	registerHealth(api, pool, rdb)
@@ -104,7 +107,7 @@ func NewApp(ctx context.Context, cfg config.Config, pool *pgxpool.Pool, rdb *red
 		Schema:          schemaModule,
 		DocRequirements: docReqModule,
 		APL01:           apl01Module,
-		APL02:           newAPL02Module(),
+		APL02:           apl02Module,
 		Portfolio:       newPortfolioModule(objStorage),
 		ObjectStorage:   objStorage,
 	}

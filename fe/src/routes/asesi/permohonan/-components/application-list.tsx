@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, FileText, Loader2 } from 'lucide-react'
+import { ArrowRight, ClipboardCheck, FileText, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatDateTime } from '../-helpers'
@@ -12,10 +12,15 @@ export type ApplicationListProps = {
   isError: boolean
   /** Pesan saat daftar kosong (mis. saat filter status aktif). */
   emptyMessage?: string
+  /**
+   * Bila diisi, permohonan yang sudah diajukan (SUBMITTED/APPROVED) menampilkan
+   * tombol menuju asesmen mandiri APL-02.
+   */
+  onOpenAssessment?: (application: Application) => void
 }
 
 /** Daftar permohonan APL-01 milik asesi (dipakai di beranda). */
-export function ApplicationList({ items, isLoading, isError, emptyMessage }: ApplicationListProps) {
+export function ApplicationList({ items, isLoading, isError, emptyMessage, onOpenAssessment }: ApplicationListProps) {
   const navigate = useNavigate()
 
   if (isLoading) {
@@ -54,17 +59,25 @@ export function ApplicationList({ items, isLoading, isError, emptyMessage }: App
               </div>
               <p className="mt-0.5 text-xs text-slate-500">Dibuat {formatDateTime(item.created_at)}</p>
             </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={() =>
-                navigate({ to: '/asesi/permohonan/$applicationId', params: { applicationId: item.id } })
-              }
-            >
-              {item.status === 'DRAFT' ? 'Lanjutkan' : 'Lihat'}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
+            <div className="flex flex-wrap items-center gap-2">
+              {onOpenAssessment && (item.status === 'SUBMITTED' || item.status === 'APPROVED') ? (
+                <Button size="sm" className="gap-1.5" onClick={() => onOpenAssessment(item)}>
+                  <ClipboardCheck className="h-4 w-4" />
+                  Asesmen Mandiri
+                </Button>
+              ) : null}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() =>
+                  navigate({ to: '/asesi/permohonan/$applicationId', params: { applicationId: item.id } })
+                }
+              >
+                {item.status === 'DRAFT' ? 'Lanjutkan' : 'Lihat'}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </div>
           </CardContent>
         </Card>
       ))}

@@ -7,6 +7,7 @@ import (
 	apl01app "lsp/internal/features/apl01/app"
 	"lsp/internal/platform/database"
 	"lsp/internal/platform/events"
+	"lsp/internal/platform/storage"
 )
 
 type APL01Module struct {
@@ -15,9 +16,9 @@ type APL01Module struct {
 	Handler    *apl01http.Handler
 }
 
-func newAPL01Module(pool *pgxpool.Pool, tx *database.TxManager, bus events.Bus) *APL01Module {
+func newAPL01Module(pool *pgxpool.Pool, tx *database.TxManager, bus events.Bus, objStorage storage.ObjectStorage) *APL01Module {
 	repo := apl01pg.NewRepository(pool)
 	service := apl01app.NewService(repo, tx, bus)
-	handler := apl01http.NewHandler(service)
+	handler := apl01http.NewHandler(service, objStorage)
 	return &APL01Module{Repository: repo, Service: service, Handler: handler}
 }

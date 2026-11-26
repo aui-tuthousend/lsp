@@ -27,6 +27,8 @@ var allowedTypes = map[string]map[string]string{
 	"cv_file":   {"application/pdf": "pdf"},
 	"npwp_file": {"application/pdf": "pdf"},
 	"document":  {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
+	// berkas bukti asesmen mandiri (APL-02).
+	"evidence": {"image/jpeg": "jpg", "image/png": "png", "application/pdf": "pdf"},
 }
 
 // DocumentTypeResolver mengambil daftar MIME yang diizinkan untuk sebuah jenis

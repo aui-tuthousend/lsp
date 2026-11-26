@@ -10,14 +10,16 @@ import (
 	"lsp/internal/features/apl01/domain"
 	"lsp/internal/platform/auth"
 	httpplatform "lsp/internal/platform/http"
+	"lsp/internal/platform/storage"
 )
 
 type Handler struct {
 	service *app.Service
+	files   storage.ObjectStorage
 }
 
-func NewHandler(service *app.Service) *Handler {
-	return &Handler{service: service}
+func NewHandler(service *app.Service, files storage.ObjectStorage) *Handler {
+	return &Handler{service: service, files: files}
 }
 
 // CreateDraft membuat draft APL-01 baru atau mengembalikan draft aktif asesi.
@@ -30,7 +32,7 @@ func (h *Handler) CreateDraft(ctx context.Context, _ *CreateDraftInput) (*Applic
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 // ListMine menampilkan daftar permohonan milik asesi yang sedang login.
@@ -70,7 +72,7 @@ func (h *Handler) Get(ctx context.Context, input *GetInput) (*ApplicationOutput,
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func (h *Handler) UpdateStep(ctx context.Context, input *UpdateStepInput) (*ApplicationOutput, error) {
@@ -78,7 +80,7 @@ func (h *Handler) UpdateStep(ctx context.Context, input *UpdateStepInput) (*Appl
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func (h *Handler) PutData(ctx context.Context, input *PutDataInput) (*ApplicationOutput, error) {
@@ -90,7 +92,7 @@ func (h *Handler) PutData(ctx context.Context, input *PutDataInput) (*Applicatio
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func (h *Handler) PutDocuments(ctx context.Context, input *PutDocumentsInput) (*ApplicationOutput, error) {
@@ -108,7 +110,7 @@ func (h *Handler) PutDocuments(ctx context.Context, input *PutDocumentsInput) (*
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func (h *Handler) PutSchedule(ctx context.Context, input *PutScheduleInput) (*ApplicationOutput, error) {
@@ -125,7 +127,7 @@ func (h *Handler) PutSchedule(ctx context.Context, input *PutScheduleInput) (*Ap
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func (h *Handler) Submit(ctx context.Context, input *SubmitInput) (*SubmitOutput, error) {
@@ -134,7 +136,7 @@ func (h *Handler) Submit(ctx context.Context, input *SubmitInput) (*SubmitOutput
 		return nil, mapError(err)
 	}
 	return &SubmitOutput{Body: SubmitDTO{
-		Application: toApplicationDetailDTO(result.Application),
+		Application: h.toApplicationDetailDTO(ctx, result.Application),
 		VerifyToken: result.VerifyToken,
 	}}, nil
 }
@@ -148,7 +150,7 @@ func (h *Handler) Verify(ctx context.Context, input *VerifyInput) (*ApplicationO
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 // VerifyStatus mengembalikan status token verifikasi tanpa memakainya.
@@ -184,7 +186,7 @@ func (h *Handler) Decide(ctx context.Context, input *DecideInput) (*ApplicationO
 	if err != nil {
 		return nil, mapError(err)
 	}
-	return &ApplicationOutput{Body: toApplicationDetailDTO(detail)}, nil
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
 func headerValue(value string) *string {
