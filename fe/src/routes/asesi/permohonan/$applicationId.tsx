@@ -31,6 +31,8 @@ import { StepDocuments } from './-components/step-documents'
 import { StepIdentity } from './-components/step-identity'
 import { StepSchedule } from './-components/step-schedule'
 import type { ApplicationDetail, AssessmentMode, AssessmentPurpose } from './-types'
+import { apl01Keys } from './-queryKeys'
+import { useQueryClient } from '@tanstack/react-query'
 
 export const Route = createFileRoute('/asesi/permohonan/$applicationId')({
   component: PermohonanPage,
@@ -70,6 +72,7 @@ function PermohonanPage() {
 
 function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; session: Session }) {
   const navigate = useNavigate()
+  const queryClient = useQueryClient()
   const applicationId = detail.application.id
 
   const profileQuery = useAsesiProfileByUser(session.id, session)
@@ -154,6 +157,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   useAppEvent('apl01.verified', (event) => {
     if (event.data?.application_id !== applicationId) return
     toast.success('Pendaftaran APL-01 telah selesai')
+    void queryClient.invalidateQueries({ queryKey: apl01Keys.detail(applicationId) })
     void navigate({ to: '/asesi', replace: true })
   })
 

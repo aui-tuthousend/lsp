@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, useNavigate } from '@tanstack/react-router'
 import { useEffect, useMemo, useState } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { toast } from 'sonner'
@@ -59,6 +59,7 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
   // Terkunci karena QR sudah terbit tapi belum discan (status masih DRAFT).
   const pendingQR = isReadOnly && status === 'DRAFT'
 
+  const navigate = useNavigate()
   const queryClient = useQueryClient()
   const putUnits = usePutUnits(assessmentId, session)
   const submit = useSubmitAssessment(assessmentId, session)
@@ -102,6 +103,7 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
     if (event.data?.assessment_id !== assessmentId) return
     toast.success('Asesmen mandiri telah diverifikasi')
     void queryClient.invalidateQueries({ queryKey: apl02Keys.detail(assessmentId) })
+    void navigate({ to: '/asesi/asesmen-mandiri', replace: true })
   })
 
   const saving = actionPending || putUnits.isPending || submit.isPending
