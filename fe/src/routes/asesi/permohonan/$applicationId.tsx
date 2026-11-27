@@ -294,8 +294,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   }
 
   async function handleSubmit() {
-    // Sudah punya token QR → permohonan sudah diajukan, tidak bisa diajukan lagi.
-    if (isReadOnly || actionPending || verifyToken) return
+    if (isReadOnly || actionPending) return
     setActionPending(true)
     try {
       if (!(await saveSchedule())) return
@@ -438,12 +437,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             <ChevronRight className="h-4 w-4" />
           </Button>
         ) : (
-          <Button
-            type="button"
-            onClick={() => void handleSubmit()}
-            disabled={isReadOnly || saving || Boolean(verifyToken)}
-            className="gap-1.5"
-          >
+          <Button type="button" onClick={() => void handleSubmit()} disabled={isReadOnly || saving} className="gap-1.5">
             <Check className="h-4 w-4" />
             {saving ? 'Memproses...' : 'Ajukan Permohonan'}
           </Button>

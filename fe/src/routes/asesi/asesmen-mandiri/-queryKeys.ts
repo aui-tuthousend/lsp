@@ -7,6 +7,4 @@ export const apl02Keys = {
   details: () => [...apl02Keys.all, 'detail'] as const,
   detail: (id: string) => [...apl02Keys.details(), id] as const,
   schemaTree: (schemaId: string) => [...apl02Keys.all, 'schema-tree', schemaId] as const,
-  verifyStatuses: () => [...apl02Keys.all, 'verify-status'] as const,
-  verifyStatus: (token: string) => [...apl02Keys.verifyStatuses(), token] as const,
 }

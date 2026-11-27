@@ -44,15 +44,6 @@ export function useSchemaTree(schemaId: string, session: Session | null) {
   })
 }
 
-/** Status token QR asesmen mandiri (menunggu/dipakai/kadaluarsa/dibatalkan). */
-export function useAssessmentVerifyStatus(token: string | null, session: Session | null) {
-  return useQuery({
-    queryKey: apl02Keys.verifyStatus(token ?? ''),
-    queryFn: () => apl02Service.verifyStatus(token as string, session),
-    enabled: Boolean(session) && Boolean(token),
-  })
-}
-
 // --- Mutation ---
 
 /** Buat atau lanjutkan asesmen mandiri untuk sebuah permohonan. */

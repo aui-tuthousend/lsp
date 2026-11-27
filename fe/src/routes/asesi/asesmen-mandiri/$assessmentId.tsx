@@ -15,7 +15,7 @@ import { useApplication, useSchemaRequirements } from '../permohonan/-hooks'
 import { UnitAnswer, EVIDENCE_ACCEPT, type UnitAnswerValue } from './-components/unit-answer'
 import { DECISION_LABELS, formatDate, formatDateTime, purposeLabel, readVerifyToken, writeVerifyToken } from './-helpers'
 import { apl02Keys } from './-queryKeys'
-import { useAssessment, useAssessmentVerifyStatus, usePutUnits, useSchemaTree, useSubmitAssessment } from './-hooks'
+import { useAssessment, usePutUnits, useSchemaTree, useSubmitAssessment } from './-hooks'
 import type { AssessmentDetail, ElementNode } from './-types'
 
 export const Route = createFileRoute('/asesi/asesmen-mandiri/$assessmentId')({
@@ -66,8 +66,6 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
   const [verifyToken, setVerifyToken] = useState<string | null>(null)
   const [hydratedId, setHydratedId] = useState<string | null>(null)
 
-  const verifyStatusQuery = useAssessmentVerifyStatus(verifyToken, session)
-
   // Elemen & KUK per unit kompetensi (dari struktur skema).
   const elementsByUnit = useMemo(() => {
     const map: Record<string, ElementNode[]> = {}
@@ -99,7 +97,6 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
     if (event.data?.assessment_id !== assessmentId) return
     toast.success('Asesmen mandiri telah diverifikasi')
     void queryClient.invalidateQueries({ queryKey: apl02Keys.detail(assessmentId) })
-    void queryClient.invalidateQueries({ queryKey: apl02Keys.verifyStatuses() })
   })
 
   const saving = actionPending || putUnits.isPending || submit.isPending
@@ -197,13 +194,10 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
     }
   }
 
-  const signatureStatus = verifyStatusQuery.data?.status
   const verifyBadge =
-    signatureStatus === 'dipakai'
-      ? { label: 'Sudah diverifikasi', className: 'bg-emerald-100 text-emerald-700' }
-      : signatureStatus === 'kadaluarsa'
-        ? { label: 'Kedaluarsa', className: 'bg-rose-100 text-rose-700' }
-        : { label: 'Menunggu dipindai', className: 'bg-amber-100 text-amber-700' }
+    status === 'DRAFT'
+      ? { label: 'Menunggu dipindai', className: 'bg-amber-100 text-amber-700' }
+      : { label: 'Sudah diverifikasi', className: 'bg-emerald-100 text-emerald-700' }
 
   return (
     <div className="space-y-5">

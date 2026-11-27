@@ -175,10 +175,15 @@ func (s *Service) Submit(ctx context.Context, assessmentID, existingToken string
 	if err != nil {
 		return SubmitResult{}, err
 	}
+	if assessment.Status != domain.StatusDraft {
+		return SubmitResult{}, domain.ErrNotDraft
+	}
+	if err := s.validateComplete(ctx, assessmentID); err != nil {
+		return SubmitResult{}, err
+	}
 
 	now := time.Now().UTC()
 
-	// Idempoten: pakai ulang token aktif bila klien masih memegangnya (mis. retry).
 	if existingToken != "" {
 		if sig, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(existingToken)); err == nil &&
 			sig.ApplicationID == assessment.ApplicationID &&
@@ -193,24 +198,15 @@ func (s *Service) Submit(ctx context.Context, assessmentID, existingToken string
 		}
 	}
 
-	if assessment.Status != domain.StatusDraft {
-		return SubmitResult{}, domain.ErrNotDraft
-	}
-	if err := s.validateComplete(ctx, assessmentID); err != nil {
-		return SubmitResult{}, err
-	}
-
 	rawToken, tokenHash, err := newToken()
 	if err != nil {
 		return SubmitResult{}, err
 	}
-	// Terbitkan token QR sekaligus kunci asesmen (status SUBMITTED) agar jawaban &
-	// berkas tidak dapat diubah lagi; pemindaian QR hanya menandai token terpakai.
 	err = s.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
 		if err := s.repo.RevokeActiveSignatures(txCtx, assessment.ApplicationID, domain.SignatureEntity, domain.SignatureRoleAsesi, now); err != nil {
 			return err
 		}
-		if err := s.repo.CreateSignature(txCtx, domain.Signature{
+		return s.repo.CreateSignature(txCtx, domain.Signature{
 			ID:            id.New(),
 			ApplicationID: assessment.ApplicationID,
 			Entity:        domain.SignatureEntity,
@@ -218,11 +214,7 @@ func (s *Service) Submit(ctx context.Context, assessmentID, existingToken string
 			TokenHash:     tokenHash,
 			Status:        domain.SignatureStatusPending,
 			ExpiresAt:     now.Add(signatureTTL),
-		}); err != nil {
-			return err
-		}
-		_, err := s.repo.MarkSubmitted(txCtx, assessment.ID, now)
-		return err
+		})
 	})
 	if err != nil {
 		return SubmitResult{}, err
@@ -235,8 +227,7 @@ func (s *Service) Submit(ctx context.Context, assessmentID, existingToken string
 	return SubmitResult{Assessment: detail, VerifyToken: rawToken}, nil
 }
 
-// Verify mengonfirmasi hasil scan QR dengan menandai token terpakai. Status
-// asesmen sudah SUBMITTED sejak Submit (dikunci), jadi tidak diubah lagi di sini.
+// Verify mengonfirmasi hasil scan QR (menandai token terpakai & asesmen SUBMITTED).
 func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgent *string) (domain.AssessmentDetail, error) {
 	signature, err := s.repo.FindSignatureByTokenHash(ctx, hashToken(token))
 	if err != nil {
@@ -268,7 +259,14 @@ func (s *Service) Verify(ctx context.Context, userID, token string, ip, userAgen
 		return domain.AssessmentDetail{}, err
 	}
 
-	if _, err := s.repo.MarkSignatureUsed(ctx, signature.ID, now, ip, userAgent); err != nil {
+	err = s.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
+		if _, err := s.repo.MarkSignatureUsed(txCtx, signature.ID, now, ip, userAgent); err != nil {
+			return err
+		}
+		_, err := s.repo.MarkSubmitted(txCtx, assessment.ID, now)
+		return err
+	})
+	if err != nil {
 		return domain.AssessmentDetail{}, err
 	}
 
