@@ -19,6 +19,14 @@ type ListMineInput struct {
 	httpplatform.PaginationQuery
 }
 
+type ListAllInput struct {
+	httpplatform.PaginationQuery
+	Status string `query:"status" enum:"DRAFT,SUBMITTED,REVIEWED" doc:"Filter status asesmen mandiri"`
+	// ApplicationStatus memfilter berdasarkan status permohonan APL-01
+	// (keputusan admin): SUBMITTED = menunggu, APPROVED/REJECTED = sudah diputuskan.
+	ApplicationStatus string `query:"application_status" enum:"DRAFT,SUBMITTED,APPROVED,REJECTED" doc:"Filter status permohonan APL-01"`
+}
+
 type GetInput struct {
 	ID string `path:"id"`
 }
@@ -140,8 +148,16 @@ type AssessmentDTO struct {
 	ZoomTime       *string    `json:"zoom_time,omitempty"`
 	SchemaName     string     `json:"schema_name,omitempty"`
 	SchemaCode     string     `json:"schema_code,omitempty"`
-	CreatedAt      time.Time  `json:"created_at"`
-	UpdatedAt      time.Time  `json:"updated_at"`
+	// AsesiName/ApplicationCode terisi pada daftar staff (antrian verifikasi).
+	AsesiName       string `json:"asesi_name,omitempty"`
+	ApplicationCode string `json:"application_code,omitempty"`
+	// ApplicationStatus adalah status permohonan APL-01 (DRAFT/SUBMITTED/
+	// APPROVED/REJECTED); terisi pada daftar staff.
+	ApplicationStatus string `json:"application_status,omitempty"`
+	// ApplicationNote adalah catatan verifikasi admin (mis. alasan penolakan).
+	ApplicationNote *string   `json:"application_note,omitempty"`
+	CreatedAt       time.Time `json:"created_at"`
+	UpdatedAt       time.Time `json:"updated_at"`
 }
 
 type AssessmentUnitDTO struct {
@@ -205,20 +221,24 @@ func (h *Handler) toAssessmentDetailDTO(ctx context.Context, d domain.Assessment
 
 func toAssessmentDTO(a domain.Assessment) AssessmentDTO {
 	dto := AssessmentDTO{
-		ID:            a.ID,
-		ApplicationID: a.ApplicationID,
-		Code:          a.Code,
-		Status:        string(a.Status),
-		AsesorNote:    a.AsesorNote,
-		SubmittedAt:   a.SubmittedAt,
-		ReviewedBy:    a.ReviewedBy,
-		ReviewedAt:    a.ReviewedAt,
-		ZoomLink:      a.ZoomLink,
-		ZoomTime:      a.ZoomTime,
-		SchemaName:    a.SchemaName,
-		SchemaCode:    a.SchemaCode,
-		CreatedAt:     a.CreatedAt,
-		UpdatedAt:     a.UpdatedAt,
+		ID:                a.ID,
+		ApplicationID:     a.ApplicationID,
+		Code:              a.Code,
+		Status:            string(a.Status),
+		AsesorNote:        a.AsesorNote,
+		SubmittedAt:       a.SubmittedAt,
+		ReviewedBy:        a.ReviewedBy,
+		ReviewedAt:        a.ReviewedAt,
+		ZoomLink:          a.ZoomLink,
+		ZoomTime:          a.ZoomTime,
+		SchemaName:        a.SchemaName,
+		SchemaCode:        a.SchemaCode,
+		AsesiName:         a.AsesiName,
+		ApplicationCode:   a.ApplicationCode,
+		ApplicationStatus: a.ApplicationStatus,
+		ApplicationNote:   a.ApplicationNote,
+		CreatedAt:         a.CreatedAt,
+		UpdatedAt:         a.UpdatedAt,
 	}
 	if a.AsesorDecision != nil {
 		value := string(*a.AsesorDecision)

@@ -4,7 +4,7 @@
 // boolean (kompeten/tidak) + daftar berkas bukti (object key hasil upload).
 
 import type { ElementNode, SchemaTree } from '../../admin/skema/-types'
-import type { SignatureStatus } from '../permohonan/-types'
+import type { ApplicationStatus, SignatureStatus } from '../permohonan/-types'
 
 export type { ElementNode, SchemaTree, SignatureStatus }
 
@@ -29,6 +29,10 @@ export type Assessment = {
   /** Skema yang dipilih (hanya terisi pada daftar). */
   schema_name?: string
   schema_code?: string
+  /** Status permohonan APL-01 (hanya terisi pada daftar). */
+  application_status?: ApplicationStatus
+  /** Catatan verifikasi admin pada permohonan APL-01 (mis. alasan penolakan). */
+  application_note?: string | null
   created_at: string
   updated_at: string
 }

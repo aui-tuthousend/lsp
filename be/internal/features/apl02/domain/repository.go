@@ -18,8 +18,16 @@ const (
 type ListParams struct {
 	// UserID membatasi hasil ke asesi pemilik; kosong = semua (staff).
 	UserID string
-	Limit  int
-	Offset int
+	// Status membatasi hasil ke satu status asesmen mandiri; kosong = semua.
+	Status string
+	// ApplicationStatus membatasi hasil ke status permohonan APL-01 (DRAFT/
+	// SUBMITTED/APPROVED/REJECTED); kosong = semua.
+	ApplicationStatus string
+	// ExcludeDraft mengecualikan asesmen yang masih DRAFT. Dipakai antrian
+	// verifikasi staff agar hanya asesmen yang sudah diajukan yang tampil.
+	ExcludeDraft bool
+	Limit        int
+	Offset       int
 }
 
 type ListResult struct {

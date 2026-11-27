@@ -9,6 +9,7 @@ import (
 
 func RegisterRoutes(api huma.API, handler *Handler) {
 	asesiOnly := auth.RequireRoles(string(domain.RoleAsesi))
+	staffOnly := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAdminLSP), string(domain.RoleManagerSertifikasi))
 	readAccess := requireAssessmentRead(handler,
 		string(domain.RoleAdmin), string(domain.RoleAdminLSP), string(domain.RoleManagerSertifikasi), string(domain.RoleAsesor))
 	ownerOnly := requireAssessmentOwner(handler)
@@ -24,6 +25,11 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 	huma.Get(api, "/apl02/mine", handler.ListMine,
 		asesiOnly,
 		httpplatform.WithDoc("apl02-list-mine", "List my APL-02", "Daftar asesmen mandiri milik asesi yang login.", "APL-02"),
+	)
+	// Staff: seluruh asesmen mandiri (antrian verifikasi admin).
+	huma.Get(api, "/apl02", handler.ListAll,
+		staffOnly,
+		httpplatform.WithDoc("apl02-list", "List all APL-02", "Daftar seluruh asesmen mandiri (antrian verifikasi), dapat difilter status.", "APL-02"),
 	)
 	huma.Get(api, "/apl02/{id}", handler.Get,
 		readAccess,

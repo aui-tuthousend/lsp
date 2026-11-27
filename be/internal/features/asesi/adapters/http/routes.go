@@ -10,6 +10,9 @@ import (
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
 	selfOrAdmin := auth.RequireSelfOrRoles("user_id", string(domain.RoleAdmin))
+	// Baca profil/pekerjaan asesi oleh staff (untuk verifikasi permohonan).
+	selfOrStaff := auth.RequireSelfOrRoles("user_id",
+		string(domain.RoleAdmin), string(domain.RoleAdminLSP), string(domain.RoleManagerSertifikasi))
 	ownerOrAdmin := requireProfileOwnerOrRoles(handler, string(domain.RoleAdmin))
 
 	huma.Post(api, "/asesi-profiles", handler.Create,
@@ -26,7 +29,7 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("asesi-profiles-get", "Get asesi profile", "Ambil detail profil data diri asesi.", "Asesi Profiles"),
 	)
 	huma.Get(api, "/users/{user_id}/asesi-profile", handler.GetByUser,
-		selfOrAdmin,
+		selfOrStaff,
 		httpplatform.WithDoc("asesi-profiles-get-by-user", "Get asesi profile by user", "Ambil profil data diri asesi berdasarkan user ID.", "Asesi Profiles"),
 	)
 	huma.Patch(api, "/asesi-profiles/{id}", handler.Update,
@@ -63,7 +66,7 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("asesi-occupations-delete", "Delete asesi occupation", "Hapus data pekerjaan asesi.", "Asesi Occupations"),
 	)
 	huma.Get(api, "/users/{user_id}/asesi-occupation", handler.GetOccupationByUser,
-		selfOrAdmin,
+		selfOrStaff,
 		httpplatform.WithDoc("asesi-occupations-get-by-user", "Get asesi occupation by user", "Ambil data pekerjaan asesi berdasarkan user ID.", "Asesi Occupations"),
 	)
 	huma.Put(api, "/users/{user_id}/asesi-occupation", handler.UpsertOccupationByUser,

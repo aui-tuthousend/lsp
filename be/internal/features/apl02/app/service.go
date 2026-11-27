@@ -126,9 +126,11 @@ func (s *Service) Detail(ctx context.Context, id string) (domain.AssessmentDetai
 	}, nil
 }
 
-// List mengambil daftar asesmen mandiri. userID kosong = semua (staff).
-func (s *Service) List(ctx context.Context, userID string, limit, offset int) (domain.ListResult, error) {
-	return s.repo.ListAssessments(ctx, domain.ListParams{UserID: userID, Limit: limit, Offset: offset})
+// List mengambil daftar asesmen mandiri sesuai filter. UserID kosong berarti
+// semua asesi (staff); ExcludeDraft dipakai antrian verifikasi agar hanya
+// asesmen yang sudah diajukan yang tampil.
+func (s *Service) List(ctx context.Context, params domain.ListParams) (domain.ListResult, error) {
+	return s.repo.ListAssessments(ctx, params)
 }
 
 // ApplicationContext mengembalikan konteks permohonan APL-01 pemilik sebuah

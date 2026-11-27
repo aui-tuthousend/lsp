@@ -39,6 +39,14 @@ type Assessment struct {
 	// APL-01) untuk menampilkan skema yang dipilih; kosong pada pengambilan tunggal.
 	SchemaName string
 	SchemaCode string
+	// ApplicationCode/AsesiName/ApplicationStatus hanya diisi pada daftar
+	// staff (antrian verifikasi) hasil join ke permohonan & profil asesi.
+	ApplicationCode   string
+	AsesiName         string
+	ApplicationStatus string
+	// ApplicationNote adalah catatan verifikasi admin pada permohonan APL-01
+	// (mis. alasan penolakan); hanya diisi pada daftar.
+	ApplicationNote *string
 }
 
 // UnitAnswer adalah jawaban asesi untuk satu unit kompetensi, beserta berkas

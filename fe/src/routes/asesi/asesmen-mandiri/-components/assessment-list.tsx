@@ -1,7 +1,8 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, ClipboardCheck, Layers, Loader2 } from 'lucide-react'
+import { AlertCircle, ArrowRight, ClipboardCheck, Layers, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { ApplicationStatusBadge } from '../../permohonan/-components/application-status-badge'
 import { formatDateTime } from '../-helpers'
 import type { Assessment } from '../-types'
 import { AssessmentStatusBadge } from './assessment-status-badge'
@@ -44,37 +45,48 @@ export function AssessmentList({ items, isLoading, isError, emptyMessage }: Asse
 
   return (
     <div className="grid gap-3">
-      {items.map((item) => (
-        <Card key={item.id}>
-          <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
-            <div className="min-w-0">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="font-medium text-slate-900">{item.code}</span>
-                <AssessmentStatusBadge status={item.status} />
+      {items.map((item) => {
+        // Status keputusan admin atas permohonan APL-01 (bila sudah diputuskan).
+        const decided = item.application_status === 'APPROVED' || item.application_status === 'REJECTED'
+        return (
+          <Card key={item.id}>
+            <CardContent className="flex flex-wrap items-center justify-between gap-3 p-4">
+              <div className="min-w-0">
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="font-medium text-slate-900">{item.code}</span>
+                  <AssessmentStatusBadge status={item.status} />
+                  {decided ? <ApplicationStatusBadge status={item.application_status!} /> : null}
+                </div>
+                {item.schema_name ? (
+                  <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
+                    <Layers className="h-3.5 w-3.5 text-slate-400" />
+                    <span className="font-medium">{item.schema_name}</span>
+                    {item.schema_code ? <span className="text-slate-400">· {item.schema_code}</span> : null}
+                  </p>
+                ) : null}
+                <p className="mt-0.5 text-xs text-slate-500">Dibuat {formatDateTime(item.created_at)}</p>
+                {item.application_status === 'REJECTED' && item.application_note ? (
+                  <p className="mt-2 flex items-start gap-1.5 rounded-md bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                    <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                    <span className="whitespace-pre-line">{item.application_note}</span>
+                  </p>
+                ) : null}
               </div>
-              {item.schema_name ? (
-                <p className="mt-0.5 flex flex-wrap items-center gap-1.5 text-xs text-slate-600">
-                  <Layers className="h-3.5 w-3.5 text-slate-400" />
-                  <span className="font-medium">{item.schema_name}</span>
-                  {item.schema_code ? <span className="text-slate-400">· {item.schema_code}</span> : null}
-                </p>
-              ) : null}
-              <p className="mt-0.5 text-xs text-slate-500">Dibuat {formatDateTime(item.created_at)}</p>
-            </div>
-            <Button
-              variant="outline"
-              size="sm"
-              className="gap-1.5"
-              onClick={() =>
-                navigate({ to: '/asesi/asesmen-mandiri/$assessmentId', params: { assessmentId: item.id } })
-              }
-            >
-              {item.status === 'DRAFT' ? 'Lanjutkan' : 'Lihat'}
-              <ArrowRight className="h-4 w-4" />
-            </Button>
-          </CardContent>
-        </Card>
-      ))}
+              <Button
+                variant="outline"
+                size="sm"
+                className="gap-1.5"
+                onClick={() =>
+                  navigate({ to: '/asesi/asesmen-mandiri/$assessmentId', params: { assessmentId: item.id } })
+                }
+              >
+                {item.status === 'DRAFT' ? 'Lanjutkan' : 'Lihat'}
+                <ArrowRight className="h-4 w-4" />
+              </Button>
+            </CardContent>
+          </Card>
+        )
+      })}
     </div>
   )
 }

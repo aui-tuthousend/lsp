@@ -10,8 +10,9 @@ import (
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
 	// Daftar TUK boleh dibaca asesi (dipakai saat memilih lokasi asesmen pada
-	// APL-01); mutasi tetap khusus admin.
-	adminOrAsesi := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi))
+	// APL-01) dan staff (verifikasi admin LSP/manager); mutasi tetap khusus admin.
+	tukReaders := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi),
+		string(domain.RoleAdminLSP), string(domain.RoleManagerSertifikasi))
 
 	huma.Post(api, "/tuks", handler.Create,
 		adminOnly,
@@ -19,7 +20,7 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("tuks-create", "Create TUK", "Membuat master data Tempat Uji Kompetensi.", "TUK"),
 	)
 	huma.Get(api, "/tuks", handler.List,
-		adminOrAsesi,
+		tukReaders,
 		httpplatform.WithDoc("tuks-list", "List TUK", "Daftar master data Tempat Uji Kompetensi.", "TUK"),
 	)
 	huma.Get(api, "/tuks/{id}", handler.Get,

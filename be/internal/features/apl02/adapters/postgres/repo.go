@@ -88,15 +88,20 @@ func (r *Repository) FindAssessmentByApplicationID(ctx context.Context, applicat
 func (r *Repository) ListAssessments(ctx context.Context, params domain.ListParams) (domain.ListResult, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	rows, err := db.Query(ctx, `
-		SELECT `+assessmentColumnsA+`, COALESCE(cs.name, ''), COALESCE(cs.schema_code, cs.code, ''), COUNT(*) OVER() AS total_count
+		SELECT `+assessmentColumnsA+`, c.code, c.status::text, c.verification_note, COALESCE(p.full_name, ''),
+			COALESCE(cs.name, ''), COALESCE(cs.schema_code, cs.code, ''), COUNT(*) OVER() AS total_count
 		FROM independent_assessments a
 		JOIN certification_applications c ON c.id = a.application_id
+		LEFT JOIN asesi_profiles p ON p.user_id = c.user_id
 		LEFT JOIN certification_application_data d ON d.application_id = a.application_id
 		LEFT JOIN certification_schemas cs ON cs.id = d.certification_schema_id
 		WHERE ($1::text = '' OR c.user_id = $1::text)
+		  AND ($4::text = '' OR a.status::text = $4::text)
+		  AND ($5::text = '' OR c.status::text = $5::text)
+		  AND (NOT $6::bool OR a.status <> 'DRAFT')
 		ORDER BY a.created_at DESC
 		LIMIT $2 OFFSET $3
-	`, params.UserID, params.Limit, params.Offset)
+	`, params.UserID, params.Limit, params.Offset, params.Status, params.ApplicationStatus, params.ExcludeDraft)
 	if err != nil {
 		return domain.ListResult{}, mapError(err)
 	}
@@ -396,7 +401,7 @@ func scanAssessmentWithTotal(rows pgx.Rows) (domain.Assessment, int, error) {
 	var total int
 	if err := rows.Scan(&a.ID, &a.ApplicationID, &a.Code, &status, &a.AsesorNote, &decision,
 		&a.SubmittedAt, &a.ReviewedBy, &a.ReviewedAt, &a.ZoomLink, &a.ZoomDate, &a.ZoomTime,
-		&a.CreatedAt, &a.UpdatedAt, &a.SchemaName, &a.SchemaCode, &total); err != nil {
+		&a.CreatedAt, &a.UpdatedAt, &a.ApplicationCode, &a.ApplicationStatus, &a.ApplicationNote, &a.AsesiName, &a.SchemaName, &a.SchemaCode, &total); err != nil {
 		return domain.Assessment{}, 0, mapError(err)
 	}
 	a.Status = domain.Status(status)

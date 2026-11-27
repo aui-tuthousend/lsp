@@ -42,7 +42,29 @@ func (h *Handler) ListMine(ctx context.Context, input *ListMineInput) (*httpplat
 		return nil, huma.Error401Unauthorized("unauthenticated")
 	}
 	limit := input.SafeLimit()
-	result, err := h.service.List(ctx, claims.UserID, limit, input.Offset())
+	result, err := h.service.List(ctx, domain.ListParams{UserID: claims.UserID, Limit: limit, Offset: input.Offset()})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	items := make([]AssessmentDTO, 0, len(result.Items))
+	for _, item := range result.Items {
+		items = append(items, toAssessmentDTO(item))
+	}
+	return httpplatform.NewPagedResponse(items, input.Page, limit, result.Total), nil
+}
+
+// ListAll menampilkan seluruh asesmen mandiri (antrian verifikasi staff),
+// dengan filter status permohonan (application_status) dan/atau status asesmen.
+// Hanya asesmen yang sudah diajukan (bukan DRAFT) yang ditampilkan.
+func (h *Handler) ListAll(ctx context.Context, input *ListAllInput) (*httpplatform.PagedResponse[AssessmentDTO], error) {
+	limit := input.SafeLimit()
+	result, err := h.service.List(ctx, domain.ListParams{
+		Status:            input.Status,
+		ApplicationStatus: input.ApplicationStatus,
+		ExcludeDraft:      true,
+		Limit:             limit,
+		Offset:            input.Offset(),
+	})
 	if err != nil {
 		return nil, mapError(err)
 	}

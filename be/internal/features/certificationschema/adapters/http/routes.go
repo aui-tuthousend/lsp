@@ -10,8 +10,10 @@ import (
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
 	// Daftar & detail skema boleh dibaca asesi (dipakai saat memilih skema pada
-	// APL-01 dan menampilkan elemen/KUK pada APL-02); mutasi tetap khusus admin.
-	adminOrAsesi := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi))
+	// APL-01 dan menampilkan elemen/KUK pada APL-02) dan staff (verifikasi admin
+	// LSP/manager); mutasi tetap khusus admin.
+	schemaReaders := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleAsesi),
+		string(domain.RoleAdminLSP), string(domain.RoleManagerSertifikasi))
 
 	// Skema sertifikasi.
 	huma.Post(api, "/certification-schemas", handler.CreateSchema,
@@ -20,11 +22,11 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		httpplatform.WithDoc("certification-schemas-create", "Create certification schema", "Membuat master data skema sertifikasi.", "Certification Schemas"),
 	)
 	huma.Get(api, "/certification-schemas", handler.ListSchemas,
-		adminOrAsesi,
+		schemaReaders,
 		httpplatform.WithDoc("certification-schemas-list", "List certification schemas", "Daftar master data skema sertifikasi.", "Certification Schemas"),
 	)
 	huma.Get(api, "/certification-schemas/{id}", handler.GetSchema,
-		adminOrAsesi,
+		schemaReaders,
 		httpplatform.WithDoc("certification-schemas-get", "Get certification schema", "Ambil skema beserta struktur unit, elemen, dan kriteria.", "Certification Schemas"),
 	)
 	huma.Patch(api, "/certification-schemas/{id}", handler.UpdateSchema,

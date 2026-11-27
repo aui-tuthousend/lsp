@@ -1,5 +1,5 @@
 import { useNavigate } from '@tanstack/react-router'
-import { ArrowRight, ClipboardCheck, FileText, Loader2 } from 'lucide-react'
+import { AlertCircle, ArrowRight, ClipboardCheck, FileText, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { formatDateTime } from '../-helpers'
@@ -58,6 +58,12 @@ export function ApplicationList({ items, isLoading, isError, emptyMessage, onOpe
                 <ApplicationStatusBadge status={item.status} />
               </div>
               <p className="mt-0.5 text-xs text-slate-500">Dibuat {formatDateTime(item.created_at)}</p>
+              {item.status === 'REJECTED' && item.verification_note ? (
+                <p className="mt-2 flex items-start gap-1.5 rounded-md bg-rose-50 px-2.5 py-1.5 text-xs text-rose-700">
+                  <AlertCircle className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                  <span className="whitespace-pre-line">{item.verification_note}</span>
+                </p>
+              ) : null}
             </div>
             <div className="flex flex-wrap items-center gap-2">
               {onOpenAssessment && (item.status === 'SUBMITTED' || item.status === 'APPROVED') ? (
