@@ -78,4 +78,7 @@ type AssessmentDetail struct {
 	Assessment  Assessment
 	Application ApplicationInfo
 	Units       []UnitAnswer
+	// Locked menandai formulir tidak boleh diubah lagi: status bukan DRAFT,
+	// atau QR sudah terbit (token asesi masih aktif/menunggu).
+	Locked bool
 }

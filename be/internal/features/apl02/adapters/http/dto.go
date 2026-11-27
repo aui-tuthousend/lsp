@@ -112,6 +112,8 @@ type AssessmentDetailDTO struct {
 	Assessment  AssessmentDTO       `json:"assessment"`
 	Application ApplicationInfoDTO  `json:"application"`
 	Units       []AssessmentUnitDTO `json:"units"`
+	// Locked: formulir tidak boleh diubah (sudah diajukan / QR sudah terbit).
+	Locked bool `json:"locked"`
 }
 
 // ApplicationInfoDTO — info permohonan/skema untuk laman asesmen mandiri (read-only).
@@ -196,7 +198,8 @@ func (h *Handler) toAssessmentDetailDTO(ctx context.Context, d domain.Assessment
 			Purpose:               d.Application.Purpose,
 			DataCreatedAt:         d.Application.DataCreatedAt,
 		},
-		Units: units,
+		Units:  units,
+		Locked: d.Locked,
 	}
 }
 

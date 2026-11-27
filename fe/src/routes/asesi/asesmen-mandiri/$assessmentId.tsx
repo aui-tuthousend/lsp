@@ -6,6 +6,7 @@ import { CalendarClock, Check, Eye, FileText, Loader2, Lock, Video } from 'lucid
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import type { Session } from '@/lib/auth/types'
 import { useAppEvent } from '@/lib/sse/use-app-event'
 import { uploadFile } from '@/lib/upload'
@@ -53,7 +54,10 @@ function AssessmentPage() {
 function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session: Session }) {
   const assessmentId = detail.assessment.id
   const status = detail.assessment.status
-  const isReadOnly = status !== 'DRAFT'
+  // Terkunci begitu diajukan atau QR terbit (meski belum discan) → read-only.
+  const isReadOnly = detail.locked
+  // Terkunci karena QR sudah terbit tapi belum discan (status masih DRAFT).
+  const pendingQR = isReadOnly && status === 'DRAFT'
 
   const queryClient = useQueryClient()
   const putUnits = usePutUnits(assessmentId, session)
@@ -64,6 +68,7 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [actionPending, setActionPending] = useState(false)
   const [verifyToken, setVerifyToken] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
   const [hydratedId, setHydratedId] = useState<string | null>(null)
 
   // Elemen & KUK per unit kompetensi (dari struktur skema).
@@ -194,6 +199,23 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
     }
   }
 
+  // Terbitkan ulang / tampilkan kembali QR verifikasi tanpa mengubah jawaban
+  // (dipakai saat token tersimpan hilang/kedaluwarsa).
+  async function handleReissueQR() {
+    if (actionPending) return
+    setActionPending(true)
+    try {
+      const result = await submit.mutateAsync(readVerifyToken(assessmentId))
+      setVerifyToken(result.verify_token)
+      writeVerifyToken(assessmentId, result.verify_token)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      // error sudah ditangani toast
+    } finally {
+      setActionPending(false)
+    }
+  }
+
   const verifyBadge =
     status === 'DRAFT'
       ? { label: 'Menunggu dipindai', className: 'bg-amber-100 text-amber-700' }
@@ -209,7 +231,7 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
         {isReadOnly ? (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
             <Lock className="h-3.5 w-3.5" />
-            Asesmen sudah diajukan — hanya dapat dilihat
+            {pendingQR ? 'Formulir terkunci — menunggu verifikasi QR' : 'Asesmen sudah diajukan — hanya dapat dilihat'}
           </p>
         ) : null}
       </div>
@@ -252,18 +274,6 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
         </CardContent>
       </Card>
 
-      {!isReadOnly ? (
-        <div className="flex items-center justify-end gap-3">
-          <Button type="button" variant="outline" onClick={() => void handleSave()} disabled={saving}>
-            {putUnits.isPending ? 'Menyimpan...' : 'Simpan'}
-          </Button>
-          <Button type="button" onClick={() => void handleSubmit()} disabled={saving} className="gap-1.5">
-            <Check className="h-4 w-4" />
-            {actionPending || submit.isPending ? 'Memproses...' : 'Ajukan Asesmen Mandiri'}
-          </Button>
-        </div>
-      ) : null}
-
       {verifyToken && status !== 'REVIEWED' ? (
         <Card>
           <CardContent className="space-y-4 p-4 sm:p-6">
@@ -277,6 +287,53 @@ function AssessmentForm({ detail, session }: { detail: AssessmentDetail; session
             <QrPanel token={verifyToken} />
           </CardContent>
         </Card>
+      ) : null}
+
+      {!isReadOnly ? (
+        <>
+          <div className="flex items-center justify-end gap-3">
+            <Button type="button" variant="outline" onClick={() => void handleSave()} disabled={saving}>
+              {putUnits.isPending ? 'Menyimpan...' : 'Simpan'}
+            </Button>
+            <Button type="button" onClick={() => setConfirmOpen(true)} disabled={saving} className="gap-1.5">
+              <Check className="h-4 w-4" />
+              {actionPending || submit.isPending ? 'Memproses...' : 'Ajukan Asesmen Mandiri'}
+            </Button>
+          </div>
+
+          <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Konfirmasi Pengajuan Asesmen Mandiri</DialogTitle>
+                <DialogDescription>
+                  Apakah Anda sudah memastikan seluruh pernyataan kompetensi dan berkas bukti yang Anda masukkan sudah
+                  benar? Setelah diajukan, asesmen mandiri tidak dapat diubah lagi.
+                </DialogDescription>
+              </DialogHeader>
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+                  Batal
+                </Button>
+                <Button
+                  className="gap-1.5"
+                  onClick={() => {
+                    setConfirmOpen(false)
+                    void handleSubmit()
+                  }}
+                >
+                  <Check className="h-4 w-4" />
+                  Ya, Ajukan
+                </Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+        </>
+      ) : pendingQR && !verifyToken ? (
+        <div className="flex items-center justify-end">
+          <Button type="button" variant="outline" onClick={() => void handleReissueQR()} disabled={saving}>
+            Tampilkan QR Verifikasi
+          </Button>
+        </div>
       ) : null}
 
       {status === 'REVIEWED' ? (

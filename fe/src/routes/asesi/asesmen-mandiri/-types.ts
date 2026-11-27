@@ -69,6 +69,8 @@ export type AssessmentDetail = {
   assessment: Assessment
   application: ApplicationInfo
   units: AssessmentUnit[]
+  /** Formulir terkunci (sudah diajukan / QR sudah terbit). */
+  locked: boolean
 }
 
 export type ListAssessmentsParams = {

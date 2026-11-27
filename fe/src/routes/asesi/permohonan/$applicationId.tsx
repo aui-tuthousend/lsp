@@ -4,6 +4,7 @@ import { toast } from 'sonner'
 import { CalendarDays, Check, ChevronLeft, ChevronRight, FileText, Layers, Loader2, Lock, User } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Stepper } from '@/components/ui/stepper'
 import type { Session } from '@/lib/auth/types'
 import { useAppEvent } from '@/lib/sse/use-app-event'
@@ -93,6 +94,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   const [docFiles, setDocFiles] = useState<Record<string, File | null>>({})
   const [errors, setErrors] = useState<Record<string, string>>({})
   const [verifyToken, setVerifyToken] = useState<string | null>(null)
+  const [confirmOpen, setConfirmOpen] = useState(false)
 
   const [profileValues, setProfileValues] = useState<ProfileFormValues>(EMPTY_FORM)
   const [occupationValues, setOccupationValues] = useState<OccupationFormValues>(EMPTY_OCCUPATION_FORM)
@@ -108,8 +110,10 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
   const tukOptions = useTukOptions(session)
   const minDate = useMemo(() => new Date().toISOString().slice(0, 10), [])
 
-  // Permohonan yang sudah diajukan (bukan draft) ditampilkan read-only.
-  const isReadOnly = detail.application.status !== 'DRAFT'
+  // Terkunci begitu diajukan atau QR terbit (meski belum discan) → read-only.
+  const isReadOnly = detail.locked
+  // Terkunci karena QR sudah terbit tapi belum discan (status masih DRAFT).
+  const pendingQR = isReadOnly && detail.application.status === 'DRAFT'
 
   // Hidrasi state dari server sekali per permohonan.
   useEffect(() => {
@@ -309,6 +313,23 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     }
   }
 
+  // Terbitkan ulang / tampilkan kembali QR verifikasi tanpa mengubah data
+  // (dipakai saat token tersimpan hilang/kedaluwarsa).
+  async function handleReissueQR() {
+    if (actionPending) return
+    setActionPending(true)
+    try {
+      const result = await submit.mutateAsync(readVerifyToken(applicationId))
+      setVerifyToken(result.verify_token)
+      writeVerifyToken(applicationId, result.verify_token)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    } catch {
+      // error sudah ditangani toast
+    } finally {
+      setActionPending(false)
+    }
+  }
+
   function renderStep() {
     switch (step) {
       case 0:
@@ -386,7 +407,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
         {isReadOnly ? (
           <p className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-medium text-slate-600">
             <Lock className="h-3.5 w-3.5" />
-            Permohonan sudah diajukan — hanya dapat dilihat
+            {pendingQR ? 'Formulir terkunci — menunggu verifikasi QR' : 'Permohonan sudah diajukan — hanya dapat dilihat'}
           </p>
         ) : null}
       </div>
@@ -436,13 +457,46 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             {saving ? 'Menyimpan...' : 'Lanjut'}
             <ChevronRight className="h-4 w-4" />
           </Button>
+        ) : isReadOnly ? (
+          pendingQR && !verifyToken ? (
+            <Button type="button" variant="outline" onClick={() => void handleReissueQR()} disabled={saving}>
+              Tampilkan QR Verifikasi
+            </Button>
+          ) : null
         ) : (
-          <Button type="button" onClick={() => void handleSubmit()} disabled={isReadOnly || saving} className="gap-1.5">
+          <Button type="button" onClick={() => setConfirmOpen(true)} disabled={saving} className="gap-1.5">
             <Check className="h-4 w-4" />
             {saving ? 'Memproses...' : 'Ajukan Permohonan'}
           </Button>
         )}
       </div>
+
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Konfirmasi Pengajuan Permohonan</DialogTitle>
+            <DialogDescription>
+              Apakah Anda sudah memastikan seluruh data yang Anda masukkan sudah benar? Setelah diajukan, permohonan
+              tidak dapat diubah lagi.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>
+              Batal
+            </Button>
+            <Button
+              className="gap-1.5"
+              onClick={() => {
+                setConfirmOpen(false)
+                void handleSubmit()
+              }}
+            >
+              <Check className="h-4 w-4" />
+              Ya, Ajukan
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

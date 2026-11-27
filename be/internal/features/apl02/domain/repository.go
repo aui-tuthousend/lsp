@@ -98,4 +98,7 @@ type Repository interface {
 	RevokeActiveSignatures(ctx context.Context, applicationID, entity, role string, revokedAt time.Time) error
 	FindSignatureByTokenHash(ctx context.Context, tokenHash string) (Signature, error)
 	MarkSignatureUsed(ctx context.Context, id string, usedAt time.Time, ip, userAgent *string) (Signature, error)
+	// HasPendingSignature melaporkan apakah asesmen mandiri masih punya token QR
+	// asesi yang menunggu (belum dipakai & belum kedaluwarsa).
+	HasPendingSignature(ctx context.Context, applicationID string) (bool, error)
 }

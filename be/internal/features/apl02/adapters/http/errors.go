@@ -18,6 +18,8 @@ func mapError(err error) error {
 		return huma.Error409Conflict("independent assessment already exists")
 	case errors.Is(err, domain.ErrNotDraft):
 		return huma.Error409Conflict("independent assessment is not a draft")
+	case errors.Is(err, domain.ErrLocked):
+		return huma.Error409Conflict("independent assessment is locked after submission")
 	case errors.Is(err, domain.ErrNotSubmitted):
 		return huma.Error409Conflict("independent assessment is not submitted")
 	case errors.Is(err, domain.ErrNotEligible):

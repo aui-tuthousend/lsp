@@ -107,6 +107,11 @@ func (s *Service) Detail(ctx context.Context, id string) (domain.AssessmentDetai
 	if err != nil {
 		return domain.AssessmentDetail{}, err
 	}
+	// Terkunci bila sudah bukan draft, atau QR sudah terbit (belum discan).
+	pendingSignature, err := s.repo.HasPendingSignature(ctx, assessment.ApplicationID)
+	if err != nil {
+		return domain.AssessmentDetail{}, err
+	}
 	return domain.AssessmentDetail{
 		Assessment: assessment,
 		Application: domain.ApplicationInfo{
@@ -116,7 +121,8 @@ func (s *Service) Detail(ctx context.Context, id string) (domain.AssessmentDetai
 			Purpose:       appCtx.Purpose,
 			DataCreatedAt: appCtx.DataCreatedAt,
 		},
-		Units: units,
+		Units:  units,
+		Locked: assessment.Status != domain.StatusDraft || pendingSignature,
 	}, nil
 }
 
@@ -348,6 +354,14 @@ func (s *Service) ensureDraft(ctx context.Context, assessmentID string) error {
 	}
 	if assessment.Status != domain.StatusDraft {
 		return domain.ErrNotDraft
+	}
+	// Terkunci begitu QR terbit (meski belum discan): jawaban tidak boleh berubah.
+	pending, err := s.repo.HasPendingSignature(ctx, assessment.ApplicationID)
+	if err != nil {
+		return err
+	}
+	if pending {
+		return domain.ErrLocked
 	}
 	return nil
 }

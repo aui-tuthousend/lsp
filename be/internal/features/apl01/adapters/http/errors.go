@@ -18,6 +18,8 @@ func mapError(err error) error {
 		return huma.Error409Conflict("certification application already exists")
 	case errors.Is(err, domain.ErrNotDraft):
 		return huma.Error409Conflict("certification application is not a draft")
+	case errors.Is(err, domain.ErrLocked):
+		return huma.Error409Conflict("certification application is locked after submission")
 	case errors.Is(err, domain.ErrIncomplete):
 		return huma.Error422UnprocessableEntity("certification application is incomplete")
 	case errors.Is(err, domain.ErrInvalidToken):

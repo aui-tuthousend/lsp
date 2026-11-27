@@ -100,6 +100,8 @@ export type ApplicationDetail = {
   documents: ApplicationDocument[]
   schedule?: AssessmentSchedule | null
   signatures: FormSignature[]
+  /** Formulir terkunci (sudah diajukan / QR sudah terbit). */
+  locked: boolean
 }
 
 export type ListApplicationsParams = {

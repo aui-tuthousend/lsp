@@ -142,6 +142,8 @@ type ApplicationDetailDTO struct {
 	Documents   []ApplicationDocumentDTO `json:"documents"`
 	Schedule    *AssessmentScheduleDTO   `json:"schedule,omitempty"`
 	Signatures  []FormSignatureDTO       `json:"signatures"`
+	// Locked: formulir tidak boleh diubah (sudah diajukan / QR sudah terbit).
+	Locked bool `json:"locked"`
 }
 
 type ApplicationDTO struct {
@@ -230,6 +232,7 @@ func (h *Handler) toApplicationDetailDTO(ctx context.Context, d domain.Applicati
 		Application: toApplicationDTO(d.Application),
 		Documents:   h.toApplicationDocumentDTOs(ctx, d.Documents),
 		Signatures:  toFormSignatureDTOs(d.Signatures),
+		Locked:      d.Locked,
 	}
 	if d.Data != nil {
 		data := toApplicationDataDTO(*d.Data)

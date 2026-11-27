@@ -65,6 +65,9 @@ type ApplicationDetail struct {
 	Documents   []ApplicationDocument
 	Schedule    *AssessmentSchedule
 	Signatures  []FormSignature
+	// Locked menandai formulir tidak boleh diubah lagi: status bukan DRAFT,
+	// atau QR sudah terbit (token asesi masih aktif/menunggu).
+	Locked bool
 }
 
 // Decision membawa hasil verifikasi admin atas sebuah permohonan.

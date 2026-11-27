@@ -332,6 +332,25 @@ func (r *Repository) RevokeActiveSignatures(ctx context.Context, applicationID, 
 	return mapError(err)
 }
 
+// HasPendingSignature melaporkan apakah asesmen mandiri masih punya token QR
+// asesi yang menunggu (belum dipakai & belum kedaluwarsa). Selama token ini
+// ada, formulir APL-02 terkunci dari perubahan.
+func (r *Repository) HasPendingSignature(ctx context.Context, applicationID string) (bool, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	var exists bool
+	err := db.QueryRow(ctx, `
+		SELECT EXISTS (
+			SELECT 1 FROM form_signatures
+			WHERE application_id = $1 AND entity = 'asesmen_mandiri' AND role = 'asesi'
+			  AND status = 'menunggu' AND expires_at > now()
+		)
+	`, applicationID).Scan(&exists)
+	if err != nil {
+		return false, mapError(err)
+	}
+	return exists, nil
+}
+
 func (r *Repository) FindSignatureByTokenHash(ctx context.Context, tokenHash string) (domain.Signature, error) {
 	db := database.GetExecutor(ctx, r.pool)
 	return scanSignature(db.QueryRow(ctx, `

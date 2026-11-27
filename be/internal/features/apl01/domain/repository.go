@@ -55,4 +55,7 @@ type Repository interface {
 	FindSignatureByTokenHash(ctx context.Context, tokenHash string) (FormSignature, error)
 	MarkSignatureUsed(ctx context.Context, id string, usedAt time.Time, ip, userAgent *string) (FormSignature, error)
 	ListSignatures(ctx context.Context, applicationID string) ([]FormSignature, error)
+	// HasPendingSignature melaporkan apakah masih ada token QR asesi yang
+	// menunggu (belum dipakai & belum kedaluwarsa) untuk permohonan ini.
+	HasPendingSignature(ctx context.Context, applicationID string) (bool, error)
 }

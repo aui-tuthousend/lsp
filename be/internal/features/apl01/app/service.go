@@ -97,6 +97,13 @@ func (s *Service) Detail(ctx context.Context, applicationID string) (domain.Appl
 	}
 	detail.Signatures = signatures
 
+	// Terkunci bila sudah bukan draft, atau QR sudah terbit (belum discan).
+	pendingSignature, err := s.repo.HasPendingSignature(ctx, applicationID)
+	if err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	detail.Locked = application.Status != domain.StatusDraft || pendingSignature
+
 	return detail, nil
 }
 
@@ -367,6 +374,14 @@ func (s *Service) ensureDraft(ctx context.Context, applicationID string) error {
 	}
 	if application.Status != domain.StatusDraft {
 		return domain.ErrNotDraft
+	}
+	// Terkunci begitu QR terbit (meski belum discan): data tidak boleh berubah.
+	pending, err := s.repo.HasPendingSignature(ctx, applicationID)
+	if err != nil {
+		return err
+	}
+	if pending {
+		return domain.ErrLocked
 	}
 	return nil
 }
