@@ -93,6 +93,24 @@ export type FormSignature = {
   updated_at: string
 }
 
+/** Status penugasan asesor (plotting oleh manager sertifikasi / admin). */
+export type AsesorAssignmentStatus = 'PENDING' | 'ACCEPTED' | 'REJECTED' | 'CANCELLED'
+
+/** Penugasan asesor aktif atas sebuah permohonan. */
+export type AsesorAssignment = {
+  id: string
+  application_id: string
+  asesor_id: string
+  asesor_name?: string
+  status: AsesorAssignmentStatus
+  assigned_by?: string | null
+  assigned_at: string
+  responded_at?: string | null
+  note?: string | null
+  created_at: string
+  updated_at: string
+}
+
 /** Detail permohonan lengkap seluruh step (GET /apl01/{id}). */
 export type ApplicationDetail = {
   application: Application
@@ -100,6 +118,8 @@ export type ApplicationDetail = {
   documents: ApplicationDocument[]
   schedule?: AssessmentSchedule | null
   signatures: FormSignature[]
+  /** Penugasan asesor aktif (bila sudah di-plotting). */
+  assignment?: AsesorAssignment | null
   /** Formulir terkunci (sudah diajukan / QR sudah terbit). */
   locked: boolean
 }

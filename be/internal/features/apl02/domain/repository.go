@@ -26,8 +26,11 @@ type ListParams struct {
 	// ExcludeDraft mengecualikan asesmen yang masih DRAFT. Dipakai antrian
 	// verifikasi staff agar hanya asesmen yang sudah diajukan yang tampil.
 	ExcludeDraft bool
-	Limit        int
-	Offset       int
+	// Assigned memfilter berdasarkan ada/tidaknya penugasan asesor aktif
+	// (PENDING/ACCEPTED); nil = tanpa filter. Dipakai antrian manager.
+	Assigned *bool
+	Limit    int
+	Offset   int
 }
 
 type ListResult struct {

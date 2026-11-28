@@ -149,6 +149,99 @@ func (r *Repository) ApplyDecision(ctx context.Context, decision domain.Decision
 		decision.Note, decision.AsesorID, decision.AsesorAssignedAt))
 }
 
+// --- Penugasan asesor (plotting) ---
+
+const assignmentColumns = `a.id, a.application_id, a.asesor_id, COALESCE(u.name, ''), a.status::text,
+	a.assigned_by, a.assigned_at, a.responded_at, a.note, a.created_at, a.updated_at`
+
+func (r *Repository) FindActiveAssignment(ctx context.Context, applicationID string) (*domain.AsesorAssignment, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	assignment, err := scanAssignment(db.QueryRow(ctx, `
+		SELECT `+assignmentColumns+`
+		FROM asesor_assignments a
+		LEFT JOIN users u ON u.id = a.asesor_id
+		WHERE a.application_id = $1 AND a.status IN ('PENDING', 'ACCEPTED')
+		LIMIT 1
+	`, applicationID))
+	if err != nil {
+		if errors.Is(err, domain.ErrNotFound) {
+			return nil, nil
+		}
+		return nil, err
+	}
+	return &assignment, nil
+}
+
+func (r *Repository) AssignAsesor(ctx context.Context, assignment domain.AsesorAssignment) error {
+	db := database.GetExecutor(ctx, r.pool)
+	// Batalkan penugasan aktif sebelumnya (bila ada) agar hanya tersisa satu.
+	if _, err := db.Exec(ctx, `
+		UPDATE asesor_assignments
+		SET status = 'CANCELLED', responded_at = $2
+		WHERE application_id = $1 AND status IN ('PENDING', 'ACCEPTED')
+	`, assignment.ApplicationID, assignment.AssignedAt); err != nil {
+		return mapError(err)
+	}
+	// Simpan penugasan baru.
+	if _, err := db.Exec(ctx, `
+		INSERT INTO asesor_assignments (id, application_id, asesor_id, status, assigned_by, assigned_at)
+		VALUES ($1, $2, $3, $4, $5, $6)
+	`, assignment.ID, assignment.ApplicationID, assignment.AsesorID, assignment.Status,
+		assignment.AssignedBy, assignment.AssignedAt); err != nil {
+		return mapError(err)
+	}
+	// Sinkronkan asesor aktif di header permohonan.
+	if _, err := db.Exec(ctx, `
+		UPDATE certification_applications
+		SET asesor_id = $2, asesor_assigned_at = $3
+		WHERE id = $1 AND deleted_at IS NULL
+	`, assignment.ApplicationID, assignment.AsesorID, assignment.AssignedAt); err != nil {
+		return mapError(err)
+	}
+	return nil
+}
+
+// ListAsesorCandidates mengembalikan asesor yang terafiliasi dengan TUK jadwal
+// permohonan, beserta jumlah penugasan aktif (PENDING/ACCEPTED) pada tanggal
+// jadwal tersebut. TUK dan tanggal diambil dari assessment_schedules.
+func (r *Repository) ListAsesorCandidates(ctx context.Context, applicationID string) ([]domain.AsesorCandidate, error) {
+	db := database.GetExecutor(ctx, r.pool)
+	rows, err := db.Query(ctx, `
+		SELECT ap.user_id, COALESCE(u.name, ''), COALESCE(ap.province, ''), COALESCE(ap.city, ''),
+		       ap.daily_assignment_limit,
+		       (SELECT COUNT(*)
+		        FROM asesor_assignments aa
+		        JOIN assessment_schedules sc ON sc.application_id = aa.application_id
+		        WHERE aa.status IN ('PENDING', 'ACCEPTED')
+		          AND aa.asesor_id = ap.user_id
+		          AND sc.scheduled_date = s.scheduled_date) AS assigned_count
+		FROM assessment_schedules s
+		JOIN asesor_profiles ap ON ap.tuk_id = s.tuk_id
+		JOIN users u ON u.id = ap.user_id
+		WHERE s.application_id = $1 AND u.deleted_at IS NULL
+		ORDER BY u.name
+	`, applicationID)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	defer rows.Close()
+
+	items := make([]domain.AsesorCandidate, 0)
+	for rows.Next() {
+		var c domain.AsesorCandidate
+		if err := rows.Scan(&c.UserID, &c.Name, &c.Province, &c.City,
+			&c.DailyAssignmentLimit, &c.AssignedCount); err != nil {
+			return nil, mapError(err)
+		}
+		c.Disabled = c.DailyAssignmentLimit > 0 && c.AssignedCount >= c.DailyAssignmentLimit
+		items = append(items, c)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, mapError(err)
+	}
+	return items, nil
+}
+
 // --- Data sertifikasi (step 2) ---
 
 func (r *Repository) UpsertApplicationData(ctx context.Context, data domain.ApplicationData) (domain.ApplicationData, error) {
@@ -413,6 +506,15 @@ func scanApplicationWithTotal(rows pgx.Rows) (domain.Application, int, error) {
 	}
 	a.Status = domain.Status(status)
 	return a, total, nil
+}
+
+func scanAssignment(row pgx.Row) (domain.AsesorAssignment, error) {
+	var a domain.AsesorAssignment
+	if err := row.Scan(&a.ID, &a.ApplicationID, &a.AsesorID, &a.AsesorName, &a.Status,
+		&a.AssignedBy, &a.AssignedAt, &a.RespondedAt, &a.Note, &a.CreatedAt, &a.UpdatedAt); err != nil {
+		return domain.AsesorAssignment{}, mapError(err)
+	}
+	return a, nil
 }
 
 func scanApplicationData(row pgx.Row) (domain.ApplicationData, error) {

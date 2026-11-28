@@ -68,6 +68,15 @@ type DecideInput struct {
 	Body DecideBody `json:"body"`
 }
 
+type AssignAsesorInput struct {
+	ID   string           `path:"id"`
+	Body AssignAsesorBody `json:"body"`
+}
+
+type AsesorCandidatesInput struct {
+	ID string `path:"id"`
+}
+
 // --- Body ---
 
 type UpdateStepBody struct {
@@ -108,6 +117,10 @@ type DecideBody struct {
 	AsesorID *string `json:"asesor_id,omitempty" maxLength:"32" doc:"Asesor yang di-plotting (bila disetujui)"`
 }
 
+type AssignAsesorBody struct {
+	AsesorID string `json:"asesor_id" minLength:"1" maxLength:"32" doc:"ID asesor yang ditugaskan"`
+}
+
 // --- Output ---
 
 type ApplicationOutput struct {
@@ -127,6 +140,10 @@ type VerifyStatusOutput struct {
 	Body VerifyStatusDTO `json:"body"`
 }
 
+type AsesorCandidatesOutput struct {
+	Body AsesorCandidatesDTO `json:"body"`
+}
+
 type VerifyStatusDTO struct {
 	Status          string     `json:"status" doc:"menunggu | dipakai | kadaluarsa | dibatalkan"`
 	ApplicationCode string     `json:"application_code,omitempty"`
@@ -142,8 +159,38 @@ type ApplicationDetailDTO struct {
 	Documents   []ApplicationDocumentDTO `json:"documents"`
 	Schedule    *AssessmentScheduleDTO   `json:"schedule,omitempty"`
 	Signatures  []FormSignatureDTO       `json:"signatures"`
+	// Assignment: penugasan asesor aktif (bila sudah di-plotting).
+	Assignment *AsesorAssignmentDTO `json:"assignment,omitempty"`
 	// Locked: formulir tidak boleh diubah (sudah diajukan / QR sudah terbit).
 	Locked bool `json:"locked"`
+}
+
+type AsesorAssignmentDTO struct {
+	ID            string     `json:"id"`
+	ApplicationID string     `json:"application_id"`
+	AsesorID      string     `json:"asesor_id"`
+	AsesorName    string     `json:"asesor_name,omitempty"`
+	Status        string     `json:"status"`
+	AssignedBy    *string    `json:"assigned_by,omitempty"`
+	AssignedAt    time.Time  `json:"assigned_at"`
+	RespondedAt   *time.Time `json:"responded_at,omitempty"`
+	Note          *string    `json:"note,omitempty"`
+	CreatedAt     time.Time  `json:"created_at"`
+	UpdatedAt     time.Time  `json:"updated_at"`
+}
+
+type AsesorCandidateDTO struct {
+	UserID               string `json:"user_id"`
+	Name                 string `json:"name"`
+	Province             string `json:"province,omitempty"`
+	City                 string `json:"city,omitempty"`
+	DailyAssignmentLimit int    `json:"daily_assignment_limit" doc:"0 = tanpa batas"`
+	AssignedCount        int    `json:"assigned_count" doc:"Jumlah penugasan aktif (PENDING/ACCEPTED) pada tanggal jadwal"`
+	Disabled             bool   `json:"disabled" doc:"True bila kapasitas harian sudah penuh"`
+}
+
+type AsesorCandidatesDTO struct {
+	Items []AsesorCandidateDTO `json:"items"`
 }
 
 type ApplicationDTO struct {
@@ -242,7 +289,43 @@ func (h *Handler) toApplicationDetailDTO(ctx context.Context, d domain.Applicati
 		schedule := toAssessmentScheduleDTO(*d.Schedule)
 		detail.Schedule = &schedule
 	}
+	if d.Assignment != nil {
+		assignment := toAsesorAssignmentDTO(*d.Assignment)
+		detail.Assignment = &assignment
+	}
 	return detail
+}
+
+func toAsesorCandidateDTOs(items []domain.AsesorCandidate) []AsesorCandidateDTO {
+	result := make([]AsesorCandidateDTO, 0, len(items))
+	for _, item := range items {
+		result = append(result, AsesorCandidateDTO{
+			UserID:               item.UserID,
+			Name:                 item.Name,
+			Province:             item.Province,
+			City:                 item.City,
+			DailyAssignmentLimit: item.DailyAssignmentLimit,
+			AssignedCount:        item.AssignedCount,
+			Disabled:             item.Disabled,
+		})
+	}
+	return result
+}
+
+func toAsesorAssignmentDTO(a domain.AsesorAssignment) AsesorAssignmentDTO {
+	return AsesorAssignmentDTO{
+		ID:            a.ID,
+		ApplicationID: a.ApplicationID,
+		AsesorID:      a.AsesorID,
+		AsesorName:    a.AsesorName,
+		Status:        a.Status,
+		AssignedBy:    a.AssignedBy,
+		AssignedAt:    a.AssignedAt,
+		RespondedAt:   a.RespondedAt,
+		Note:          a.Note,
+		CreatedAt:     a.CreatedAt,
+		UpdatedAt:     a.UpdatedAt,
+	}
 }
 
 func toApplicationDataDTO(d domain.ApplicationData) ApplicationDataDTO {

@@ -40,6 +40,7 @@ import { Route as AsesiAsesmenMandiriAssessmentIdRouteImport } from './routes/as
 import { Route as AsesiPermohonanApplicationIdRouteImport } from './routes/asesi/permohonan/$applicationId'
 import { Route as AsesiProfilIndexRouteImport } from './routes/asesi/profil/index'
 import { Route as AsesorAssignmentsAssignmentIdRouteImport } from './routes/asesor/assignments.$assignmentId'
+import { Route as ManagerPermohonanAssessmentIdRouteImport } from './routes/manager/permohonan/$assessmentId'
 
 const IndexRoute = IndexRouteImport.update({
   id: '/',
@@ -201,6 +202,12 @@ const AsesorAssignmentsAssignmentIdRoute =
     path: '/$assignmentId',
     getParentRoute: () => AsesorAssignmentsRoute,
   } as any)
+const ManagerPermohonanAssessmentIdRoute =
+  ManagerPermohonanAssessmentIdRouteImport.update({
+    id: '/permohonan/$assessmentId',
+    path: '/permohonan/$assessmentId',
+    getParentRoute: () => ManagerRouteRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -226,6 +233,7 @@ export interface FileRoutesByFullPath {
   '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/manager/permohonan/$assessmentId': typeof ManagerPermohonanAssessmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
   '/admin/dokumen/': typeof AdminDokumenIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
@@ -253,6 +261,7 @@ export interface FileRoutesByTo {
   '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/manager/permohonan/$assessmentId': typeof ManagerPermohonanAssessmentIdRoute
   '/admin/asesor': typeof AdminAsesorIndexRoute
   '/admin/dokumen': typeof AdminDokumenIndexRoute
   '/admin/roles': typeof AdminRolesIndexRoute
@@ -287,6 +296,7 @@ export interface FileRoutesById {
   '/asesi/asesmen-mandiri/$assessmentId': typeof AsesiAsesmenMandiriAssessmentIdRoute
   '/asesi/permohonan/$applicationId': typeof AsesiPermohonanApplicationIdRoute
   '/asesor/assignments/$assignmentId': typeof AsesorAssignmentsAssignmentIdRoute
+  '/manager/permohonan/$assessmentId': typeof ManagerPermohonanAssessmentIdRoute
   '/admin/asesor/': typeof AdminAsesorIndexRoute
   '/admin/dokumen/': typeof AdminDokumenIndexRoute
   '/admin/roles/': typeof AdminRolesIndexRoute
@@ -322,6 +332,7 @@ export interface FileRouteTypes {
     | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
+    | '/manager/permohonan/$assessmentId'
     | '/admin/asesor/'
     | '/admin/dokumen/'
     | '/admin/roles/'
@@ -349,6 +360,7 @@ export interface FileRouteTypes {
     | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
+    | '/manager/permohonan/$assessmentId'
     | '/admin/asesor'
     | '/admin/dokumen'
     | '/admin/roles'
@@ -382,6 +394,7 @@ export interface FileRouteTypes {
     | '/asesi/asesmen-mandiri/$assessmentId'
     | '/asesi/permohonan/$applicationId'
     | '/asesor/assignments/$assignmentId'
+    | '/manager/permohonan/$assessmentId'
     | '/admin/asesor/'
     | '/admin/dokumen/'
     | '/admin/roles/'
@@ -625,6 +638,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof AsesorAssignmentsAssignmentIdRouteImport
       parentRoute: typeof AsesorAssignmentsRoute
     }
+    '/manager/permohonan/$assessmentId': {
+      id: '/manager/permohonan/$assessmentId'
+      path: '/permohonan/$assessmentId'
+      fullPath: '/manager/permohonan/$assessmentId'
+      preLoaderRoute: typeof ManagerPermohonanAssessmentIdRouteImport
+      parentRoute: typeof ManagerRouteRoute
+    }
   }
 }
 
@@ -715,10 +735,12 @@ const AsesorRouteRouteWithChildren = AsesorRouteRoute._addFileChildren(
 
 interface ManagerRouteRouteChildren {
   ManagerIndexRoute: typeof ManagerIndexRoute
+  ManagerPermohonanAssessmentIdRoute: typeof ManagerPermohonanAssessmentIdRoute
 }
 
 const ManagerRouteRouteChildren: ManagerRouteRouteChildren = {
   ManagerIndexRoute: ManagerIndexRoute,
+  ManagerPermohonanAssessmentIdRoute: ManagerPermohonanAssessmentIdRoute,
 }
 
 const ManagerRouteRouteWithChildren = ManagerRouteRoute._addFileChildren(

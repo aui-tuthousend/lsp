@@ -58,10 +58,20 @@ func (h *Handler) ListMine(ctx context.Context, input *ListMineInput) (*httpplat
 // Hanya asesmen yang sudah diajukan (bukan DRAFT) yang ditampilkan.
 func (h *Handler) ListAll(ctx context.Context, input *ListAllInput) (*httpplatform.PagedResponse[AssessmentDTO], error) {
 	limit := input.SafeLimit()
+	var assigned *bool
+	switch input.Assigned {
+	case "true":
+		value := true
+		assigned = &value
+	case "false":
+		value := false
+		assigned = &value
+	}
 	result, err := h.service.List(ctx, domain.ListParams{
 		Status:            input.Status,
 		ApplicationStatus: input.ApplicationStatus,
 		ExcludeDraft:      true,
+		Assigned:          assigned,
 		Limit:             limit,
 		Offset:            input.Offset(),
 	})

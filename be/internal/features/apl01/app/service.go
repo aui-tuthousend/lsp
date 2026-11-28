@@ -104,6 +104,12 @@ func (s *Service) Detail(ctx context.Context, applicationID string) (domain.Appl
 	}
 	detail.Locked = application.Status != domain.StatusDraft || pendingSignature
 
+	assignment, err := s.repo.FindActiveAssignment(ctx, applicationID)
+	if err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	detail.Assignment = assignment
+
 	return detail, nil
 }
 
@@ -169,10 +175,13 @@ func (s *Service) PutDocuments(ctx context.Context, cmd PutDocumentsCommand) (do
 }
 
 // PutSchedule menyimpan jadwal asesmen (step 4). Menolak bila asesi sudah punya
-// pengajuan lain pada tanggal yang sama.
+// pengajuan lain pada tanggal yang sama. TUK wajib diisi untuk kedua mode.
 func (s *Service) PutSchedule(ctx context.Context, cmd PutScheduleCommand) (domain.ApplicationDetail, error) {
 	if err := s.ensureDraft(ctx, cmd.ApplicationID); err != nil {
 		return domain.ApplicationDetail{}, err
+	}
+	if cmd.TukID == nil || strings.TrimSpace(*cmd.TukID) == "" {
+		return domain.ApplicationDetail{}, domain.ErrTukRequired
 	}
 	conflict, err := s.repo.HasScheduleConflict(ctx, cmd.ApplicationID, cmd.ScheduledDate)
 	if err != nil {
@@ -434,6 +443,49 @@ type DecideCommand struct {
 	Note          *string
 	AsesorID      *string
 	VerifiedBy    string
+}
+
+// AssignAsesorCommand membawa perintah plotting asesor oleh manager/admin.
+type AssignAsesorCommand struct {
+	ApplicationID string
+	AsesorID      string
+	AssignedBy    string
+}
+
+// AssignAsesor menugaskan asesor untuk sebuah permohonan yang sudah disetujui.
+// Penugasan lama (bila ada) dibatalkan, penugasan baru disimpan sebagai PENDING.
+func (s *Service) AssignAsesor(ctx context.Context, cmd AssignAsesorCommand) (domain.ApplicationDetail, error) {
+	application, err := s.repo.FindApplicationByID(ctx, cmd.ApplicationID)
+	if err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	if application.Status != domain.StatusApproved {
+		return domain.ApplicationDetail{}, domain.ErrNotApproved
+	}
+	assignment := domain.AsesorAssignment{
+		ID:            id.New(),
+		ApplicationID: cmd.ApplicationID,
+		AsesorID:      cmd.AsesorID,
+		Status:        domain.AssignmentStatusPending,
+		AssignedBy:    &cmd.AssignedBy,
+		AssignedAt:    time.Now().UTC(),
+	}
+	if err := s.tx.WithinTransaction(ctx, func(txCtx context.Context) error {
+		return s.repo.AssignAsesor(txCtx, assignment)
+	}); err != nil {
+		return domain.ApplicationDetail{}, err
+	}
+	return s.Detail(ctx, cmd.ApplicationID)
+}
+
+// AsesorCandidates mengembalikan kandidat asesor (matriks plotting) untuk sebuah
+// permohonan: asesor yang terafiliasi TUK jadwal, jumlah penugasan aktifnya pada
+// tanggal jadwal, dan flag disabled bila kapasitas hariannya sudah penuh.
+func (s *Service) AsesorCandidates(ctx context.Context, applicationID string) ([]domain.AsesorCandidate, error) {
+	if _, err := s.repo.FindApplicationByID(ctx, applicationID); err != nil {
+		return nil, err
+	}
+	return s.repo.ListAsesorCandidates(ctx, applicationID)
 }
 
 type SubmitResult struct {

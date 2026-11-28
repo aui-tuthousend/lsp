@@ -9,9 +9,11 @@ import (
 
 func RegisterRoutes(api huma.API, handler *Handler) {
 	adminOnly := auth.RequireRoles(string(domain.RoleAdmin))
+	// Daftar asesor juga dibaca manager sertifikasi untuk plotting asesor.
+	adminOrManager := auth.RequireRoles(string(domain.RoleAdmin), string(domain.RoleManagerSertifikasi))
 
 	huma.Get(api, "/asesor-profiles", handler.List,
-		adminOnly,
+		adminOrManager,
 		httpplatform.WithDoc("asesor-profiles-list", "List asesor profiles", "Daftar profil asesor beserta batas penugasan harian.", "Asesor Profiles"),
 	)
 	huma.Get(api, "/asesor-profiles/{user_id}", handler.Get,

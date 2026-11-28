@@ -47,6 +47,11 @@ type Assessment struct {
 	// ApplicationNote adalah catatan verifikasi admin pada permohonan APL-01
 	// (mis. alasan penolakan); hanya diisi pada daftar.
 	ApplicationNote *string
+	// AsesorID/AsesorName/AsesorAssignmentStatus hanya diisi pada daftar staff
+	// (hasil join ke penugasan asesor aktif pada permohonan).
+	AsesorID               *string
+	AsesorName             string
+	AsesorAssignmentStatus *string
 }
 
 // UnitAnswer adalah jawaban asesi untuk satu unit kompetensi, beserta berkas

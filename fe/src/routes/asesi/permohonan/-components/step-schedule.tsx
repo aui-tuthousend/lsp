@@ -17,7 +17,7 @@ export type StepScheduleProps = {
   onTukChange: (tukId: string) => void
 }
 
-/** Step 4 — pilih jadwal asesmen (metode, tanggal, dan lokasi TUK bila offline). */
+/** Step 4 — pilih jadwal asesmen (metode, tanggal, dan lokasi TUK). */
 export function StepSchedule({
   mode,
   scheduledDate,
@@ -47,22 +47,20 @@ export function StepSchedule({
         </Select>
       </Field>
 
-      {mode === 'OFFLINE' ? (
-        <Field
-          label="Tempat Uji Kompetensi (TUK)"
-          htmlFor="tuk"
-          required
-          error={errors.tuk_id}
-          hint="Pilih lokasi pelaksanaan asesmen."
-        >
-          <Select id="tuk" value={tukId} disabled={tuksLoading} onChange={(event) => onTukChange(event.target.value)}>
-            <option value="">{tuksLoading ? 'Memuat TUK...' : '— Pilih TUK —'}</option>
-            {tuks.map((tuk) => (
-              <option key={tuk.id} value={tuk.id}>{`${tuk.name} - ${tuk.province}`}</option>
-            ))}
-          </Select>
-        </Field>
-      ) : null}
+      <Field
+        label="Tempat Uji Kompetensi (TUK)"
+        htmlFor="tuk"
+        required
+        error={errors.tuk_id}
+        hint="Pilih TUK; untuk asesmen online, TUK menjadi lokasi asesor yang ditugaskan."
+      >
+        <Select id="tuk" value={tukId} disabled={tuksLoading} onChange={(event) => onTukChange(event.target.value)}>
+          <option value="">{tuksLoading ? 'Memuat TUK...' : '— Pilih TUK —'}</option>
+          {tuks.map((tuk) => (
+            <option key={tuk.id} value={tuk.id}>{`${tuk.name} - ${tuk.province}`}</option>
+          ))}
+        </Select>
+      </Field>
 
       <Field
         label="Tanggal yang Diajukan"

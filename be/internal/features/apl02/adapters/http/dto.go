@@ -25,6 +25,9 @@ type ListAllInput struct {
 	// ApplicationStatus memfilter berdasarkan status permohonan APL-01
 	// (keputusan admin): SUBMITTED = menunggu, APPROVED/REJECTED = sudah diputuskan.
 	ApplicationStatus string `query:"application_status" enum:"DRAFT,SUBMITTED,APPROVED,REJECTED" doc:"Filter status permohonan APL-01"`
+	// Assigned memfilter ada/tidaknya penugasan asesor aktif (PENDING/ACCEPTED):
+	// "true" = sudah ditugaskan, "false" = belum, kosong = tanpa filter.
+	Assigned string `query:"assigned" enum:"true,false" doc:"Filter penugasan asesor: true=sudah, false=belum"`
 }
 
 type GetInput struct {
@@ -155,9 +158,14 @@ type AssessmentDTO struct {
 	// APPROVED/REJECTED); terisi pada daftar staff.
 	ApplicationStatus string `json:"application_status,omitempty"`
 	// ApplicationNote adalah catatan verifikasi admin (mis. alasan penolakan).
-	ApplicationNote *string   `json:"application_note,omitempty"`
-	CreatedAt       time.Time `json:"created_at"`
-	UpdatedAt       time.Time `json:"updated_at"`
+	ApplicationNote *string `json:"application_note,omitempty"`
+	// AsesorID/AsesorName/AsesorAssignmentStatus terisi pada daftar staff bila
+	// permohonan sudah di-plotting ke seorang asesor.
+	AsesorID               *string   `json:"asesor_id,omitempty"`
+	AsesorName             string    `json:"asesor_name,omitempty"`
+	AsesorAssignmentStatus *string   `json:"asesor_assignment_status,omitempty"`
+	CreatedAt              time.Time `json:"created_at"`
+	UpdatedAt              time.Time `json:"updated_at"`
 }
 
 type AssessmentUnitDTO struct {
@@ -221,24 +229,27 @@ func (h *Handler) toAssessmentDetailDTO(ctx context.Context, d domain.Assessment
 
 func toAssessmentDTO(a domain.Assessment) AssessmentDTO {
 	dto := AssessmentDTO{
-		ID:                a.ID,
-		ApplicationID:     a.ApplicationID,
-		Code:              a.Code,
-		Status:            string(a.Status),
-		AsesorNote:        a.AsesorNote,
-		SubmittedAt:       a.SubmittedAt,
-		ReviewedBy:        a.ReviewedBy,
-		ReviewedAt:        a.ReviewedAt,
-		ZoomLink:          a.ZoomLink,
-		ZoomTime:          a.ZoomTime,
-		SchemaName:        a.SchemaName,
-		SchemaCode:        a.SchemaCode,
-		AsesiName:         a.AsesiName,
-		ApplicationCode:   a.ApplicationCode,
-		ApplicationStatus: a.ApplicationStatus,
-		ApplicationNote:   a.ApplicationNote,
-		CreatedAt:         a.CreatedAt,
-		UpdatedAt:         a.UpdatedAt,
+		ID:                     a.ID,
+		ApplicationID:          a.ApplicationID,
+		Code:                   a.Code,
+		Status:                 string(a.Status),
+		AsesorNote:             a.AsesorNote,
+		SubmittedAt:            a.SubmittedAt,
+		ReviewedBy:             a.ReviewedBy,
+		ReviewedAt:             a.ReviewedAt,
+		ZoomLink:               a.ZoomLink,
+		ZoomTime:               a.ZoomTime,
+		SchemaName:             a.SchemaName,
+		SchemaCode:             a.SchemaCode,
+		AsesiName:              a.AsesiName,
+		ApplicationCode:        a.ApplicationCode,
+		ApplicationStatus:      a.ApplicationStatus,
+		ApplicationNote:        a.ApplicationNote,
+		AsesorID:               a.AsesorID,
+		AsesorName:             a.AsesorName,
+		AsesorAssignmentStatus: a.AsesorAssignmentStatus,
+		CreatedAt:              a.CreatedAt,
+		UpdatedAt:              a.UpdatedAt,
 	}
 	if a.AsesorDecision != nil {
 		value := string(*a.AsesorDecision)

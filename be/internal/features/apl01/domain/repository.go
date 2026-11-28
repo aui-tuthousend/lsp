@@ -30,6 +30,17 @@ type Repository interface {
 	MarkSubmitted(ctx context.Context, id string, submittedAt time.Time) (Application, error)
 	ApplyDecision(ctx context.Context, decision Decision) (Application, error)
 
+	// Penugasan asesor (plotting).
+	// FindActiveAssignment mengembalikan penugasan aktif (PENDING/ACCEPTED) atau
+	// nil bila belum ada.
+	FindActiveAssignment(ctx context.Context, applicationID string) (*AsesorAssignment, error)
+	// AssignAsesor membatalkan penugasan aktif sebelumnya lalu menyimpan
+	// penugasan baru, sekaligus menyinkronkan asesor di header permohonan.
+	AssignAsesor(ctx context.Context, assignment AsesorAssignment) error
+	// ListAsesorCandidates mengembalikan asesor yang terdaftar pada TUK jadwal
+	// permohonan beserta jumlah penugasan aktifnya pada tanggal jadwal tersebut.
+	ListAsesorCandidates(ctx context.Context, applicationID string) ([]AsesorCandidate, error)
+
 	// Data sertifikasi (step 2).
 	UpsertApplicationData(ctx context.Context, data ApplicationData) (ApplicationData, error)
 	FindApplicationData(ctx context.Context, applicationID string) (ApplicationData, error)

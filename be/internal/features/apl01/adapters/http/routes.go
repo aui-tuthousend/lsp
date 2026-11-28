@@ -70,4 +70,17 @@ func RegisterRoutes(api huma.API, handler *Handler) {
 		staffOnly,
 		httpplatform.WithDoc("apl01-decide", "Decide APL-01 application", "Menetapkan hasil verifikasi admin beserta plotting asesor.", "APL-01"),
 	)
+
+	// Plotting asesor (manager sertifikasi / admin).
+	managerOnly := auth.RequireRoles(string(domain.RoleManagerSertifikasi), string(domain.RoleAdmin))
+	huma.Post(api, "/apl01/{id}/assign-asesor", handler.AssignAsesor,
+		managerOnly,
+		httpplatform.WithDoc("apl01-assign-asesor", "Assign asesor to application", "Menugaskan asesor untuk permohonan yang sudah disetujui admin LSP.", "APL-01"),
+	)
+	// Path memakai prefix statis `asesor-candidates` agar tidak bentrok dengan
+	// GET /apl01/verify/{token} pada ServeMux Go 1.22.
+	huma.Get(api, "/apl01/asesor-candidates/{id}", handler.AsesorCandidates,
+		managerOnly,
+		httpplatform.WithDoc("apl01-asesor-candidates", "List asesor candidates", "Matriks kandidat asesor dari TUK jadwal beserta jumlah penugasan aktifnya.", "APL-01"),
+	)
 }

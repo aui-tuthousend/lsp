@@ -189,6 +189,32 @@ func (h *Handler) Decide(ctx context.Context, input *DecideInput) (*ApplicationO
 	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
 }
 
+// AssignAsesor menugaskan asesor untuk permohonan yang sudah disetujui admin.
+func (h *Handler) AssignAsesor(ctx context.Context, input *AssignAsesorInput) (*ApplicationOutput, error) {
+	claims, ok := auth.ClaimsFromContext(ctx)
+	if !ok {
+		return nil, huma.Error401Unauthorized("unauthenticated")
+	}
+	detail, err := h.service.AssignAsesor(ctx, app.AssignAsesorCommand{
+		ApplicationID: input.ID,
+		AsesorID:      input.Body.AsesorID,
+		AssignedBy:    claims.UserID,
+	})
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &ApplicationOutput{Body: h.toApplicationDetailDTO(ctx, detail)}, nil
+}
+
+// AsesorCandidates menampilkan matriks kandidat asesor untuk plotting.
+func (h *Handler) AsesorCandidates(ctx context.Context, input *AsesorCandidatesInput) (*AsesorCandidatesOutput, error) {
+	candidates, err := h.service.AsesorCandidates(ctx, input.ID)
+	if err != nil {
+		return nil, mapError(err)
+	}
+	return &AsesorCandidatesOutput{Body: AsesorCandidatesDTO{Items: toAsesorCandidateDTOs(candidates)}}, nil
+}
+
 func headerValue(value string) *string {
 	if value == "" {
 		return nil

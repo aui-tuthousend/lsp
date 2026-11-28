@@ -65,9 +65,35 @@ type ApplicationDetail struct {
 	Documents   []ApplicationDocument
 	Schedule    *AssessmentSchedule
 	Signatures  []FormSignature
+	// Assignment adalah penugasan asesor aktif (PENDING/ACCEPTED) bila ada.
+	Assignment *AsesorAssignment
 	// Locked menandai formulir tidak boleh diubah lagi: status bukan DRAFT,
 	// atau QR sudah terbit (token asesi masih aktif/menunggu).
 	Locked bool
+}
+
+// Status penugasan asesor (plotting).
+const (
+	AssignmentStatusPending   = "PENDING"
+	AssignmentStatusAccepted  = "ACCEPTED"
+	AssignmentStatusRejected  = "REJECTED"
+	AssignmentStatusCancelled = "CANCELLED"
+)
+
+// AsesorAssignment adalah penugasan asesor atas sebuah permohonan (plotting).
+type AsesorAssignment struct {
+	ID            string
+	ApplicationID string
+	AsesorID      string
+	// AsesorName diisi hasil join ke users (untuk tampilan).
+	AsesorName  string
+	Status      string
+	AssignedBy  *string
+	AssignedAt  time.Time
+	RespondedAt *time.Time
+	Note        *string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 // Decision membawa hasil verifikasi admin atas sebuah permohonan.
@@ -79,4 +105,18 @@ type Decision struct {
 	Note             *string
 	AsesorID         *string
 	AsesorAssignedAt *time.Time
+}
+
+// AsesorCandidate adalah kandidat asesor untuk plotting: asesor yang terdaftar
+// pada TUK jadwal asesi, beserta jumlah penugasan aktif pada tanggal tersebut.
+type AsesorCandidate struct {
+	UserID               string
+	Name                 string
+	Province             string
+	City                 string
+	DailyAssignmentLimit int
+	AssignedCount        int
+	// Disabled menandai asesor tidak dapat dipilih karena penugasan aktifnya
+	// pada tanggal jadwal sudah mencapai batas harian.
+	Disabled bool
 }

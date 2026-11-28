@@ -257,7 +257,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     const nextErrors: Record<string, string> = {}
     if (!mode) nextErrors.mode = 'Pilih metode pelaksanaan'
     if (!scheduledDate) nextErrors.scheduled_date = 'Pilih tanggal asesmen'
-    if (mode === 'OFFLINE' && !tukId) nextErrors.tuk_id = 'Pilih TUK'
+    if (!tukId) nextErrors.tuk_id = 'Pilih TUK'
     if (Object.keys(nextErrors).length > 0) {
       setErrors(nextErrors)
       toast.error('Lengkapi jadwal asesmen terlebih dahulu')
@@ -267,7 +267,7 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
     await putSchedule.mutateAsync({
       mode: mode as AssessmentMode,
       scheduled_date: scheduledDate,
-      tuk_id: mode === 'OFFLINE' ? tukId : null,
+      tuk_id: tukId,
     })
     return true
   }
@@ -392,7 +392,6 @@ function PermohonanWizard({ detail, session }: { detail: ApplicationDetail; sess
             errors={errors}
             onModeChange={(nextMode) => {
               setMode(nextMode)
-              if (nextMode !== 'OFFLINE') setTukId('')
             }}
             onDateChange={setScheduledDate}
             onTukChange={setTukId}

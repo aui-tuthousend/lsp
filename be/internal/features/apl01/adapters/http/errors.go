@@ -28,6 +28,10 @@ func mapError(err error) error {
 		return huma.Error409Conflict("verification token already used")
 	case errors.Is(err, domain.ErrScheduleConflict):
 		return huma.Error409Conflict("you already have an application on this date")
+	case errors.Is(err, domain.ErrTukRequired):
+		return huma.Error422UnprocessableEntity("tuk_id is required")
+	case errors.Is(err, domain.ErrNotApproved):
+		return huma.Error409Conflict("certification application is not approved yet")
 	default:
 		return err
 	}

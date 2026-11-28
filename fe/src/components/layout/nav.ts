@@ -1,4 +1,4 @@
-import { Building2, ClipboardCheck, ClipboardList, FileCheck, FileText, Home, Layers, ShieldCheck, UserCog, Users } from 'lucide-react'
+import { Building2, ClipboardCheck, ClipboardList, FileCheck, FileText, Home, Layers, LayoutDashboard, ShieldCheck, UserCog, Users } from 'lucide-react'
 import type { Role } from '@/lib/auth/types'
 
 export type NavItem = {
@@ -15,14 +15,21 @@ export type NavSection = {
 
 const ALL: Role[] = ['admin', 'admin_lsp', 'asesi', 'asesor', 'validator', 'manager_sertifikasi']
 
+// Role yang beranda-nya memakai item "Dashboard" umum (via '/'). manager_sertifikasi
+// punya menu tersendiri sehingga tidak ikut item umum ini.
+const GENERAL_DASHBOARD: Role[] = ['admin', 'admin_lsp', 'asesi', 'asesor', 'validator']
+
 export const navSections: NavSection[] = [
   {
     title: 'Umum',
     items: [
-      { label: 'Dashboard', to: '/', icon: Home, roles: ALL },
+      { label: 'Dashboard', to: '/', icon: Home, roles: GENERAL_DASHBOARD },
       { label: 'Materi Uji Kompetensi', to: '/admin_lsp/muk', icon: FileCheck, roles: ['admin_lsp'] },
     ],
-
+  },
+  {
+    title: 'Manajemen Sertifikasi',
+    items: [{ label: 'Dashboard', to: '/manager', icon: LayoutDashboard, roles: ['manager_sertifikasi'] }],
   },
   {
     title: 'Sertifikasi',
